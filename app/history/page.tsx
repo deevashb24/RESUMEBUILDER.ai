@@ -19,7 +19,7 @@ export default function HistoryPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login")
+      router.replace("/")
     }
   }, [user, loading, router])
 

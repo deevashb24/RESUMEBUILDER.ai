@@ -1,17 +1,28 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { User as FirebaseUser, onAuthStateChanged, signOut } from "firebase/auth"
+import {
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth"
 import { auth } from "./firebase"
 
-interface AuthContextType {
+interface AuthContextValue {
   user: FirebaseUser | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
+  loginWithApple: () => Promise<void>
+  loginWithEmail: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null)
@@ -34,11 +45,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe()
   }, [])
 
-  const login = async (email: string, password: string) => {
-    // Placeholder for login - can be implemented with signInWithEmailAndPassword
-    // For now, just log (you can implement Google sign-in or email/password later)
-    console.log("Login called with:", email)
-    // Example: await signInWithEmailAndPassword(auth, email, password)
+  const loginWithGoogle = async () => {
+    if (!auth) throw new Error("Firebase auth not initialized")
+    const provider = new GoogleAuthProvider()
+    await signInWithPopup(auth, provider)
+  }
+
+  const loginWithApple = async () => {
+    if (!auth) throw new Error("Firebase auth not initialized")
+    const provider = new OAuthProvider("apple.com")
+    await signInWithPopup(auth, provider)
+  }
+
+  const loginWithEmail = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase auth not initialized")
+    try {
+      // Try to sign in
+      await signInWithEmailAndPassword(auth, email, password)
+    } catch (error: any) {
+      // If user not found, try to create account
+      if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
+        await createUserWithEmailAndPassword(auth, email, password)
+      } else {
+        throw error
+      }
+    }
   }
 
   const logout = async () => {
@@ -47,17 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth)
     } catch (error) {
       console.error("Error signing out:", error)
+      throw error
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, loginWithGoogle, loginWithApple, loginWithEmail, logout }}
+    >
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")

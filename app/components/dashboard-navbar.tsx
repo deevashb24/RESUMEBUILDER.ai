@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
@@ -8,10 +9,12 @@ import { useAuth } from "@/lib/auth-context"
 
 export function DashboardNavbar() {
   const { user, logout } = useAuth()
+  const router = useRouter()
 
   const handleLogout = async () => {
     try {
       await logout()
+      router.replace("/")
     } catch (error) {
       console.error("Logout error:", error)
     }
