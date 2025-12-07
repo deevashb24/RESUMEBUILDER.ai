@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   // Redirect if not authenticated
   if (!loading && !user) {
-    router.push("/")
+    router.push("/login")
     return null
   }
 

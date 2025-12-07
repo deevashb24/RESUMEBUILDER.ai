@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { FileText, BookOpen, Mail, ArrowRight } from "lucide-react"
+import { FileText, BookOpen, Mail } from "lucide-react"
 
 export default function Home() {
   return (
@@ -20,12 +20,9 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Link href="/login">
-              <Button size="lg" className="gap-2">
-                Get Started
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <p className="text-lg font-medium text-foreground">
+              Get Started
+            </p>
             <Link href="/dashboard">
               <Button variant="outline" size="lg">
                 Go to Dashboard
