@@ -5,7 +5,7 @@ import { FileText, BookOpen, Mail, ArrowRight } from "lucide-react"
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      {/* Hero Section - ResumeAI Landing Page */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24">
         <div className="text-center space-y-8">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
