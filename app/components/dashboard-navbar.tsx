@@ -10,16 +10,31 @@ export function DashboardNavbar() {
   const { user, logout } = useAuth()
 
   const handleLogout = async () => {
-    await logout()
+    try {
+      await logout()
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
-  const initials = user?.name
-    ? user.name
+  // Get user initials from Firebase user (displayName or email)
+  const getUserInitials = () => {
+    if (!user) return "JD"
+    if (user.displayName) {
+      return user.displayName
         .split(" ")
         .map((n) => n[0])
         .join("")
         .toUpperCase()
-    : "JD"
+        .slice(0, 2)
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase()
+    }
+    return "JD"
+  }
+
+  const initials = getUserInitials()
 
   return (
     <nav className="border-b border-border bg-card">

@@ -1,59 +1,57 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
-
-interface User {
-  name: string
-  email: string
-}
+import { User as FirebaseUser, onAuthStateChanged, signOut } from "firebase/auth"
+import { auth } from "./firebase"
 
 interface AuthContextType {
-  user: User | null
+  user: FirebaseUser | null
+  loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<FirebaseUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error("Error parsing stored user:", error)
-      }
+    // Only subscribe if auth is available (client-side)
+    if (!auth) {
+      setLoading(false)
+      return
     }
-    setIsLoading(false)
+
+    // Subscribe to auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser)
+      setLoading(false)
+    })
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe()
   }, [])
 
   const login = async (email: string, password: string) => {
-    // Mock login - replace with actual authentication logic
-    const mockUser: User = {
-      name: "John Doe",
-      email: email,
-    }
-    setUser(mockUser)
-    localStorage.setItem("user", JSON.stringify(mockUser))
+    // Placeholder for login - can be implemented with signInWithEmailAndPassword
+    // For now, just log (you can implement Google sign-in or email/password later)
+    console.log("Login called with:", email)
+    // Example: await signInWithEmailAndPassword(auth, email, password)
   }
 
   const logout = async () => {
-    setUser(null)
-    localStorage.removeItem("user")
-    // Redirect to login page
-    if (typeof window !== "undefined") {
-      window.location.href = "/login"
+    if (!auth) return
+    try {
+      await signOut(auth)
+    } catch (error) {
+      console.error("Error signing out:", error)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
