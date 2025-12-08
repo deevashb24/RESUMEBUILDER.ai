@@ -30,35 +30,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Only subscribe if auth is available (client-side)
-    if (!auth) {
+    if (typeof window === "undefined" || !auth) {
       setLoading(false)
       return
     }
 
-    // Subscribe to auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser)
-      setLoading(false)
-    })
+    try {
+      // Subscribe to auth state changes
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          setUser(firebaseUser)
+          setLoading(false)
+        },
+        (error) => {
+          console.error("Auth state change error:", error)
+          setLoading(false)
+        }
+      )
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe()
+      // Cleanup subscription on unmount
+      return () => unsubscribe()
+    } catch (error) {
+      console.error("Error setting up auth listener:", error)
+      setLoading(false)
+    }
   }, [])
 
   const loginWithGoogle = async () => {
-    if (!auth) throw new Error("Firebase auth not initialized")
+    if (!auth) {
+      throw new Error("Firebase auth not initialized. Please check your environment variables.")
+    }
     const provider = new GoogleAuthProvider()
     await signInWithPopup(auth, provider)
   }
 
   const loginWithApple = async () => {
-    if (!auth) throw new Error("Firebase auth not initialized")
+    if (!auth) {
+      throw new Error("Firebase auth not initialized. Please check your environment variables.")
+    }
     const provider = new OAuthProvider("apple.com")
     await signInWithPopup(auth, provider)
   }
 
   const loginWithEmail = async (email: string, password: string) => {
-    if (!auth) throw new Error("Firebase auth not initialized")
+    if (!auth) {
+      throw new Error("Firebase auth not initialized. Please check your environment variables.")
+    }
     try {
       // Try to sign in
       await signInWithEmailAndPassword(auth, email, password)

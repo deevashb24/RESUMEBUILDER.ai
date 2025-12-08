@@ -63,10 +63,19 @@ export default function Home() {
     }
   }
 
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  // Redirect if already logged in (handled by useEffect, but show loading during redirect)
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Redirecting to dashboard...</p>
       </div>
     )
   }
