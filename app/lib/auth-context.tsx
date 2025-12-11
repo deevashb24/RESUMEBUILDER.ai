@@ -62,7 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Firebase auth not initialized. Please check your environment variables.")
     }
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    
+    // Configure provider to show account selection
+    provider.setCustomParameters({
+      prompt: "select_account", // Forces account selection - shows Gmail account picker
+    })
+    
+    // Add scopes if needed
+    provider.addScope("profile")
+    provider.addScope("email")
+    
+    try {
+      // This will open Google's popup with account selection
+      // User will see all their Gmail accounts to choose from
+      await signInWithPopup(auth, provider)
+      // Auth state will be updated automatically via onAuthStateChanged
+    } catch (error: any) {
+      // Handle popup blocked error
+      if (error.code === "auth/popup-blocked") {
+        throw new Error("Popup was blocked by your browser. Please allow popups for this site and try again.")
+      }
+      // Handle popup closed error
+      if (error.code === "auth/popup-closed-by-user") {
+        throw new Error("Sign-in popup was closed. Please try again.")
+      }
+      // Handle other errors
+      throw error
+    }
   }
 
   const loginWithApple = async () => {

@@ -1,3 +1,4 @@
+ 
  "use client";
  
  import React, { useState } from "react";
@@ -21,19 +22,26 @@
  
    if (!open) return null;
  
-   const handleGoogle = async () => {
-     try {
-       setIsSubmitting(true);
-       setError(null);
-       await loginWithGoogle();
-       router.push("/dashboard");
-       onClose();
-     } catch (e: any) {
-       setError(e?.message ?? "Failed to sign in with Google");
-     } finally {
-       setIsSubmitting(false);
-     }
-   };
+  const handleGoogle = async () => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      // This will open Google's account selection popup
+      await loginWithGoogle();
+      
+      // If successful, redirect to dashboard
+      router.push("/dashboard");
+      onClose();
+    } catch (e: any) {
+      // Show user-friendly error messages
+      const errorMessage = e?.message || "Failed to sign in with Google";
+      setError(errorMessage);
+      console.error("Google sign-in error:", e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
  
    const handleEmail = async (e: React.FormEvent) => {
      e.preventDefault();
