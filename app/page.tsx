@@ -1,20 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import SignInModal from "@/components/sign-in-modal"
 import { FileText, BookOpen, Mail } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export default function Home() {
-  const { user, loading, loginWithGoogle, loginWithApple, loginWithEmail } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const [showSignIn, setShowSignIn] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -22,46 +19,6 @@ export default function Home() {
       router.push("/dashboard")
     }
   }, [user, loading, router])
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      await loginWithGoogle()
-      router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleAppleSignIn = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      await loginWithApple()
-      router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with Apple")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      setIsLoading(true)
-      setError(null)
-      await loginWithEmail(email, password)
-      router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with email")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -95,79 +52,17 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="text-2xl text-center">ResumeAI</CardTitle>
               <CardDescription className="text-center">
-                {showSignIn ? "Choose your sign-in method" : "Get started with your account"}
+                Go to dashboard to sign in
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!showSignIn ? (
-                <Button
-                  onClick={() => setShowSignIn(true)}
-                  className="w-full"
-                  size="lg"
-                >
-                  Sign in
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Continue with Google
-                  </Button>
-
-                  <Button
-                    onClick={handleAppleSignIn}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Continue with Apple
-                  </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleEmailSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                      <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </div>
-                    {error && (
-                      <p className="text-sm text-red-500 text-center">{error}</p>
-                    )}
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full"
-                    >
-                      {isLoading ? "Signing in..." : "Continue with Email"}
-                    </Button>
-                  </form>
-                </>
-              )}
+              <Button
+                onClick={() => setOpen(true)}
+                className="w-full"
+                size="lg"
+              >
+                Sign in
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -211,6 +106,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <SignInModal open={open} onClose={() => setOpen(false)} />
     </div>
   )
 }
