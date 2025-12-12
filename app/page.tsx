@@ -48,17 +48,17 @@ export default function Home() {
             Sign in to get started
           </p>
 
-          <Card className="max-w-md mx-auto mt-8">
+          <Card className="max-w-md mx-auto mt-8 border-2 border-primary/20 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl text-center">ResumeAI</CardTitle>
+              <CardTitle className="text-2xl text-center font-bold">ResumeAI</CardTitle>
               <CardDescription className="text-center">
-                Go to dashboard to sign in
+                Get started with your account
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
                 onClick={() => setOpen(true)}
-                className="w-full"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg h-12 shadow-md hover:shadow-lg transition-all transform hover:scale-105"
                 size="lg"
               >
                 Sign in
