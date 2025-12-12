@@ -13,7 +13,7 @@ export function DashboardNavbar() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+    await logout()
       router.replace("/")
     } catch (error) {
       console.error("Logout error:", error)

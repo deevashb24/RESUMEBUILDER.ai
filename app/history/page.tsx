@@ -91,33 +91,33 @@ export default function HistoryPage() {
               <p className="text-muted-foreground">No history yet. Generate something to see it here!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+          <div className="space-y-3">
               {history.map((item) => (
-                <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
+              <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
                         <h3 className="font-medium text-foreground">
                           {item.title || `${formatType(item.type)} - ${formatTimestamp(item.createdAt)}`}
                         </h3>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
                             {formatType(item.type)}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {formatTimestamp(item.createdAt)}
-                          </span>
-                        </div>
+                        </span>
                       </div>
-                      <Button variant="outline" size="sm" className="ml-4 gap-2 bg-transparent">
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <Button variant="outline" size="sm" className="ml-4 gap-2 bg-transparent">
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
           )}
         </div>
       </main>
