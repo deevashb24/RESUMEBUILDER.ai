@@ -65,3 +65,4 @@ if (typeof window !== "undefined") {
 }
 
 export { app, auth, db }
+
