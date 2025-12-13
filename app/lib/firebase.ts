@@ -3,11 +3,13 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
 import { getAuth, Auth } from "firebase/auth"
 import { getFirestore, Firestore } from "firebase/firestore"
+import { getStorage, FirebaseStorage } from "firebase/storage"
 
 // Initialize Firebase app (avoid re-initialization in dev/hot reload)
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
 let db: Firestore | null = null
+let storage: FirebaseStorage | null = null
 
 // Only initialize on client-side
 if (typeof window !== "undefined") {
@@ -50,6 +52,7 @@ if (typeof window !== "undefined") {
     
     auth = getAuth(app)
     db = getFirestore(app)
+    storage = getStorage(app)
   } catch (error: any) {
     console.error("❌ Error initializing Firebase:", error)
     if (error.code === "app/already-initialized") {
@@ -57,6 +60,7 @@ if (typeof window !== "undefined") {
       app = getApp()
       auth = getAuth(app)
       db = getFirestore(app)
+      storage = getStorage(app)
     } else {
       // Don't throw - allow app to load but auth won't work
       console.error("Firebase initialization failed. Auth features will not work.")
@@ -64,5 +68,5 @@ if (typeof window !== "undefined") {
   }
 }
 
-export { app, auth, db }
+export { app, auth, db, storage }
 

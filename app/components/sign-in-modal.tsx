@@ -41,7 +41,8 @@ const AppleIcon = () => (
 )
 
 export default function SignInModal({ open, onClose }: SignInModalProps) {
-  const { loginWithGoogle, loginWithApple, loginWithEmail } = useAuth()
+  const { loginWithGoogle, loginWithEmail } = useAuth()
+  // loginWithApple kept for future use but not displayed
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -61,22 +62,6 @@ export default function SignInModal({ open, onClose }: SignInModalProps) {
       const errorMessage = e?.message || "Failed to sign in with Google"
       setError(errorMessage)
       console.error("Google sign-in error:", e)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleApple = async () => {
-    try {
-      setIsSubmitting(true)
-      setError(null)
-      await loginWithApple()
-      router.push("/dashboard")
-      onClose()
-    } catch (e: any) {
-      const errorMessage = e?.message || "Failed to sign in with Apple"
-      setError(errorMessage)
-      console.error("Apple sign-in error:", e)
     } finally {
       setIsSubmitting(false)
     }
@@ -118,16 +103,6 @@ export default function SignInModal({ open, onClose }: SignInModalProps) {
             >
               <GoogleIcon />
               <span className="ml-2">Continue with Google</span>
-            </Button>
-
-            <Button
-              onClick={handleApple}
-              disabled={isSubmitting}
-              variant="outline"
-              className="w-full h-11 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-900 font-medium"
-            >
-              <AppleIcon />
-              <span className="ml-2">Continue with Apple</span>
             </Button>
 
             <div className="relative py-2">
