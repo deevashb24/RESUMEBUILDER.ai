@@ -1,0 +1,50 @@
+type User @table {
+  email: String!
+  createdAt: Timestamp!
+  displayName: String
+  photoUrl: String
+}
+
+type Resume @table {
+  user: User!
+  name: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  personalInfo: String # Representing JSON as a String for simplicity
+}
+
+type Experience @table {
+  resume: Resume!
+  title: String!
+  company: String!
+  startDate: Date!
+  endDate: Date
+  location: String
+  description: String
+}
+
+type Education @table {
+  resume: Resume!
+  institution: String!
+  degree: String!
+  fieldOfStudy: String!
+  startDate: Date!
+  endDate: Date
+  grade: String
+  description: String
+}
+
+type Skill @table {
+  resume: Resume!
+  name: String!
+  category: String
+  proficiency: String
+}
+
+type Project @table {
+  resume: Resume!
+  name: String!
+  description: String
+  technologies: String # Could be a comma-separated string or JSON string
+  link: String
+}
