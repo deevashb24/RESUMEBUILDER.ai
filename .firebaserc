@@ -1,5 +1,11 @@
 {
   "projects": {
     "default": "resume-16ae4"
+  },
+  "targets": {},
+  "etags": {
+    "resume-16ae4": {
+      "extensionInstances": {}
+    }
   }
 }
