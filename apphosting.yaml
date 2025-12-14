@@ -1,46 +1,27 @@
 # Settings for Backend (on Cloud Run).
-# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
   minInstances: 0
-  # maxInstances: 100
-  # concurrency: 80
-  # cpu: 1
-  # memoryMiB: 512
 
 # Environment variables and secrets.
 env:
-  -variable: NEXT_PUBLIC_FIREBASE_API_KEY
-   value: "AIzaSyDXcS1E9JGMEcmTxMZysZkF4I4SAREKgDk"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-   value: "resume-16ae4.firebaseapp.com"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-   value: "resume-16ae4"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-   value: "resume-16ae4.firebasestorage.app"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-   value: "26991117020"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: NEXT_PUBLIC_FIREBASE_APP_ID
-   value: "1:26991117020:web:0ddeaeb20fa95a84ce6a19"
-   availability:
-      - BUILD
-      - RUNTIME
-  -variable: OPENAI_API_KEY
-   value: "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"
-   availability:
-      - BUILD
-      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyDXcS1E9JGMEcmTxMZysZkF4I4SAREKgDk"
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "resume-16ae4.firebaseapp.com"
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "resume-16ae4"
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "resume-16ae4.firebasestorage.app"
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "26991117020"
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:26991117020:web:0ddeaeb20fa95a84ce6a19"
+
+  # SECURITY FIX: Use a secret for the private key
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
