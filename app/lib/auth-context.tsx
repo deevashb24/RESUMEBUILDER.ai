@@ -10,6 +10,7 @@ import {
   OAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  AuthError,
 } from "firebase/auth"
 import { auth } from "./firebase"
 
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(firebaseUser)
           setLoading(false)
         },
-        (error) => {
+        (error: AuthError) => {
           console.error("❌ Auth state change error:", error)
           // Handle specific auth errors
           if (error.code === "auth/network-request-failed") {
@@ -155,4 +156,3 @@ export function useAuth(): AuthContextValue {
   }
   return context
 }
-
