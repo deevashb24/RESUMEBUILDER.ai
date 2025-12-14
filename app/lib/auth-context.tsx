@@ -30,7 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Only subscribe if auth is available (client-side)
-    if (typeof window === "undefined" || !auth) {
+    if (typeof window === "undefined") {
+      setLoading(false)
+      return
+    }
+
+    // Check if auth is initialized
+    if (!auth) {
+      console.warn("⚠️ Firebase Auth is not initialized. Please check your environment variables.")
       setLoading(false)
       return
     }
@@ -44,15 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false)
         },
         (error) => {
-          console.error("Auth state change error:", error)
+          console.error("❌ Auth state change error:", error)
+          // Handle specific auth errors
+          if (error.code === "auth/network-request-failed") {
+            console.error("Network error: Check your internet connection")
+          } else if (error.code === "auth/invalid-api-key") {
+            console.error("Invalid API key: Check your Firebase configuration")
+          }
           setLoading(false)
         }
       )
 
       // Cleanup subscription on unmount
       return () => unsubscribe()
-    } catch (error) {
-      console.error("Error setting up auth listener:", error)
+    } catch (error: any) {
+      console.error("❌ Error setting up auth listener:", error)
       setLoading(false)
     }
   }, [])
