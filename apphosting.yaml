@@ -24,4 +24,4 @@ env:
 
   # SECURITY FIX: Use a secret for the private key
   - variable: OPENAI_API_KEY
-    secret: OPENAI_API_KEY
+    secret: OPENAI_API_KEY@4
