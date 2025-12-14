@@ -42,7 +42,7 @@ env:
 
   # Secret for the backend (only needs RUNTIME usually, but BUILD is safe too)
   - variable: OPENAI_API_KEY
-    secret: OPENAI_API_KEY
+    secret: OPENAI_API_KEY@5
     availability:
       - BUILD
       - RUNTIME
