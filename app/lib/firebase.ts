@@ -26,7 +26,8 @@ if (typeof window !== "undefined") {
 
   // 2. Validate the config object values, NOT process.env keys
   const missingKeys = Object.entries(firebaseConfig)
-    .filter(([_, value]) => !value)
+    .filter(([_, value]) => typeof value !== "string" || value.trim() === "")
+
     .map(([key]) => key)
     
   // Debug logging
