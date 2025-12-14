@@ -6,22 +6,43 @@ runConfig:
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyDXcS1E9JGMEcmTxMZysZkF4I4SAREKgDk"
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "resume-16ae4.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: "resume-16ae4"
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "resume-16ae4.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     value: "26991117020"
+    availability:
+      - BUILD
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:26991117020:web:0ddeaeb20fa95a84ce6a19"
+    availability:
+      - BUILD
+      - RUNTIME
 
-  # SECURITY FIX: Use a secret for the private key
+  # Secret for the backend (only needs RUNTIME usually, but BUILD is safe too)
   - variable: OPENAI_API_KEY
-    secret: OPENAI_API_KEY@4
+    secret: OPENAI_API_KEY
+    availability:
+      - BUILD
+      - RUNTIME
