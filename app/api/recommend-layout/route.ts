@@ -71,7 +71,8 @@ Respond with ONLY the layout ID (demo, modern, classic, or creative), nothing el
         }
       } else {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          // Change this line:
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: {
