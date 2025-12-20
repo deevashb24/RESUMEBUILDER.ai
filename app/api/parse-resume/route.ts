@@ -170,8 +170,7 @@ ${resumeText.substring(0, 8000)}`
 
 async function parseWithGemini(apiKey: string, prompt: string): Promise<ParsedResume> {
   const response = await fetch(
-    // Change this line:
-`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: {
