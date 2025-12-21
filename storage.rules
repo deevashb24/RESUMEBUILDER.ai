@@ -1,15 +1,9 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Allow users to access their own "resumes" folder
-    match /resumes/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Default rule: block everything else
+    // DEVELOPMENT MODE: Allow any logged-in user to upload/download files
     match /{allPaths=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
