@@ -1,38 +1,9 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- Helper Functions ---
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // --- Resumes Collection ---
-    match /resumes/{resumeId} {
-      // Allow create if the new document belongs to the authenticated user
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      // Allow read/write if the existing document belongs to the user
-      allow read, update, delete: if isOwner(resource.data.userId);
-    }
-
-    // --- History Collection (Fixed) ---
-    match /history/{historyId} {
-      // Allow saving generation history
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      // Allow reading user's own history
-      allow read, update, delete: if isOwner(resource.data.userId);
-    }
-
-    // --- Default: Block Everything Else ---
+    // DEVELOPMENT MODE: Allow any logged-in user to read/write everything
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
