@@ -5,12 +5,10 @@ import { useSearchParams } from "next/navigation"
 import { DashboardNavbar } from "@/components/dashboard-navbar"
 import { SimpleResumeLayout } from "@/components/layouts/demo"
 import { getHistoryEntry } from "@/lib/history"
-import { ParsedResumeData } from "@/lib/resume"
+import { getResume, ParsedResumeData } from "@/lib/resume" // Import getResume for fallback
 
 function PreviewContent() {
   const searchParams = useSearchParams()
-  
-  // FIX: Use optional chaining (?.) to safely handle if searchParams is null
   const id = searchParams?.get("id")
 
   const [data, setData] = useState<ParsedResumeData | null>(null)
@@ -18,19 +16,47 @@ function PreviewContent() {
 
   useEffect(() => {
     async function loadData() {
-      if (id) {
-        setLoading(true)
-        // Correctly fetch from the 'history' collection we setup
-        const entry = await getHistoryEntry(id)
-        if (entry && entry.output) {
+      if (!id) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      try {
+        let foundData: ParsedResumeData | null = null
+
+        // STRATEGY 1: Try fetching from History (Primary for "View" button)
+        const historyEntry = await getHistoryEntry(id)
+        
+        if (historyEntry?.output) {
           try {
-            setData(JSON.parse(entry.output))
+            const parsed = JSON.parse(historyEntry.output)
+            // CRITICAL FIX: Extract 'parsedData' if it's nested inside the history wrapper
+            foundData = parsed.parsedData || parsed
           } catch (e) {
-            console.error("Failed to parse history data", e)
+            console.error("Failed to parse history JSON", e)
           }
         }
-        setLoading(false)
-      } else {
+
+        // STRATEGY 2: If not found in History, try Resumes collection (Fallback for Dashboard redirect)
+        if (!foundData) {
+          const resumeEntry = await getResume(id)
+          if (resumeEntry) {
+            // If it has generated content, prefer that. Otherwise use the raw parsed data.
+            // We use 'as any' here because generatedContent is flexible
+            const content = (resumeEntry as any).generatedContent
+            if (content && content.parsedData) {
+               foundData = content.parsedData
+            } else {
+               foundData = resumeEntry.parsedData
+            }
+          }
+        }
+
+        setData(foundData)
+      } catch (err) {
+        console.error("Error loading preview data:", err)
+      } finally {
         setLoading(false)
       }
     }
@@ -40,9 +66,13 @@ function PreviewContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-         <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Loading preview...
-         </div>
+        <DashboardNavbar />
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+           <div className="flex flex-col items-center gap-2">
+             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+             <p>Loading resume preview...</p>
+           </div>
+        </div>
       </div>
     )
   }
@@ -50,30 +80,33 @@ function PreviewContent() {
   if (!data) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
+        <DashboardNavbar />
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          No data found. Please generate a resume first.
+          <div className="text-center p-6 max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Resume Not Found</h3>
+            <p>We couldn't find the data for this resume. It might have been deleted or permissions may be incorrect.</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-lg min-h-[800px] my-8">
-       <SimpleResumeLayout data={data} />
+    <div className="min-h-screen bg-gray-50">
+      <DashboardNavbar />
+      <div className="max-w-5xl mx-auto py-8 px-4">
+         <div className="bg-white shadow-lg rounded-lg overflow-hidden min-h-[800px]">
+            <SimpleResumeLayout data={data} />
+         </div>
+      </div>
     </div>
   )
 }
 
 export default function PreviewPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardNavbar />
-      <main className="p-6 md:p-8">
-        {/* Suspense is required when using useSearchParams in Next.js */}
-        <Suspense fallback={<div>Loading...</div>}>
-          <PreviewContent />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <PreviewContent />
+    </Suspense>
   )
 }
