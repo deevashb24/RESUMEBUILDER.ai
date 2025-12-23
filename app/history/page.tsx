@@ -1,3 +1,4 @@
+// app/history/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -16,14 +17,12 @@ export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/")
     }
   }, [user, loading, router])
 
-  // Fetch history when user is available
   useEffect(() => {
     if (user && !loading) {
       const fetchHistory = async () => {
@@ -42,91 +41,58 @@ export default function HistoryPage() {
   }, [user, loading])
 
   if (loading || !user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardNavbar />
-        <main className="p-6 md:p-8">
-          <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </main>
-      </div>
-    )
+    return <div className="min-h-screen bg-background"><DashboardNavbar /><main className="p-8">Loading...</main></div>
   }
 
   const formatTimestamp = (timestamp: Timestamp | Date | undefined) => {
     if (!timestamp) return "Unknown date"
     const date = timestamp instanceof Timestamp ? timestamp.toDate() : timestamp
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    })
+    return date.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
-  const formatType = (type: string) => {
-    return type
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-  }
+  const formatType = (type: string) => type.replace("-", " ").toUpperCase()
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
       <main className="p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-foreground">History</h1>
-            <p className="text-sm text-muted-foreground mt-1">View all your previously generated documents</p>
-          </div>
+          <h1 className="text-2xl font-semibold mb-6">History</h1>
 
           {historyLoading ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <p className="text-muted-foreground">Loading history...</p>
-            </div>
+            <p>Loading history...</p>
           ) : history.length === 0 ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <p className="text-muted-foreground">No history yet. Generate something to see it here!</p>
-            </div>
+            <p>No history yet.</p>
           ) : (
-          <div className="space-y-3">
+            <div className="space-y-3">
               {history.map((item) => (
-              <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                        <h3 className="font-medium text-foreground">
-                          {item.title || `${formatType(item.type)} - ${formatTimestamp(item.createdAt)}`}
-                        </h3>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                            {formatType(item.type)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTimestamp(item.createdAt)}
-                        </span>
+                <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">
+                        {item.title || `${formatType(item.type)} - ${formatTimestamp(item.createdAt)}`}
+                      </h3>
+                      <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="bg-secondary px-2 py-0.5 rounded">{formatType(item.type)}</span>
+                        <span>{formatTimestamp(item.createdAt)}</span>
                       </div>
                     </div>
+                    
+                    {/* FIXED BUTTON HERE */}
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="ml-4 gap-2 bg-transparent"
-                      onClick={() => {
-                        // Navigate to preview page with the item's data or ID
-                        // You might need to adjust the path based on your routing setup
-                        router.push(`/dashboard/preview?id=${item.id}`) 
-                      }}
-                          >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                                        </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      className="ml-4 gap-2"
+                      onClick={() => router.push(`/dashboard/preview?id=${item.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       </main>

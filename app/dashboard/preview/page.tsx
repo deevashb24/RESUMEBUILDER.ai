@@ -1,112 +1,79 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { getResume, ParsedResumeData } from "@/lib/resume"
-import { ResumeRenderer } from "@/components/resume-renderer"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
+import { useEffect, useState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+import { DashboardNavbar } from "@/components/dashboard-navbar"
+import { SimpleResumeLayout } from "@/components/layouts/demo"
+import { getHistoryEntry } from "@/lib/history"
+import { ParsedResumeData } from "@/lib/resume"
 
-export default function ResumePreviewPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
+function PreviewContent() {
   const searchParams = useSearchParams()
-  const resumeId = searchParams?.get("id") || null
   
-  const [resumeData, setResumeData] = useState<ParsedResumeData | null>(null)
-  const [layoutId, setLayoutId] = useState<string>("demo")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // FIX: Use optional chaining (?.) to safely handle if searchParams is null
+  const id = searchParams?.get("id")
+
+  const [data, setData] = useState<ParsedResumeData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/")
-      return
-    }
-
-    if (resumeId && user) {
-      loadResume()
-    }
-  }, [resumeId, user, loading])
-
-  const loadResume = async () => {
-    if (!resumeId) return
-
-    try {
-      setIsLoading(true)
-      const resume = await getResume(resumeId)
-
-      if (!resume) {
-        setError("Resume not found")
-        return
+    async function loadData() {
+      if (id) {
+        setLoading(true)
+        // Correctly fetch from the 'history' collection we setup
+        const entry = await getHistoryEntry(id)
+        if (entry && entry.output) {
+          try {
+            setData(JSON.parse(entry.output))
+          } catch (e) {
+            console.error("Failed to parse history data", e)
+          }
+        }
+        setLoading(false)
+      } else {
+        setLoading(false)
       }
-
-      if (resume.userId !== user?.uid) {
-        setError("Unauthorized access")
-        return
-      }
-
-      setResumeData(resume.parsedData)
-      setLayoutId(resume.layoutId || "demo")
-    } catch (err: any) {
-      console.error("Error loading resume:", err)
-      setError(err.message || "Failed to load resume")
-    } finally {
-      setIsLoading(false)
     }
-  }
+    loadData()
+  }, [id])
 
-  const handleDownload = () => {
-    // TODO: Implement PDF download using react-to-pdf or similar
-    window.print()
-  }
-
-  if (loading || isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading resume...</p>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+         <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            Loading preview...
+         </div>
       </div>
     )
   }
 
-  if (error) {
+  if (!data) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => router.push("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          No data found. Please generate a resume first.
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-6 flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/dashboard")}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <Button onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            Download PDF
-          </Button>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-lg">
-          <ResumeRenderer layoutId={layoutId} data={resumeData} />
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto bg-white shadow-lg min-h-[800px] my-8">
+       <SimpleResumeLayout data={data} />
     </div>
   )
 }
 
+export default function PreviewPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <DashboardNavbar />
+      <main className="p-6 md:p-8">
+        {/* Suspense is required when using useSearchParams in Next.js */}
+        <Suspense fallback={<div>Loading...</div>}>
+          <PreviewContent />
+        </Suspense>
+      </main>
+    </div>
+  )
+}
