@@ -181,4 +181,3 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
     throw error
   }
 }
-
