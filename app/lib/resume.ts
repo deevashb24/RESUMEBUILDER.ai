@@ -180,4 +180,5 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
     console.error("Error fetching resume:", error)
     throw error
   }
+}
 
