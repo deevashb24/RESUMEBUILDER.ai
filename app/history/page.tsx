@@ -109,11 +109,20 @@ export default function HistoryPage() {
                         </span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="ml-4 gap-2 bg-transparent">
-                      <Eye className="h-4 w-4" />
-                      View
-                    </Button>
-                  </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="ml-4 gap-2 bg-transparent"
+                      onClick={() => {
+                        // Navigate to preview page with the item's data or ID
+                        // You might need to adjust the path based on your routing setup
+                        router.push(`/dashboard/preview?id=${item.id}`) 
+                      }}
+                          >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                                        </div>
                 </CardContent>
               </Card>
             ))}

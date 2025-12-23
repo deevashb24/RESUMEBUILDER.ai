@@ -1,115 +1,75 @@
-import { collection, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "./firebase"
+// app/lib/resume.ts
+
+// Base interface for all items (adds ID and Visibility control)
+export interface ResumeItem {
+  id: string
+  isVisible: boolean // User can toggle this ON/OFF
+  isGenerated?: boolean // Tag if AI added this specific item
+}
+
+export interface ResumeSection extends ResumeItem {
+  title: string
+  items: string[] // For simple lists like Achievements
+  content?: string // For paragraph content
+}
+
+export interface ExperienceItem extends ResumeItem {
+  company: string
+  role: string
+  start: string
+  end: string
+  location?: string
+  bullets: string[]
+}
+
+export interface ProjectItem extends ResumeItem {
+  title: string
+  tech: string[]
+  bullets: string[]
+  link?: string
+}
+
+export interface EducationItem extends ResumeItem {
+  school: string
+  degree: string
+  field: string
+  start: string
+  end: string
+  gpa?: string
+}
+
+export interface SkillSet {
+  languages: string[]
+  frameworks: string[]
+  tools: string[]
+  concepts: string[]
+}
 
 export interface ParsedResumeData {
-  name: string
-  email: string
-  phone: string
-  skills: string[]
-  experience: Array<{
-    title: string
-    company: string
-    duration: string
-    description: string
-  }>
-  education: Array<{
-    degree: string
-    institution: string
-    year: string
-  }>
-  projects: Array<{
+  personal: {
     name: string
-    description: string
-    technologies: string[]
-  }>
-}
-
-export interface ResumeRecord {
-  id?: string
-  userId: string
-  layoutId?: string
-  parsedData: ParsedResumeData
-  jobDescription?: string
-  fileUrl?: string
-  filePath?: string
-  createdAt: any
-  updatedAt: any
-}
-
-/**
- * Save parsed resume data to Firestore
- */
-export async function saveParsedResume(
-  userId: string,
-  parsedData: ParsedResumeData,
-  fileUrl?: string,
-  filePath?: string
-): Promise<string> {
-  if (!db) {
-    throw new Error("Firestore not initialized")
+    email: string
+    phone: string
+    linkedin: string
+    location: string
+    summary: string
   }
-
-  const resumeRef = doc(collection(db, "resumes"))
-  const resumeId = resumeRef.id
-
-  await setDoc(resumeRef, {
-    userId,
-    parsedData,
-    fileUrl: fileUrl || null,
-    filePath: filePath || null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  })
-
-  return resumeId
+  experience: ExperienceItem[]
+  education: EducationItem[]
+  projects: ProjectItem[]
+  skills: SkillSet
+  // "customSections" ensures Field Work, Awards, Hobbies never fade away
+  customSections: ResumeSection[] 
 }
 
-/**
- * Save final generated resume
- */
-export async function saveGeneratedResume(
-  userId: string,
-  resumeId: string,
-  layoutId: string,
-  jobDescription: string,
-  content: any
-): Promise<void> {
-  if (!db) {
-    throw new Error("Firestore not initialized")
-  }
+// Helper to generate IDs
+export const generateId = () => Math.random().toString(36).substr(2, 9)
 
-  const resumeRef = doc(db, "resumes", resumeId)
-
-  await setDoc(
-    resumeRef,
-    {
-      layoutId,
-      jobDescription,
-      content,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  )
+export const initialResumeData: ParsedResumeData = {
+  personal: { name: "", email: "", phone: "", linkedin: "", location: "", summary: "" },
+  experience: [],
+  education: [],
+  projects: [],
+  skills: { languages: [], frameworks: [], tools: [], concepts: [] },
+  customSections: [] 
 }
-
-/**
- * Get resume by ID
- */
-export async function getResume(resumeId: string): Promise<ResumeRecord | null> {
-  if (!db) {
-    throw new Error("Firestore not initialized")
-  }
-
-  const resumeRef = doc(db, "resumes", resumeId)
-  const snapshot = await getDoc(resumeRef)
-
-  if (!snapshot.exists()) {
-    return null
-  }
-
-  return {
-    id: snapshot.id,
-    ...snapshot.data(),
-  } as ResumeRecord
-}
-

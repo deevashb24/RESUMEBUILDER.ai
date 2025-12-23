@@ -1,258 +1,72 @@
 import { NextRequest, NextResponse } from "next/server"
+import { GoogleGenerativeAI } from "@google/generative-ai"
+import { generateId } from "@/lib/resume" // Ensure this imports correctly
 
-// Dynamic imports for server-side only packages
-let mammoth: any
-let pdfParse: any
-
-// Lazy load these packages (they're server-side only)
-async function loadParsers() {
-  if (!mammoth) {
-    mammoth = (await import("mammoth")).default
-  }
-  if (!pdfParse) {
-    pdfParse = (await import("pdf-parse")).default
-  }
-}
-
-/**
- * API Route: Parse Resume Document
- * 
- * Accepts PDF or DOCX files, extracts text, and sends to AI for structured parsing.
- * Returns structured resume data in JSON format.
- * 
- * Architecture:
- * - Server-side only (no client exposure of AI keys)
- * - Supports PDF (pdf-parse) and DOCX (mammoth)
- * - Uses Gemini or OpenAI API for intelligent parsing
- */
-
-interface ParsedResume {
-  name: string
-  email: string
-  phone: string
-  skills: string[]
-  experience: Array<{
-    title: string
-    company: string
-    duration: string
-    description: string
-  }>
-  education: Array<{
-    degree: string
-    institution: string
-    year: string
-  }>
-  projects: Array<{
-    name: string
-    description: string
-    technologies: string[]
-  }>
-}
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
-    const file = formData.get("file") as File
+    const { text } = await request.json()
 
-    if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      )
+    if (!text) {
+      return NextResponse.json({ error: "No text provided" }, { status: 400 })
     }
 
-    // Validate file type
-    const fileType = file.type
-    const fileName = file.name.toLowerCase()
-    const isPDF = fileType === "application/pdf" || fileName.endsWith(".pdf")
-    const isDOCX =
-      fileType ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      fileName.endsWith(".docx")
+    // LAYER 1: Pre-clean
+    const cleanedText = text
+      .replace(/(\r\n|\n|\r)/gm, " ")
+      .replace(/\s+/g, " ")
+      .trim()
 
-    if (!isPDF && !isDOCX) {
-      return NextResponse.json(
-        { error: "Unsupported file type. Please upload PDF or DOCX." },
-        { status: 400 }
-      )
+    // LAYER 2: "Archivist" Prompt - Extract EVERYTHING
+    const prompt = `
+      You are an expert Resume Archivist. 
+      Your goal is to extract 100% of the candidate's history, including "Field Work", "Volunteering", "Achievements", "Hobbies", or "Certifications".
+      
+      RULES:
+      1. DO NOT FILTER: Even if an item seems irrelevant to a typical job, extract it. The user will decide later what to keep.
+      2. PRESERVE CUSTOM SECTIONS: If you see "Field Work" or "Awards", put them in 'customSections'.
+      3. STRUCTURE: Use the JSON format below.
+
+      Output JSON Structure:
+      {
+        "personal": { "name": "...", "email": "...", "phone": "...", "linkedin": "...", "location": "...", "summary": "..." },
+        "skills": { "languages": [], "frameworks": [], "tools": [], "concepts": [] },
+        "experience": [ { "company": "...", "role": "...", "start": "...", "end": "...", "bullets": ["..."] } ],
+        "projects": [ { "title": "...", "tech": ["..."], "bullets": ["..."] } ],
+        "education": [ { "school": "...", "degree": "...", "field": "...", "start": "...", "end": "..." } ],
+        "customSections": [ { "title": "e.g. Field Work", "items": ["..."], "content": "..." } ]
+      }
+
+      RESUME TEXT:
+      ${cleanedText}
+    `
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json", temperature: 0 },
+    })
+
+    const responseText = result.response.text()
+    const rawData = JSON.parse(responseText)
+
+    // LAYER 3: Data Enrichment (Add IDs and Visibility Defaults)
+    // This is the "Logic" that enables user control later
+    const enrichedData = {
+      ...rawData,
+      experience: rawData.experience?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
+      education: rawData.education?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
+      projects: rawData.projects?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
+      customSections: rawData.customSections?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
     }
 
-    // Load parsers
-    await loadParsers()
+    return NextResponse.json({ success: true, data: enrichedData })
 
-    // Extract text from document
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    let extractedText = ""
-
-    if (isPDF) {
-      const pdfData = await pdfParse(buffer)
-      extractedText = pdfData.text
-    } else if (isDOCX) {
-      const result = await mammoth.extractRawText({ buffer })
-      extractedText = result.value
-    }
-
-    if (!extractedText || extractedText.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Could not extract text from document" },
-        { status: 400 }
-      )
-    }
-
-    // Parse with AI (Gemini or OpenAI)
-    const parsedResume = await parseResumeWithAI(extractedText)
-
-    return NextResponse.json({ success: true, data: parsedResume })
   } catch (error: any) {
     console.error("Error parsing resume:", error)
-    return NextResponse.json(
-      { error: error.message || "Failed to parse resume" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to parse resume" }, { status: 500 })
   }
 }
-
-/**
- * Parse resume text using AI (Gemini or OpenAI)
- * Returns structured JSON with resume data
- */
-async function parseResumeWithAI(resumeText: string): Promise<ParsedResume> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY
-  const useOpenAI = !!process.env.OPENAI_API_KEY
-
-  if (!apiKey) {
-    throw new Error(
-      "No AI API key found. Please set GEMINI_API_KEY or OPENAI_API_KEY in environment variables."
-    )
-  }
-
-  const prompt = `Parse the following resume text and extract structured information. Return ONLY valid JSON in this exact format (no markdown, no code blocks):
-
-{
-  "name": "Full Name",
-  "email": "email@example.com",
-  "phone": "+1234567890",
-  "skills": ["skill1", "skill2"],
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "duration": "Jan 2020 - Present",
-      "description": "Job description"
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree Name",
-      "institution": "University Name",
-      "year": "2020"
-    }
-  ],
-  "projects": [
-    {
-      "name": "Project Name",
-      "description": "Project description",
-      "technologies": ["tech1", "tech2"]
-    }
-  ]
-}
-
-Resume text:
-${resumeText.substring(0, 8000)}`
-
-  if (useOpenAI) {
-    return await parseWithOpenAI(apiKey, prompt)
-  } else {
-    return await parseWithGemini(apiKey, prompt)
-  }
-}
-
-async function parseWithGemini(apiKey: string, prompt: string): Promise<ParsedResume> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      }),
-    }
-  )
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Gemini API error: ${error}`)
-  }
-
-  const data = await response.json()
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-  if (!text) {
-    throw new Error("No response from Gemini API")
-  }
-
-  // Extract JSON from response (handle markdown code blocks if present)
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    throw new Error("Could not extract JSON from AI response")
-  }
-
-  return JSON.parse(jsonMatch[0])
-}
-
-async function parseWithOpenAI(apiKey: string, prompt: string): Promise<ParsedResume> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a resume parser. Extract structured information and return ONLY valid JSON, no markdown formatting.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`OpenAI API error: ${error}`)
-  }
-
-  const data = await response.json()
-  const text = data.choices?.[0]?.message?.content
-
-  if (!text) {
-    throw new Error("No response from OpenAI API")
-  }
-
-  // Extract JSON from response
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    throw new Error("Could not extract JSON from AI response")
-  }
-
-  return JSON.parse(jsonMatch[0])
-}
-
