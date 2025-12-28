@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardNavbar } from "@/components/dashboard-navbar"
 import { useAuth } from "@/lib/auth-context"
@@ -13,18 +13,25 @@ export default function DashboardLayout({
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  // Redirect if not authenticated
-  if (!loading && !user) {
-    router.replace("/")
-    return null
-  }
+  // FIX: Move the side effect (redirect) into useEffect
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/")
+    }
+  }, [user, loading, router])
 
+  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
       </div>
     )
+  }
+
+  // If not loading and no user, we are redirecting. Return null to prevent flash.
+  if (!user) {
+    return null
   }
 
   return (
