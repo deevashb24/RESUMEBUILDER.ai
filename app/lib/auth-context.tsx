@@ -12,11 +12,13 @@ import {
   createUserWithEmailAndPassword,
   AuthError,
 } from "firebase/auth"
-import { auth } from "./firebase"
+import { doc, getDoc, setDoc } from "firebase/firestore" // Import Firestore methods
+import { auth, db } from "./firebase" // Import db
 
 interface AuthContextValue {
   user: FirebaseUser | null
   loading: boolean
+  isPremium: boolean // NEW: Add this property
   loginWithGoogle: () => Promise<void>
   loginWithApple: () => Promise<void>
   loginWithEmail: (email: string, password: string) => Promise<void>
@@ -28,42 +30,67 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isPremium, setIsPremium] = useState(false) // NEW: State for premium
 
   useEffect(() => {
-    // Only subscribe if auth is available (client-side)
     if (typeof window === "undefined") {
       setLoading(false)
       return
     }
 
-    // Check if auth is initialized
     if (!auth) {
-      console.warn("⚠️ Firebase Auth is not initialized. Please check your environment variables.")
+      console.warn("⚠️ Firebase Auth is not initialized.")
       setLoading(false)
       return
     }
 
     try {
-      // Subscribe to auth state changes
       const unsubscribe = onAuthStateChanged(
         auth,
-        (firebaseUser) => {
+        async (firebaseUser) => {
+          // 1. Set the Auth User
           setUser(firebaseUser)
+
+          if (firebaseUser) {
+            // 2. CHECK DATABASE for User Document
+            try {
+              if (db) {
+                const userRef = doc(db, "users", firebaseUser.uid)
+                const userSnap = await getDoc(userRef)
+
+                if (userSnap.exists()) {
+                  // User exists, check premium status
+                  const data = userSnap.data()
+                  setIsPremium(data.isPremium === true)
+                } else {
+                  // User is NEW -> Create DB Entry
+                  await setDoc(userRef, {
+                    email: firebaseUser.email,
+                    createdAt: new Date().toISOString(),
+                    isPremium: false,
+                    provider: "google/email",
+                  })
+                  setIsPremium(false)
+                }
+              }
+            } catch (dbError) {
+              console.error("❌ Error fetching/creating user profile:", dbError)
+              // Fail safe: assume not premium
+              setIsPremium(false)
+            }
+          } else {
+            // User logged out
+            setIsPremium(false)
+          }
+
           setLoading(false)
         },
         (error: AuthError) => {
           console.error("❌ Auth state change error:", error)
-          // Handle specific auth errors
-          if (error.code === "auth/network-request-failed") {
-            console.error("Network error: Check your internet connection")
-          } else if (error.code === "auth/invalid-api-key") {
-            console.error("Invalid API key: Check your Firebase configuration")
-          }
           setLoading(false)
         }
       )
 
-      // Cleanup subscription on unmount
       return () => unsubscribe()
     } catch (error: any) {
       console.error("❌ Error setting up auth listener:", error)
@@ -72,57 +99,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const loginWithGoogle = async () => {
-    if (!auth) {
-      throw new Error("Firebase auth not initialized. Please check your environment variables.")
-    }
+    if (!auth) throw new Error("Firebase auth not initialized.")
     const provider = new GoogleAuthProvider()
-    
-    // Configure provider to show account selection
-    provider.setCustomParameters({
-      prompt: "select_account", // Forces account selection - shows Gmail account picker
-    })
-    
-    // Add scopes if needed
+    provider.setCustomParameters({ prompt: "select_account" })
     provider.addScope("profile")
     provider.addScope("email")
     
     try {
-      // This will open Google's popup with account selection
-      // User will see all their Gmail accounts to choose from
       await signInWithPopup(auth, provider)
-      // Auth state will be updated automatically via onAuthStateChanged
     } catch (error: any) {
-      // Handle popup blocked error
       if (error.code === "auth/popup-blocked") {
-        throw new Error("Popup was blocked by your browser. Please allow popups for this site and try again.")
+        throw new Error("Popup blocked. Please allow popups.")
       }
-      // Handle popup closed error
-      if (error.code === "auth/popup-closed-by-user") {
-        throw new Error("Sign-in popup was closed. Please try again.")
-      }
-      // Handle other errors
       throw error
     }
   }
 
   const loginWithApple = async () => {
-    if (!auth) {
-      throw new Error("Firebase auth not initialized. Please check your environment variables.")
-    }
+    if (!auth) throw new Error("Firebase auth not initialized.")
     const provider = new OAuthProvider("apple.com")
     await signInWithPopup(auth, provider)
   }
 
   const loginWithEmail = async (email: string, password: string) => {
-    if (!auth) {
-      throw new Error("Firebase auth not initialized. Please check your environment variables.")
-    }
+    if (!auth) throw new Error("Firebase auth not initialized.")
     try {
-      // Try to sign in
       await signInWithEmailAndPassword(auth, email, password)
     } catch (error: any) {
-      // If user not found, try to create account
       if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
+        // If user not found, try to create account (simple logic for now)
         await createUserWithEmailAndPassword(auth, email, password)
       } else {
         throw error
@@ -134,6 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) return
     try {
       await signOut(auth)
+      setUser(null)
+      setIsPremium(false)
     } catch (error) {
       console.error("Error signing out:", error)
       throw error
@@ -142,7 +149,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, loginWithGoogle, loginWithApple, loginWithEmail, logout }}
+      value={{ 
+        user, 
+        loading, 
+        isPremium, // Expose this to the app
+        loginWithGoogle, 
+        loginWithApple, 
+        loginWithEmail, 
+        logout 
+      }}
     >
       {children}
     </AuthContext.Provider>
