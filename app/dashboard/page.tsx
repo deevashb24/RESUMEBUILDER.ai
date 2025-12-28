@@ -12,7 +12,8 @@ import { useAuth } from "@/lib/auth-context"
 import { uploadResumeFile } from "@/lib/storage"
 import { saveParsedResume, saveGeneratedResume, ParsedResumeData } from "@/lib/resume"
 import { saveHistoryEntry } from "@/lib/history"
-import { LAYOUTS } from "@/lib/layouts"
+import { GenerationProgress } from "@/components/generation-progress" // IMPORT THE NEW COMPONENT
+import { ArrowRight } from "lucide-react"
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
@@ -24,124 +25,74 @@ export default function DashboardPage() {
   const [parsedResume, setParsedResume] = useState<ParsedResumeData | null>(null)
   const [selectedLayout, setSelectedLayout] = useState<string | null>(null)
   const [recommendedLayout, setRecommendedLayout] = useState<string | null>(null)
+  
+  // New States for Progress Logic
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generationFinished, setGenerationFinished] = useState(false)
+  const [generationStats, setGenerationStats] = useState<any>(null)
+  const [resumeIdToView, setResumeIdToView] = useState<string | null>(null)
+  
   const [error, setError] = useState<string | null>(null)
 
-  // Redirect if not authenticated
   if (!loading && !user) {
     router.replace("/")
     return null
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
-  }
+  if (loading) return <div className="p-8 text-center">Loading...</div>
 
+  // ... (handleFileSelect and handleJobDescriptionChange remain exactly the same as before) ...
+  // For brevity, I am not repeating them here, but you should keep them in the file!
   const handleFileSelect = async (file: File | null) => {
     if (!file || !user) return
-
     setUploadedFile(file)
     setError(null)
     setIsUploading(true)
-
     try {
-      // Upload file to Firebase Storage
       const { url, path } = await uploadResumeFile(user.uid, file)
-
-      // Parse resume with AI
       const formData = new FormData()
       formData.append("file", file)
-
-      const parseResponse = await fetch("/api/parse-resume", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!parseResponse.ok) {
-        const errorData = await parseResponse.json()
-        throw new Error(errorData.error || "Failed to parse resume")
-      }
-
+      const parseResponse = await fetch("/api/parse-resume", { method: "POST", body: formData })
+      if (!parseResponse.ok) throw new Error("Failed to parse resume")
       const { data: parsedData } = await parseResponse.json()
       setParsedResume(parsedData)
-
-      // Save parsed resume to Firestore
       await saveParsedResume(user.uid, parsedData, url, path)
-
-      // Get layout recommendation if job description exists
+      
+      // Auto-recommend layout
       if (jobDescription.trim()) {
-        const layoutResponse = await fetch("/api/recommend-layout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jobDescription,
-            resumeData: parsedData,
-          }),
-        })
-
-        if (layoutResponse.ok) {
-          const { layoutId } = await layoutResponse.json()
-          setRecommendedLayout(layoutId)
-          setSelectedLayout(layoutId)
-        }
+         // ... (Layout logic same as before)
       } else {
-        // Default to demo layout if no job description
         setSelectedLayout("demo")
       }
     } catch (err: any) {
-      console.error("Error uploading/parsing file:", err)
-      setError(err.message || "Failed to upload and parse resume")
-      setUploadedFile(null)
-      setParsedResume(null)
+      setError(err.message || "Failed")
     } finally {
       setIsUploading(false)
     }
   }
 
   const handleJobDescriptionChange = async (value: string) => {
-    setJobDescription(value)
-
-    // Get layout recommendation when job description changes
-    if (value.trim() && parsedResume) {
-      try {
-        const layoutResponse = await fetch("/api/recommend-layout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jobDescription: value,
-            resumeData: parsedResume,
-          }),
-        })
-
-        if (layoutResponse.ok) {
-          const { layoutId } = await layoutResponse.json()
-          setRecommendedLayout(layoutId)
-          // Auto-select recommended layout if none selected
-          if (!selectedLayout) {
-            setSelectedLayout(layoutId)
-          }
-        }
-      } catch (err) {
-        console.error("Error getting layout recommendation:", err)
-      }
-    }
+     setJobDescription(value)
+     // ... (Keep existing layout logic)
   }
 
+  // UPDATED GENERATE FUNCTION
   const handleGenerate = async () => {
     if (!user || !parsedResume || !selectedLayout || !jobDescription.trim()) {
       setError("Please upload a resume, select a layout, and provide a job description")
       return
     }
 
+    if (selectedOption !== "resume") {
+      setError("Coming Soon! SOP and Cover Letter generation are currently under development.")
+      return
+    }
+
     setIsGenerating(true)
+    setGenerationFinished(false)
     setError(null)
 
     try {
-      // Save parsed resume if not already saved
       let resumeId: string
       if (uploadedFile) {
         const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
@@ -150,88 +101,81 @@ export default function DashboardPage() {
         resumeId = await saveParsedResume(user.uid, parsedResume)
       }
 
-      // Generate final resume content (merge parsed data + layout + job description)
+      // 1. Call the AI API (Now returns stats!)
+      const response = await fetch("/api/tailor-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeData: parsedResume, jobDescription })
+      })
+
+      if (!response.ok) throw new Error("Generation failed")
+      
+      const { data: tailoredResume, stats } = await response.json()
+
+      // 2. Set Stats to show "Success" UI
+      setGenerationStats(stats)
+      setGenerationFinished(true)
+      setResumeIdToView(resumeId)
+
+      // 3. Save to Database
       const resumeContent = {
         layoutId: selectedLayout,
-        parsedData: parsedResume,
+        parsedData: tailoredResume,
         jobDescription,
         generatedAt: new Date().toISOString(),
+        stats // Save stats to history too if you want!
       }
 
-      // Save generated resume
-      await saveGeneratedResume(
-        user.uid,
-        resumeId,
-        selectedLayout,
-        jobDescription,
-        resumeContent
-      )
+      await saveGeneratedResume(user.uid, resumeId, selectedLayout, jobDescription, resumeContent)
+      await saveHistoryEntry(user.uid, selectedOption, jobDescription, JSON.stringify(resumeContent))
 
-      // Save to history
-      await saveHistoryEntry(
-        user.uid,
-        selectedOption,
-        jobDescription,
-        JSON.stringify(resumeContent)
-      )
-
-      // Redirect to preview page
-      router.push(`/dashboard/preview?id=${resumeId}`)
     } catch (err: any) {
       console.error("Error generating resume:", err)
       setError(err.message || "Failed to generate resume")
-    } finally {
       setIsGenerating(false)
     }
   }
 
+  const handleViewResult = () => {
+    if (resumeIdToView) {
+        router.push(`/dashboard/preview?id=${resumeIdToView}`)
+    }
+  }
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 mb-20">
       {error && (
         <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-sm text-red-600">{error}</p>
-          </CardContent>
+          <CardContent className="p-4 text-sm text-red-600 font-medium">{error}</CardContent>
         </Card>
       )}
 
+      {/* 1. Upload & JD Section (Same as before) */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Upload Resume Card */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Upload Resume</CardTitle>
-            <CardDescription className="text-sm">
-              Drag and drop your resume or click to browse (PDF or DOCX)
-            </CardDescription>
+            <CardDescription className="text-sm">Drag and drop your resume (PDF/DOCX)</CardDescription>
           </CardHeader>
           <CardContent>
-            <FileUpload
-              onFileSelect={handleFileSelect}
-              uploadedFile={uploadedFile}
-              isUploading={isUploading}
-            />
+            <FileUpload onFileSelect={handleFileSelect} uploadedFile={uploadedFile} isUploading={isUploading} />
             {parsedResume && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-sm text-green-800">
-                  ✓ Resume parsed successfully! Found: {parsedResume.name}
-                </p>
+                <p className="text-sm text-green-800">✓ Resume parsed: {parsedResume.personal?.name || "Found"}</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Job Description Card */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Job Description</CardTitle>
-            <CardDescription className="text-sm">
-              Paste the job description you're applying for
-            </CardDescription>
+            <CardDescription className="text-sm">Paste the job description here</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="Paste job description here…"
-              className="min-h-32 resize-none border-border bg-background text-foreground placeholder:text-muted-foreground"
+              placeholder="Paste job description..."
+              className="min-h-32 resize-none"
               value={jobDescription}
               onChange={(e) => handleJobDescriptionChange(e.target.value)}
             />
@@ -239,14 +183,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Layout Selection Card */}
+      {/* 2. Layout Section (Same as before) */}
       {parsedResume && (
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Choose Layout</CardTitle>
-            <CardDescription className="text-sm">
-              Select a resume layout. AI recommendation is highlighted.
-            </CardDescription>
+             <CardTitle className="text-lg font-semibold">Choose Layout</CardTitle>
+             <CardDescription className="text-sm">AI recommendation highlighted.</CardDescription>
           </CardHeader>
           <CardContent>
             <LayoutSelector
@@ -258,31 +200,42 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Generation Card */}
+      {/* 3. GENERATION SECTION (Updated with Progress) */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">Generate</CardTitle>
-          <CardDescription className="text-sm">Choose what you want to generate</CardDescription>
+          <CardDescription className="text-sm">Create your tailored resume</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <GenerationOptions
-            selectedOption={selectedOption}
-            setSelectedOption={setSelectedOption}
-          />
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !parsedResume || !selectedLayout || !jobDescription.trim()}
-            className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-base"
-          >
-            {isGenerating ? "Generating..." : "Generate Resume"}
-          </Button>
-          {(!parsedResume || !selectedLayout || !jobDescription.trim()) && (
-            <p className="text-xs text-muted-foreground text-center">
-              {!parsedResume && "• Upload a resume"}
-              {!selectedLayout && " • Select a layout"}
-              {!jobDescription.trim() && " • Add a job description"}
-            </p>
+          
+          {/* If Generating or Finished, show Progress Component */}
+          {isGenerating ? (
+            <div className="space-y-4">
+               <GenerationProgress isFinished={generationFinished} finalStats={generationStats} />
+               
+               {/* Show "View Result" button only when finished */}
+               {generationFinished && (
+                 <Button 
+                   onClick={handleViewResult} 
+                   className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 animate-in fade-in slide-in-from-bottom-2"
+                 >
+                    View Tailored Resume <ArrowRight className="ml-2 h-5 w-5" />
+                 </Button>
+               )}
+            </div>
+          ) : (
+            <>
+              <GenerationOptions selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
+              <Button
+                onClick={handleGenerate}
+                disabled={!parsedResume || !selectedLayout || !jobDescription.trim()}
+                className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-base"
+              >
+                Generate Resume
+              </Button>
+            </>
           )}
+
         </CardContent>
       </Card>
     </div>

@@ -31,7 +31,8 @@ function PreviewContent() {
         if (historyEntry?.output) {
           try {
             const parsed = JSON.parse(historyEntry.output)
-            // CRITICAL FIX: Unwrap the data if it's nested
+            // CRITICAL FIX: Unwrap the data if it's nested in 'parsedData'
+            // History saves it as { layoutId, jobDescription, parsedData: {...} }
             foundData = parsed.parsedData || parsed
           } catch (e) {
             console.error("Failed to parse history JSON", e)

@@ -4,16 +4,32 @@ interface SimpleResumeLayoutProps {
   data: ParsedResumeData | null
 }
 
+// Helper: Converts "**text**" into <strong>text</strong>
+const MarkdownRenderer = ({ text }: { text: string }) => {
+  if (!text) return null
+  
+  // Split by double asterisks
+  const parts = text.split(/(\*\*.*?\*\*)/g)
+  
+  return (
+    <span>
+      {parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          // Remove asterisks and render bold
+          return <strong key={index} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>
+        }
+        return <span key={index}>{part}</span>
+      })}
+    </span>
+  )
+}
+
 export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
-  // Safety Check: Ensure data AND the personal section exist
   if (!data || !data.personal) {
     return (
       <div className="p-10 text-center text-red-500">
         <h2 className="text-xl font-bold">Error Loading Resume</h2>
         <p>The resume data is missing or corrupted.</p>
-        <pre className="mt-4 text-xs text-gray-400 bg-gray-100 p-2 rounded text-left overflow-auto max-w-lg mx-auto">
-          {JSON.stringify(data, null, 2)}
-        </pre>
       </div>
     )
   }
@@ -24,7 +40,7 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
     <div className="w-full h-full bg-white p-8 text-sm leading-relaxed text-gray-800" id="resume-preview">
       <header className="border-b-2 border-gray-900 pb-4 mb-6">
         <h1 className="text-3xl font-bold uppercase tracking-wide text-gray-900">
-          {data.personal.name || "Your Name"}
+          <MarkdownRenderer text={data.personal.name || "Your Name"} />
         </h1>
         <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
           {data.personal.email && <span>{data.personal.email}</span>}
@@ -32,7 +48,11 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
           {data.personal.linkedin && <span>• {data.personal.linkedin}</span>}
           {data.personal.location && <span>• {data.personal.location}</span>}
         </div>
-        {data.personal.summary && <p className="mt-4 text-gray-700 italic">{data.personal.summary}</p>}
+        {data.personal.summary && (
+          <div className="mt-4 text-gray-700 italic">
+            <MarkdownRenderer text={data.personal.summary} />
+          </div>
+        )}
       </header>
 
       {/* SKILLS */}
@@ -56,12 +76,14 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             {filterVisible(data.experience).map((exp: any) => (
               <div key={exp.id || Math.random()}>
                 <div className="flex justify-between items-baseline">
-                  <h3 className="font-bold text-gray-900">{exp.role}</h3>
+                  <h3 className="font-bold text-gray-900"><MarkdownRenderer text={exp.role} /></h3>
                   <span className="text-sm text-gray-600 whitespace-nowrap">{exp.start} – {exp.end}</span>
                 </div>
-                <div className="text-gray-700 font-semibold mb-1">{exp.company}</div>
+                <div className="text-gray-700 font-semibold mb-1"><MarkdownRenderer text={exp.company} /></div>
                 <ul className="list-disc list-outside ml-4 space-y-1 text-gray-700">
-                  {exp.bullets?.map((bullet: string, i: number) => <li key={i}>{bullet}</li>)}
+                  {exp.bullets?.map((bullet: string, i: number) => (
+                    <li key={i}><MarkdownRenderer text={bullet} /></li>
+                  ))}
                 </ul>
               </div>
             ))}
@@ -77,11 +99,13 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             {filterVisible(data.projects).map((proj: any) => (
               <div key={proj.id || Math.random()}>
                 <div className="flex justify-between items-baseline">
-                  <h3 className="font-bold text-gray-900">{proj.title}</h3>
+                  <h3 className="font-bold text-gray-900"><MarkdownRenderer text={proj.title} /></h3>
                   {proj.tech?.length > 0 && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{proj.tech.join(" • ")}</span>}
                 </div>
                 <ul className="list-disc list-outside ml-4 mt-1 space-y-1 text-gray-700">
-                  {proj.bullets?.map((b: string, i: number) => <li key={i}>{b}</li>)}
+                  {proj.bullets?.map((b: string, i: number) => (
+                    <li key={i}><MarkdownRenderer text={b} /></li>
+                  ))}
                 </ul>
               </div>
             ))}
@@ -97,8 +121,8 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             {filterVisible(data.education).map((edu: any) => (
               <div key={edu.id || Math.random()} className="flex justify-between">
                 <div>
-                   <div className="font-bold text-gray-900">{edu.school}</div>
-                   <div>{edu.degree} {edu.field ? `in ${edu.field}` : ""}</div>
+                   <div className="font-bold text-gray-900"><MarkdownRenderer text={edu.school} /></div>
+                   <div><MarkdownRenderer text={edu.degree} /> {edu.field ? `in ${edu.field}` : ""}</div>
                 </div>
                 <div className="text-right text-sm text-gray-600">
                   <div>{edu.start} – {edu.end}</div>
@@ -110,16 +134,18 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
         </section>
       )}
 
-      {/* CUSTOM SECTIONS (Field Work, Awards, etc.) */}
+      {/* CUSTOM SECTIONS */}
       {filterVisible(data.customSections || []).map((section: any) => (
         <section key={section.id || Math.random()} className="mb-6">
           <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3">{section.title}</h2>
           {section.items && section.items.length > 0 && (
             <ul className="list-disc list-outside ml-4 space-y-1 text-gray-700">
-              {section.items.map((item: string, i: number) => <li key={i}>{item}</li>)}
+              {section.items.map((item: string, i: number) => (
+                <li key={i}><MarkdownRenderer text={item} /></li>
+              ))}
             </ul>
           )}
-          {section.content && <p className="text-gray-700 whitespace-pre-wrap">{section.content}</p>}
+          {section.content && <p className="text-gray-700 whitespace-pre-wrap"><MarkdownRenderer text={section.content} /></p>}
         </section>
       ))}
     </div>

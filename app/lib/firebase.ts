@@ -6,13 +6,13 @@ import { getFirestore, Firestore } from "firebase/firestore"
 import { getStorage, FirebaseStorage } from "firebase/storage"
 
 // Initialize Firebase app (avoid re-initialization in dev/hot reload)
-let app: FirebaseApp | null = null
-let auth: Auth | null = null
-let db: Firestore | null = null
-let storage: FirebaseStorage | null = null
+let app: FirebaseApp 
+let auth: Auth
+let db: Firestore
+let storage: FirebaseStorage
 
 // Only initialize on client-side
-if (typeof window !== "undefined") {
+
   
   // 1. Explicitly define config so the bundler can see the variables
   const firebaseConfig: FirebaseOptions = {
@@ -22,8 +22,8 @@ if (typeof window !== "undefined") {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  }
 
+  }
   // 2. Validate the config object values, NOT process.env keys
   const missingKeys = Object.entries(firebaseConfig)
     .filter(([_, value]) => typeof value !== "string" || value.trim() === "")
@@ -80,6 +80,6 @@ if (typeof window !== "undefined") {
       }
     }
   }
-}
+
 
 export { app, auth, db, storage }
