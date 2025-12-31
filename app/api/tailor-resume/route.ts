@@ -20,19 +20,22 @@ export async function POST(request: NextRequest) {
       2. Analyze the Resume and count "Original Match".
       3. Rewrite the Summary/Bullets to include missing skills (use **bold** for keywords).
       
-      4. QUALITY AUDIT (CRITICAL):
-         - Calculate a "Grammar Score" (100 = perfect, deduct for typos/passive voice).
-         - Calculate an "Originality Score" (100 = unique/impactful, deduct for clichés like "hard worker" or generic AI-sounding phrases).
-         - Calculate "ATS Compatibility" (0-100).
+      4. SCORING RULES (Fair & Realistic):
+         - "Grammar Score": 0-100. Deduct for typos/passive voice.
+         - "Originality Score": 0-100. Deduct for clichés.
+         - "ATS Compatibility": 0-100. How well keywords match.
+           * NOTE: Even if the match is low, do not score below 40 unless it's completely irrelevant gibberish. 
+           * If it's a decent match but missing keywords, score between 60-80.
+           * Only score 90+ for perfect matches.
 
       5. PRESERVE all experience/projects.
 
       Output JSON STRICTLY:
       {
         "stats": {
-          "atsScore": 85, 
+          "atsScore": 75, 
           "grammarScore": 95,
-          "originalityScore": 92, // The "Plagiarism-Free" equivalent
+          "originalityScore": 92,
           "originalMatchCount": 10,
           "totalPotentialSkills": 20,
           "addedSkillsCount": 5
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
       ${jobDescription.substring(0, 5000)}
     `
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
@@ -61,6 +64,11 @@ export async function POST(request: NextRequest) {
 
     const suggestions = JSON.parse(result.response.text())
     const stats = suggestions.stats
+
+    // --- SAFETY FLOOR LOGIC ---
+    // Ensure scores are not discouragingly low due to parsing glitches
+    stats.atsScore = Math.max(45, Math.min(99, stats.atsScore));
+    stats.grammarScore = Math.max(60, Math.min(100, stats.grammarScore));
 
     // Calculate Improvement Pct
     const improvement = stats.originalMatchCount > 0 

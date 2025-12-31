@@ -18,21 +18,12 @@ export async function generateContent(
 
   // --- 1. RESUME CONFIG ---
   if (type === "resume") {
+    // This part is largely handled by the API route, but kept for consistency
     systemInstruction = `
       You are an expert ATS Resume Optimizer.
-      Task: Tailor the user's resume to the Job Description.
-      Focus: Keywords, metrics, and impact.
     `
     jsonStructure = `
-      {
-        "personalInfo": { "fullName": "", "email": "", "phone": "", "linkedin": "", "location": "" },
-        "summary": "Professional summary...",
-        "skills": ["Skill1", "Skill2"],
-        "experience": [ { "company": "", "role": "", "duration": "", "points": ["..."] } ],
-        "education": [ { "school": "", "degree": "", "year": "" } ],
-        "projects": [ { "name": "", "tech": "", "description": "" } ],
-        "stats": { "atsScore": 85, "grammarScore": 95, "improvementPct": 30, "addedSkillsCount": 5, "originalityScore": 90 }
-      }
+      { "personalInfo": "..." }
     `
   } 
   
@@ -42,6 +33,10 @@ export async function generateContent(
       You are a professional Career Coach.
       Task: Write a persuasive Cover Letter connecting the user's resume experience to the Job Description.
       Tone: Professional, confident, and enthusiastic.
+      
+      SCORING:
+      - ATS Score: 0-100 (How well keywords match)
+      - Grammar: 0-100
     `
     jsonStructure = `
       {
@@ -51,14 +46,9 @@ export async function generateContent(
         "date": "Today's Date",
         "subject": "Application for [Role Name]",
         "salutation": "Dear Hiring Manager,",
-        "paragraphs": [
-          "Hook: Why I am applying...",
-          "Body 1: Specific achievement from resume matching JD...",
-          "Body 2: Soft skills and culture fit...",
-          "Call to Action: Request for interview."
-        ],
+        "paragraphs": [ "..." ],
         "signOff": "Sincerely,",
-        "stats": { "atsScore": 90, "grammarScore": 100, "addedSkillsCount": 0, "improvementPct": 0, "originalityScore": 95 }
+        "stats": { "atsScore": 85, "grammarScore": 95, "addedSkillsCount": 0, "improvementPct": 0, "originalityScore": 90 }
       }
     `
   }
@@ -67,21 +57,18 @@ export async function generateContent(
   else if (type === "sop") {
     systemInstruction = `
       You are a University Admissions Consultant.
-      Task: Write a Statement of Purpose (SOP) for a university application or research role.
+      Task: Write a Statement of Purpose (SOP).
       Tone: Narrative, reflective, and ambitious.
+      
+      SCORING:
+      - Evaluate how strong the narrative is for admission.
     `
     jsonStructure = `
       {
         "type": "sop",
         "title": "Statement of Purpose",
-        "paragraphs": [
-          "Introduction: My motivation and hook...",
-          "Academic Background: Highlights from resume...",
-          "Professional Experience: Real-world application...",
-          "Why This Program: Specific fit...",
-          "Conclusion: Future goals."
-        ],
-        "stats": { "atsScore": 90, "grammarScore": 100, "addedSkillsCount": 0, "improvementPct": 0, "originalityScore": 95 }
+        "paragraphs": [ "..." ],
+        "stats": { "atsScore": 85, "grammarScore": 95, "addedSkillsCount": 0, "improvementPct": 0, "originalityScore": 92 }
       }
     `
   }

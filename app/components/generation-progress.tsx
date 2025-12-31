@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { 
   Loader2, 
   CheckCircle2, 
@@ -9,8 +8,7 @@ import {
   ShieldCheck, 
   Zap, 
   Wand2, 
-  Fingerprint,
-  ArrowRight
+  Fingerprint
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -38,7 +36,6 @@ export function GenerationProgress({
 }: GenerationProgressProps) {
   const [progress, setProgress] = useState(0)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [simulatedScore, setSimulatedScore] = useState(0)
 
   // Dynamic Label Logic
   const finalStepLabel =
@@ -76,19 +73,19 @@ export function GenerationProgress({
       })
     }, 3000)
 
-    const scoreInterval = setInterval(() => {
-      setSimulatedScore((prev) => {
-        if (prev >= 65) return 65
-        return prev + 1
-      })
-    }, 150)
-
     return () => {
       clearInterval(progressInterval)
       clearInterval(stepInterval)
-      clearInterval(scoreInterval)
     }
   }, [isFinished, STEPS.length])
+
+  // --- SCORE COLOR HELPER ---
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-700"
+    if (score >= 60) return "text-blue-600"
+    if (score >= 40) return "text-orange-500"
+    return "text-red-600"
+  }
 
   // --- RENDER (Finished State) ---
   if (isFinished && finalStats) {
@@ -114,19 +111,28 @@ export function GenerationProgress({
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
                 <ShieldCheck className="w-4 h-4" /> ATS
               </div>
-              <div className="text-3xl font-black text-green-700">{finalStats.atsScore}%</div>
+              {/* Dynamic Color Applied Here */}
+              <div className={cn("text-3xl font-black", getScoreColor(finalStats.atsScore))}>
+                {finalStats.atsScore}%
+              </div>
             </div>
+            
             <div className="bg-white/60 p-4 rounded-xl border border-green-100/50 shadow-sm backdrop-blur-sm">
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
                 <Zap className="w-4 h-4" /> Impact
               </div>
-              <div className="text-3xl font-black text-green-700">{finalStats.grammarScore}%</div>
+              <div className={cn("text-3xl font-black", getScoreColor(finalStats.grammarScore))}>
+                {finalStats.grammarScore}%
+              </div>
             </div>
+            
             <div className="bg-white/60 p-4 rounded-xl border border-green-100/50 shadow-sm backdrop-blur-sm">
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
                 <Fingerprint className="w-4 h-4" /> Unique
               </div>
-              <div className="text-3xl font-black text-green-700">{finalStats.originalityScore}%</div>
+              <div className={cn("text-3xl font-black", getScoreColor(finalStats.originalityScore))}>
+                {finalStats.originalityScore}%
+              </div>
             </div>
           </div>
         </CardContent>
@@ -144,7 +150,7 @@ export function GenerationProgress({
              <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900">
-            AI is crafting your {generationType === 'sop' ? 'SOP' : generationType === 'cover-letter' ? 'Letter' : 'Resume'}
+            Cafting your {generationType === 'sop' ? 'SOP' : generationType === 'cover-letter' ? 'Letter' : 'Resume'}
           </h3>
           <p className="text-muted-foreground max-w-md mx-auto">
             Analyzing standard industry patterns and optimizing for the specific job description...

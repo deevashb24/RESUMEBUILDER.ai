@@ -2,6 +2,7 @@ import {
   collection, 
   addDoc, 
   updateDoc, 
+  deleteDoc, 
   doc, 
   getDoc, 
   serverTimestamp, 
@@ -9,7 +10,7 @@ import {
 } from "firebase/firestore"
 import { db } from "./firebase"
 
-// --- 1. ELITE DATA STRUCTURES ---
+// --- 1. DATA STRUCTURES ---
 
 export interface ResumeItem {
   id: string
@@ -56,7 +57,6 @@ export interface SkillSet {
 }
 
 export interface ParsedResumeData {
-  // We keep 'name' at the top level for Dashboard compatibility
   name?: string 
   personal: {
     name: string
@@ -70,7 +70,6 @@ export interface ParsedResumeData {
   education: EducationItem[]
   projects: ProjectItem[]
   skills: SkillSet
-  // The magic field that prevents "Field Work" from disappearing
   customSections: ResumeSection[] 
 }
 
@@ -88,6 +87,7 @@ export interface SavedResume {
 
 // --- 2. HELPER FUNCTIONS ---
 
+// ✅ FIXED: This export is required by your API route
 export const generateId = () => Math.random().toString(36).substr(2, 9)
 
 export const initialResumeData: ParsedResumeData = {
@@ -99,7 +99,7 @@ export const initialResumeData: ParsedResumeData = {
   customSections: [] 
 }
 
-// --- 3. DATABASE FUNCTIONS (The missing part!) ---
+// --- 3. DATABASE FUNCTIONS ---
 
 /**
  * Save a parsed resume to Firestore
@@ -118,10 +118,9 @@ export async function saveParsedResume(
       parsedData,
       fileUrl: fileUrl || null,
       filePath: filePath || null,
-      layoutId: "demo", // Default layout
+      layoutId: "demo",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      // Ensure dashboard can display a name even if nested in personal
       name: parsedData.name || parsedData.personal.name || "Untitled Resume" 
     })
     return docRef.id
@@ -179,5 +178,17 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
   } catch (error) {
     console.error("Error fetching resume:", error)
     throw error
+  }
+}
+
+/**
+ * Delete a resume document from Firestore
+ */
+export async function deleteResume(resumeId: string): Promise<void> {
+  if (!db) return
+  try {
+    await deleteDoc(doc(db, "resumes", resumeId))
+  } catch (error) {
+    console.error("Error deleting resume doc:", error)
   }
 }
