@@ -2,9 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { DashboardNavbar } from "@/components/dashboard-navbar"
-import { ResumeRenderer } from "@/components/resume-renderer" // Use the Renderer!
-import { LetterPreview } from "@/components/letter-preview" // NEW
+// import { DashboardNavbar } from "@/components/dashboard-navbar"  <-- REMOVED
+import { ResumeRenderer } from "@/components/resume-renderer"
+import { LetterPreview } from "@/components/letter-preview"
 import { getHistoryEntry } from "@/lib/history"
 import { getResume } from "@/lib/resume"
 
@@ -13,7 +13,7 @@ function PreviewContent() {
   const id = searchParams?.get("id")
 
   const [data, setData] = useState<any>(null)
-  const [docType, setDocType] = useState<string>("resume") // Track the type
+  const [docType, setDocType] = useState<string>("resume")
   const [layoutId, setLayoutId] = useState<string>("demo")
   const [loading, setLoading] = useState(true)
 
@@ -30,25 +30,23 @@ function PreviewContent() {
         let type = "resume"
         let layout = "demo"
 
-        // 1. Try fetching from History
+        // 1. Try fetching from History (This is where Letters/SOPs live)
         const historyEntry = await getHistoryEntry(id)
         
         if (historyEntry?.output) {
           try {
             const parsed = JSON.parse(historyEntry.output)
             
-            // Check if this is our new format { type, parsedData, ... }
             if (parsed.type) type = parsed.type
             if (parsed.layoutId) layout = parsed.layoutId
 
-            // Unwrap data
             foundData = parsed.parsedData || parsed
           } catch (e) {
             console.error("Failed to parse history JSON", e)
           }
         }
 
-        // 2. Fallback: Fetch from Resumes collection
+        // 2. Fallback: Fetch from Resumes collection (This is where Resumes live)
         if (!foundData) {
           const resumeEntry = await getResume(id)
           if (resumeEntry) {
@@ -77,36 +75,29 @@ function PreviewContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <DashboardNavbar />
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground p-8">
            Loading preview...
-        </div>
       </div>
     )
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <DashboardNavbar />
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground p-8">
           No data found.
-        </div>
       </div>
     )
   }
 
-  // --- RENDER LOGIC ---
   const isLetter = docType === "cover-letter" || docType === "sop"
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardNavbar />
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Navbar Removed to prevent Double Topbar */}
+      
       <div className="max-w-5xl mx-auto py-8 px-4 flex justify-center">
-         <div className={`bg-white shadow-lg rounded-lg overflow-hidden ${isLetter ? 'max-w-[210mm]' : 'w-full'}`}>
+         <div className={`bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300 ${isLetter ? 'max-w-[210mm]' : 'w-full'}`}>
             
-            {/* If Letter/SOP, use LetterPreview. Else use ResumeRenderer */}
             {isLetter ? (
               <LetterPreview data={data} />
             ) : (

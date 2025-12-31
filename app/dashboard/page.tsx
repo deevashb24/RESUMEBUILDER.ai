@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { FileUpload } from "@/components/file-upload"
-import { GenerationOptions } from "@/components/generation-options" // Your existing component
+import { GenerationOptions } from "@/components/generation-options"
 import { LayoutSelector } from "@/components/layout-selector"
 import { useAuth } from "@/lib/auth-context"
 import { uploadResumeFile } from "@/lib/storage"
-import { saveParsedResume, saveGeneratedResume, ParsedResumeData } from "@/lib/resume" // Preserved imports
+import { saveParsedResume, saveGeneratedResume, ParsedResumeData } from "@/lib/resume"
 import { saveHistoryEntry } from "@/lib/history"
 import { GenerationProgress } from "@/components/generation-progress"
 import { generateContent, GenerationType } from "@/actions/generate-content"
@@ -20,7 +20,6 @@ export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   
-  // State
   const [selectedOption, setSelectedOption] = useState<GenerationType>("resume")
   const [jobDescription, setJobDescription] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -29,21 +28,18 @@ export default function DashboardPage() {
   const [selectedLayout, setSelectedLayout] = useState<string | null>("demo")
   const [recommendedLayout, setRecommendedLayout] = useState<string | null>(null)
   
-  // Generation State
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationFinished, setGenerationFinished] = useState(false)
   const [generationStats, setGenerationStats] = useState<any>(null)
   const [resumeIdToView, setResumeIdToView] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Auth Check
   if (!loading && !user) {
     router.replace("/")
     return null
   }
   if (loading) return <div className="p-8 text-center">Loading...</div>
 
-  // --- 1. FILE UPLOAD HANDLER (Preserved) ---
   const handleFileSelect = async (file: File | null) => {
     if (!file || !user) return
     setUploadedFile(file)
@@ -60,8 +56,6 @@ export default function DashboardPage() {
       const { data: parsedData } = await parseResponse.json()
       setParsedResume(parsedData)
       await saveParsedResume(user.uid, parsedData, url, path)
-      
-      // Reset layout to demo or logic for recommendation
       setSelectedLayout("demo")
     } catch (err: any) {
       setError(err.message || "Failed to upload/parse resume")
@@ -70,7 +64,6 @@ export default function DashboardPage() {
     }
   }
 
-  // --- 2. GENERATE HANDLER (Updated but preserves Logic) ---
   const handleGenerate = async () => {
     if (!user || !parsedResume || !jobDescription.trim()) {
       setError("Please upload a resume and provide a job description")
@@ -83,7 +76,7 @@ export default function DashboardPage() {
 
     try {
       let resumeId: string
-      // Save parsed resume if it's from a fresh upload
+      // Always save parsed resume first
       if (uploadedFile) {
         const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
         resumeId = await saveParsedResume(user.uid, parsedResume, url, path)
@@ -93,10 +86,11 @@ export default function DashboardPage() {
 
       let generatedData: any
       let stats: any
+      let finalIdForPreview: string = resumeId // Default
 
       // === BRANCH LOGIC ===
       if (selectedOption === "resume") {
-        // A. RESUME GENERATION (Legacy Logic Preserved)
+        // --- RESUME PATH ---
         const response = await fetch("/api/tailor-resume", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -104,12 +98,11 @@ export default function DashboardPage() {
         })
 
         if (!response.ok) throw new Error("Resume generation failed")
-        
         const result = await response.json()
         generatedData = result.data
         stats = result.stats
 
-        // CRITICAL: Save to "Resumes" Collection (Preserved functionality)
+        // Save to Resumes Collection
         const resumeContent = {
           layoutId: selectedLayout,
           parsedData: generatedData,
@@ -118,40 +111,44 @@ export default function DashboardPage() {
           stats
         }
         await saveGeneratedResume(user.uid, resumeId, selectedLayout || "demo", jobDescription, resumeContent)
-
+        
+        // For resumes, we view the Resume ID
+        finalIdForPreview = resumeId
       } else {
-        // B. SOP / COVER LETTER GENERATION (New Logic)
+        // --- SOP / LETTER PATH ---
         const resumeTextString = JSON.stringify(parsedResume)
         const resultString = await generateContent(resumeTextString, jobDescription, selectedOption)
         const result = JSON.parse(resultString)
-        
         generatedData = result
         stats = result.stats
-        // Note: We don't call saveGeneratedResume here as that function likely expects a resume structure.
-        // We rely on saveHistoryEntry below for these text documents.
+        // For letters, we DO NOT use saveGeneratedResume. We rely on History.
       }
 
-      // === COMMON SAVE LOGIC ===
-      setGenerationStats(stats)
-      setGenerationFinished(true)
-      setResumeIdToView(resumeId)
-
-      // Save to History (Preserved functionality)
+      // === SAVE HISTORY & SET PREVIEW ID ===
       const finalHistoryContent = {
         type: selectedOption,
-        layoutId: selectedLayout, // Relevant for resume, ignored for letters
+        layoutId: selectedLayout,
         parsedData: generatedData, 
         jobDescription,
         generatedAt: new Date().toISOString(),
         stats
       }
 
-      await saveHistoryEntry(
+      const historyId = await saveHistoryEntry(
         user.uid, 
         selectedOption, 
         jobDescription, 
         JSON.stringify(finalHistoryContent)
       )
+
+      // FIX: If it's a letter/SOP, we MUST view the History Entry, not the Resume ID
+      if (selectedOption !== 'resume') {
+        finalIdForPreview = historyId
+      }
+
+      setGenerationStats(stats)
+      setGenerationFinished(true)
+      setResumeIdToView(finalIdForPreview)
 
     } catch (err: any) {
       console.error("Error generating:", err)
@@ -174,7 +171,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* 1. Upload & JD Section */}
+      {/* Upload & JD */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader>
@@ -207,7 +204,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* 2. Layout Section (Only visible for Resumes) */}
+      {/* Layout - ONLY for Resumes */}
       {parsedResume && selectedOption === "resume" && (
         <Card className="border-0 shadow-sm">
           <CardHeader>
@@ -223,7 +220,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* 3. GENERATION SECTION */}
+      {/* GENERATE SECTION */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">Generate</CardTitle>
@@ -233,7 +230,12 @@ export default function DashboardPage() {
           
           {isGenerating ? (
             <div className="space-y-4">
-               <GenerationProgress isFinished={generationFinished} finalStats={generationStats} />
+               {/* Updated Component with Type */}
+               <GenerationProgress 
+                  isFinished={generationFinished} 
+                  finalStats={generationStats} 
+                  generationType={selectedOption} 
+               />
                
                {generationFinished && (
                  <Button onClick={handleViewResult} className="w-full h-12 text-lg bg-green-600 hover:bg-green-700">
@@ -243,9 +245,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Uses your existing GenerationOptions component */}
               <GenerationOptions selectedOption={selectedOption} setSelectedOption={setSelectedOption} />
-              
               <Button
                 onClick={handleGenerate}
                 disabled={!parsedResume || !jobDescription.trim()}
