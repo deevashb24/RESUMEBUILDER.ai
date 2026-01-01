@@ -54,7 +54,7 @@ env:
       - RUNTIME
   
   - variable: LEMONSQUEEZY_WEBHOOK_SECRET
-    value: "idontknowwhatthisis"
+    value: "idontknowwhatthisis2"
     availability:
       - BUILD
       - RUNTIME
