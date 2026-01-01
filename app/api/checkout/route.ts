@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { createCheckout } from "@lemonsqueezy/lemonsqueezy.js"
 import { configureLemonSqueezy } from "@/lib/lemonsqueezy"
 
+
+
 export async function POST(request: NextRequest) {
+  console.log("DEBUG ENV VARS:", {
+    storeId: process.env.LEMONSQUEEZY_STORE_ID,
+    variantId: process.env.LEMONSQUEEZY_VARIANT_ID
+  })
+  
   configureLemonSqueezy()
   
   try {
