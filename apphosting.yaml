@@ -53,3 +53,33 @@ env:
       - BUILD
       - RUNTIME
   
+  - variable: LEMONSQUEEZY_WEBHOOK_SECRET
+    secret: "idontknowwhatthisis"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: LEMONSQUEEZY_API_KEY
+    value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5NGQ1OWNlZi1kYmI4LTRlYTUtYjE3OC1kMjU0MGZjZDY5MTkiLCJqdGkiOiI1MDI2YmFmY2Q5MzA1NWMxMTA0ZDczOTJiYWU2MDJjMmZhOGVhYjMzNzQ1ODFkZGZlYTgzODgwYmI4Njk0OTU4YzUxMDAxODExOGVkYmMzMyIsImlhdCI6MTc2Njg5OTk1OS4yNzQ3NjksIm5iZiI6MTc2Njg5OTk1OS4yNzQ3NzIsImV4cCI6MjA4MjQzMjc1OS4yNTUxMjMsInN1YiI6IjYyMTIzNTgiLCJzY29wZXMiOltdfQ.lcQJZrlYN0bzAa2ZY0lcA2iKgVOrHmeFqhWl3jEG0YHee6tNnQR5EI_COK8llvWMfvDmCaA1xX-oBFoXS3FatBSwOAKiDLAgqWwG6hp90edtKmTQxHxfsn8E2DtrbpHNezLjinrrhBNQtlRz12qt-TFi1NfljtmjWg2Tk3CwPJzGByT-hK71stNnNxLFY1NKS4w4TmjmqG6OtAhUFx-2InwNKZSu_5lGvoltn2I3q9lAZkA3uWo5wNGjRVwfcH4zAzP__o8Gb1RW7WJHNVdXOQssxBV4M3Ebrcj0g-h3Bcm0W3uyJaBTcR1zbrB2u7NLIjyW9BfdBVDT6r96dEeTVInTbYxJQEKAyfrUUJwkAMjnmE9igIblUysxymZ0sva6FO-W1Awb_ZP9AdEsszHcpeCerC6oRkSL5wgDH6ZnbF7a4dMxwarsqLvhZ-BkagI2U8TkQB9X4Xt_9b_yJTLCRrfWNBnczxZY_SSB8FfjUA9uLiL13dX-NVJ1Di3HEEP05yDAE0FI-rwK5rQMF6C6OU2rm3arHrlLmJ1OJDVA7pYujC7ARSkhIG1RPpFP4rrZwciRjCbeg_MJM4IWnCKBL6RSUArhafr738e5B0L0YSRPAMvZl3cNxMh0IgWOql3PAwDcZn-1-TzZqj0kvIP2OVrUlR4OOYxHyK8PxO4PuB4"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_APP_URL
+    value: "my-web-app--resume-16ae4.us-central1.hosted.app" 
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: LEMONSQUEEZY_STORE_ID
+    value: "262790"
+    availability:
+      - BUILD
+      - RUNTIME 
+  
+  - variable: LEMONSQUEEZY_VARIANT_ID
+    value: "1176164"
+    availability: 
+      - BUILD
+      - RUNTIME
+  
