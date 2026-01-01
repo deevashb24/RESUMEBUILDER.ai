@@ -66,7 +66,7 @@ env:
       - RUNTIME
   
   - variable: NEXT_PUBLIC_APP_URL
-    value: "my-web-app--resume-16ae4.us-central1.hosted.app" 
+    value: "https://my-web-app--resume-16ae4.us-central1.hosted.app" 
     availability:
       - BUILD
       - RUNTIME
