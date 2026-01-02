@@ -95,10 +95,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ... (Keep existing login/logout functions exactly as they are) ...
   
-  const loginWithGoogle = async () => { /* ... */ }
-  const loginWithApple = async () => { /* ... */ }
-  const loginWithEmail = async (email: string, password: string) => { /* ... */ }
-  const logout = async () => { /* ... */ }
+  const loginWithGoogle = async () => {
+    if (!auth) throw new Error("Firebase auth not initialized.")
+    const provider = new GoogleAuthProvider()
+    provider.setCustomParameters({ prompt: "select_account" })
+    provider.addScope("profile")
+    provider.addScope("email")
+    try {
+      await signInWithPopup(auth, provider)
+    } catch (error: any) {
+      if (error.code === "auth/popup-blocked") throw new Error("Popup blocked.")
+      throw error
+    }
+  }
+
+  const loginWithApple = async () => {
+    if (!auth) throw new Error("Firebase auth not initialized.")
+    const provider = new OAuthProvider("apple.com")
+    await signInWithPopup(auth, provider)
+  }
+
+  const loginWithEmail = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase auth not initialized.")
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+    } catch (error: any) {
+      if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
+        await createUserWithEmailAndPassword(auth, email, password)
+      } else {
+        throw error
+      }
+    }
+  }
+
+  const logout = async () => {
+    if (!auth) return
+    try {
+      await signOut(auth)
+      setUser(null)
+      setIsPremium(false)
+    } catch (error) {
+      console.error("Error signing out:", error)
+      throw error
+    }
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, isPremium, loginWithGoogle, loginWithApple, loginWithEmail, logout }}>
