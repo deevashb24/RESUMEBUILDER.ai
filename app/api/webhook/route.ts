@@ -39,9 +39,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Process Payload
+
     const payload = JSON.parse(text)
     const eventName = payload.meta.event_name
-    const userId = payload.meta.custom_data?.userId
+    
+    // FIX: Check for both 'userId' AND 'user_id'
+    const customData = payload.meta.custom_data || {}
+    const userId = customData.userId || customData.user_id
 
     console.log(`🔔 Webhook Verified: ${eventName} for User: ${userId}`)
 
