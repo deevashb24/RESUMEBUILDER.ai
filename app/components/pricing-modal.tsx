@@ -24,29 +24,36 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     setLoading(type)
 
     try {
-      const storeId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID!
+      // 1. Determine Variant ID
       let variantId = ""
-
-      // TODO: Replace with actual Environment Variables provided by user or config
       if (type === 'monthly') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_MONTHLY!
       if (type === 'quarterly') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_QUARTERLY!
       if (type === 'one-time') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ONETIME!
 
-      // If one-time, pass generationId in custom data
-      const customData = type === 'one-time' && generationId ? { generationId } : {}
+      // 2. Call our API Route
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          userEmail: user.email,
+          variantId: variantId
+        }),
+      })
 
-      const redirectUrl = window.location.href // Return to current page
+      const data = await response.json()
 
-      const checkoutUrl = await createCheckoutUrl(storeId, variantId, { email: user.email!, id: user.uid }, redirectUrl, customData)
-
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl
+      if (response.ok && data.url) {
+        window.location.href = data.url
       } else {
-        console.error("No checkout URL returned")
-        // Optionally show user feedback here
+        console.error("Checkout Failed:", data.error)
+        alert("Failed to start checkout. Please try again.")
       }
     } catch (error) {
       console.error("Checkout error:", error)
+      alert("An error occurred. Please try again.")
     } finally {
       setLoading(null)
     }

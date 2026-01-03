@@ -13,7 +13,7 @@ import { UserProfilePopup } from "@/components/user-profile-popup" // Import new
 export function DashboardNavbar() {
   const { user, logout, isPremium } = useAuth()
   const router = useRouter()
-  
+
   const [showPricing, setShowPricing] = useState(false)
   const [showProfile, setShowProfile] = useState(false) // Toggle for profile popup
 
@@ -48,7 +48,7 @@ export function DashboardNavbar() {
     <>
       <nav className="border-b border-border bg-card relative z-40">
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
-          
+
           {/* Logo Section */}
           <div className="flex items-center gap-8">
             <Link href="/dashboard" className="font-semibold text-foreground text-lg">
@@ -66,10 +66,10 @@ export function DashboardNavbar() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            
+
             {/* Premium Status / Upgrade Button */}
             {!isPremium ? (
-              <Button 
+              <Button
                 onClick={() => setShowPricing(true)}
                 size="sm"
                 className="hidden md:flex bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 shadow-md transition-all hover:scale-105"
@@ -88,8 +88,8 @@ export function DashboardNavbar() {
 
             {/* Avatar - Now clickable! */}
             <div className="relative">
-              <button 
-                onClick={() => setShowProfile(!showProfile)} 
+              <button
+                onClick={() => setShowProfile(!showProfile)}
                 className="rounded-full ring-offset-2 hover:ring-2 hover:ring-blue-500 transition-all focus:outline-none"
               >
                 <Avatar className="h-9 w-9 bg-secondary border border-gray-200">
@@ -104,15 +104,15 @@ export function DashboardNavbar() {
       </nav>
 
       {/* --- Modals & Popups --- */}
-      
+
       {/* 1. Pricing Modal */}
-      <PricingModal 
-        isOpen={showPricing} 
-        onClose={() => setShowPricing(false)} 
+      <PricingModal
+        open={showPricing}
+        onClose={() => setShowPricing(false)}
       />
 
       {/* 2. User Profile Popup */}
-      <UserProfilePopup 
+      <UserProfilePopup
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         onLogout={handleLogout}

@@ -77,12 +77,24 @@ env:
       - BUILD
       - RUNTIME 
   
-  - variable: LEMONSQUEEZY_VARIANT_ID
+  - variable: NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_MONTHLY
     value: "1176164"
     availability: 
       - BUILD
       - RUNTIME
   
+  - variable: NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_QUARTERLY
+    value: "1190390"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ONETIME
+    value: "1190391"
+    availability:
+      - BUILD
+      - RUNTIME
+
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
     availability:

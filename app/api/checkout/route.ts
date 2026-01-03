@@ -7,21 +7,22 @@ import { configureLemonSqueezy } from "@/lib/lemonsqueezy"
 export async function POST(request: NextRequest) {
   console.log("DEBUG ENV VARS:", {
     storeId: process.env.LEMONSQUEEZY_STORE_ID,
-    variantId: process.env.LEMONSQUEEZY_VARIANT_ID
+    defaultVariantId: process.env.LEMONSQUEEZY_VARIANT_ID
   })
-  
+
   configureLemonSqueezy()
-  
+
   try {
     const body = await request.json()
     const { userId, userEmail } = body
-    
-    // 1. Validate Env Vars
+
+    // 1. Validate Env Vars & Inputs
     const storeId = process.env.LEMONSQUEEZY_STORE_ID
-    const variantId = process.env.LEMONSQUEEZY_VARIANT_ID
+    // Use variantId from request body if available, else fallback to env (default)
+    const variantId = body.variantId || process.env.LEMONSQUEEZY_VARIANT_ID
 
     if (!storeId || !variantId) {
-      const msg = "Missing LEMONSQUEEZY_STORE_ID or LEMONSQUEEZY_VARIANT_ID in .env.local"
+      const msg = "Missing LEMONSQUEEZY_STORE_ID or variant ID"
       console.error(msg)
       return NextResponse.json({ error: msg }, { status: 500 })
     }
@@ -35,8 +36,8 @@ export async function POST(request: NextRequest) {
 
     // 3. Create Checkout (Convert IDs to numbers to be safe)
     const checkout = await createCheckout(
-      parseInt(storeId), 
-      parseInt(variantId), 
+      parseInt(storeId),
+      parseInt(variantId),
       {
         checkoutData: {
           email: userEmail,
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     // 5. DEEP LOGGING
     console.error("CRITICAL CHECKOUT ERROR:", error)
-    
+
     // Check if it's an API error from Lemon Squeezy
     if (error.errors && Array.isArray(error.errors)) {
       console.error("API Error Details:", JSON.stringify(error.errors, null, 2))
