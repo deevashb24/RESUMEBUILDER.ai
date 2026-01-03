@@ -1,13 +1,13 @@
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  orderBy, 
-  serverTimestamp 
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  orderBy,
+  serverTimestamp
 } from "firebase/firestore"
 import { db } from "./firebase"
 
@@ -20,6 +20,9 @@ export interface HistoryEntry {
   output: string // This is the stringified JSON of the generated content
   createdAt: string // We convert Timestamp to ISO string for the UI
   stats?: any
+  isUnlocked?: boolean
+  unlockedAt?: string
+  paymentId?: string
 }
 
 /**
@@ -29,7 +32,8 @@ export async function saveHistoryEntry(
   userId: string,
   type: string,
   jobDescription: string,
-  output: string
+  output: string,
+  isUnlocked: boolean = false
 ): Promise<string> {
   if (!db) throw new Error("Firestore not initialized")
 
@@ -57,6 +61,8 @@ export async function saveHistoryEntry(
       title,
       jobDescription,
       output,
+      isUnlocked,
+      unlockedAt: isUnlocked ? new Date().toISOString() : null,
       createdAt: serverTimestamp(),
     })
     return docRef.id
@@ -79,12 +85,12 @@ export async function getHistory(userId: string): Promise<HistoryEntry[]> {
       where("userId", "==", userId),
       orderBy("createdAt", "desc")
     )
-    
+
     const querySnapshot = await getDocs(q)
-    
+
     return querySnapshot.docs.map(doc => {
       const data = doc.data()
-      
+
       // Safety check for converting Firestore Timestamp to ISO String
       let createdAt = new Date().toISOString()
       if (data.createdAt && typeof data.createdAt.toDate === 'function') {
@@ -120,10 +126,10 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | null> 
   try {
     const docRef = doc(db, "history", id)
     const docSnap = await getDoc(docRef)
-    
+
     if (docSnap.exists()) {
       const data = docSnap.data()
-      
+
       let createdAt = new Date().toISOString()
       if (data.createdAt && typeof data.createdAt.toDate === 'function') {
         createdAt = data.createdAt.toDate().toISOString()

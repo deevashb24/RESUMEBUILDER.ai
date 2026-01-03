@@ -1,12 +1,12 @@
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  getDoc, 
-  serverTimestamp, 
-  Timestamp 
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+  Timestamp
 } from "firebase/firestore"
 import { db } from "./firebase"
 
@@ -57,7 +57,7 @@ export interface SkillSet {
 }
 
 export interface ParsedResumeData {
-  name?: string 
+  name?: string
   personal: {
     name: string
     email: string
@@ -70,7 +70,7 @@ export interface ParsedResumeData {
   education: EducationItem[]
   projects: ProjectItem[]
   skills: SkillSet
-  customSections: ResumeSection[] 
+  customSections: ResumeSection[]
 }
 
 export interface SavedResume {
@@ -83,6 +83,9 @@ export interface SavedResume {
   jobDescription?: string
   createdAt: Timestamp
   updatedAt: Timestamp
+  isUnlocked?: boolean
+  unlockedAt?: string
+  paymentId?: string
 }
 
 // --- 2. HELPER FUNCTIONS ---
@@ -96,7 +99,7 @@ export const initialResumeData: ParsedResumeData = {
   education: [],
   projects: [],
   skills: { languages: [], frameworks: [], tools: [], concepts: [] },
-  customSections: [] 
+  customSections: []
 }
 
 // --- 3. DATABASE FUNCTIONS ---
@@ -111,7 +114,7 @@ export async function saveParsedResume(
   filePath?: string
 ): Promise<string> {
   if (!db) throw new Error("Firestore not initialized")
-  
+
   try {
     const docRef = await addDoc(collection(db, "resumes"), {
       userId,
@@ -121,7 +124,7 @@ export async function saveParsedResume(
       layoutId: "demo",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      name: parsedData.name || parsedData.personal.name || "Untitled Resume" 
+      name: parsedData.name || parsedData.personal.name || "Untitled Resume"
     })
     return docRef.id
   } catch (error) {
@@ -138,7 +141,8 @@ export async function saveGeneratedResume(
   resumeId: string,
   layoutId: string,
   jobDescription: string,
-  content: any
+  content: any,
+  isUnlocked: boolean = false
 ): Promise<void> {
   if (!db) throw new Error("Firestore not initialized")
 
@@ -149,7 +153,9 @@ export async function saveGeneratedResume(
       jobDescription,
       generatedContent: content,
       updatedAt: serverTimestamp(),
-      isGenerated: true
+      isGenerated: true,
+      isUnlocked,
+      unlockedAt: isUnlocked ? new Date().toISOString() : null
     })
   } catch (error) {
     console.error("Error saving generated resume:", error)
@@ -162,7 +168,7 @@ export async function saveGeneratedResume(
  */
 export async function getResume(resumeId: string): Promise<SavedResume | null> {
   if (!db) return null
-  
+
   try {
     const docRef = doc(db, "resumes", resumeId)
     const docSnap = await getDoc(docRef)
@@ -171,6 +177,7 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
       return {
         id: docSnap.id,
         ...docSnap.data(),
+        isUnlocked: docSnap.data().isUnlocked || false,
       } as SavedResume
     } else {
       return null

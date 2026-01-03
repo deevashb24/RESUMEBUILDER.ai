@@ -21,7 +21,7 @@ interface GenerationContextType {
   generationStats: any
   resumeIdToView: string | null
   error: string | null
-  
+
   // Actions
   handleFileSelect: (file: File | null) => Promise<void>
   processUpload: () => Promise<void> // ✅ EXPOSED NOW
@@ -32,13 +32,13 @@ interface GenerationContextType {
 const GenerationContext = createContext<GenerationContextType | undefined>(undefined)
 
 export function GenerationProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
-  
+  const { user, isPremium } = useAuth()
+
   // State
   const [selectedOption, setSelectedOption] = useState<GenerationType>("resume")
   const [jobDescription, setJobDescription] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  
+
   // Tracking IDs for cleanup
   const [storagePath, setStoragePath] = useState<string | null>(null)
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null)
@@ -46,7 +46,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
   const [isUploading, setIsUploading] = useState(false)
   const [parsedResume, setParsedResume] = useState<ParsedResumeData | null>(null)
   const [selectedLayout, setSelectedLayout] = useState<string | null>("demo")
-  
+
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationFinished, setGenerationFinished] = useState(false)
   const [generationStats, setGenerationStats] = useState<any>(null)
@@ -62,7 +62,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     if (!file) {
       if (storagePath) await deleteResumeFile(storagePath)
       if (currentResumeId) await deleteResume(currentResumeId)
-      
+
       setUploadedFile(null)
       setParsedResume(null)
       setStoragePath(null)
@@ -75,7 +75,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     if (currentResumeId) await deleteResume(currentResumeId)
 
     setUploadedFile(file)
-    setParsedResume(null) 
+    setParsedResume(null)
     setError(null)
   }
 
@@ -84,23 +84,23 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     if (!user || !uploadedFile) return
     setIsUploading(true)
     setError(null)
-    
+
     try {
       const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
-      setStoragePath(path) 
+      setStoragePath(path)
 
       const formData = new FormData()
       formData.append("file", uploadedFile)
-      
+
       const parseResponse = await fetch("/api/parse-resume", { method: "POST", body: formData })
       if (!parseResponse.ok) throw new Error("Failed to parse resume")
-      
+
       const { data: parsedData } = await parseResponse.json()
       setParsedResume(parsedData)
-      
+
       const newResumeId = await saveParsedResume(user.uid, parsedData, url, path)
       setCurrentResumeId(newResumeId)
-      
+
     } catch (err: any) {
       console.error(err)
       setError(err.message || "Failed to upload/parse resume")
@@ -122,17 +122,17 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     try {
       let resumeId = currentResumeId
       if (!resumeId) {
-         if (uploadedFile) {
-            const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
-            resumeId = await saveParsedResume(user.uid, parsedResume, url, path)
-         } else {
-            resumeId = await saveParsedResume(user.uid, parsedResume)
-         }
+        if (uploadedFile) {
+          const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
+          resumeId = await saveParsedResume(user.uid, parsedResume, url, path)
+        } else {
+          resumeId = await saveParsedResume(user.uid, parsedResume)
+        }
       }
 
       let generatedData: any
       let stats: any
-      let finalIdForPreview: string = resumeId! 
+      let finalIdForPreview: string = resumeId!
 
       if (selectedOption === "resume") {
         const response = await fetch("/api/tailor-resume", {
@@ -153,8 +153,8 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
           generatedAt: new Date().toISOString(),
           stats
         }
-        await saveGeneratedResume(user.uid, resumeId!, selectedLayout || "demo", jobDescription, resumeContent)
-        
+        await saveGeneratedResume(user.uid, resumeId!, selectedLayout || "demo", jobDescription, resumeContent, isPremium)
+
         finalIdForPreview = resumeId!
       } else {
         const resumeTextString = JSON.stringify(parsedResume)
@@ -167,17 +167,18 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       const finalHistoryContent = {
         type: selectedOption,
         layoutId: selectedLayout,
-        parsedData: generatedData, 
+        parsedData: generatedData,
         jobDescription,
         generatedAt: new Date().toISOString(),
         stats
       }
 
       const historyId = await saveHistoryEntry(
-        user.uid, 
-        selectedOption, 
-        jobDescription, 
-        JSON.stringify(finalHistoryContent)
+        user.uid,
+        selectedOption,
+        jobDescription,
+        JSON.stringify(finalHistoryContent),
+        isPremium
       )
 
       if (selectedOption !== 'resume') {
@@ -205,7 +206,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     <GenerationContext.Provider value={{
       selectedOption, setSelectedOption,
       jobDescription, setJobDescription,
-      uploadedFile, 
+      uploadedFile,
       parsedResume,
       isUploading,
       isGenerating,

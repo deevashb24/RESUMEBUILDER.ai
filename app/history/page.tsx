@@ -10,7 +10,7 @@ import { FileText, Calendar, ArrowRight, ArrowLeft, Clock } from "lucide-react" 
 import Link from "next/link"
 
 export default function HistoryPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, isPremium } = useAuth()
   const router = useRouter()
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
@@ -37,20 +37,20 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
       <div className="max-w-4xl mx-auto space-y-8">
-        
+
         {/* --- HEADER WITH BACK BUTTON --- */}
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => router.push("/dashboard")}
             className="rounded-full h-10 w-10 bg-white shadow-sm border-gray-200 hover:bg-gray-100"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </Button>
           <div>
-             <h1 className="text-3xl font-bold text-gray-900">Your History</h1>
-             <p className="text-gray-500">Access your previously generated documents.</p>
+            <h1 className="text-3xl font-bold text-gray-900">Your History</h1>
+            <p className="text-gray-500">Access your previously generated documents.</p>
           </div>
         </div>
 
@@ -83,13 +83,20 @@ export default function HistoryPage() {
                       <h4 className="font-semibold text-gray-900 line-clamp-1">{item.title}</h4>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="uppercase font-bold tracking-wider text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">
-                           {item.type || "RESUME"}
+                          {item.type || "RESUME"}
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {new Date(item.createdAt).toLocaleDateString()}
                         </span>
+
+                        {/* --- UNLOCK BADGE --- */}
+                        {(isPremium || item.isUnlocked) && (
+                          <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100 uppercase tracking-wide ml-2">
+                            Unlocked
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

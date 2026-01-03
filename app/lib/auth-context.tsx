@@ -15,10 +15,19 @@ import {
 import { doc, onSnapshot, setDoc } from "firebase/firestore" // CHANGED: Import onSnapshot
 import { auth, db } from "./firebase"
 
+export interface Subscription {
+  status: 'active' | 'inactive' | 'past_due' | 'cancelled';
+  planId: string | null;
+  periodEnd: string | null;
+  lemonSqueezySubscriptionId?: string;
+  customerPortalUrl?: string;
+}
+
 interface AuthContextValue {
   user: FirebaseUser | null
   loading: boolean
   isPremium: boolean
+  subscription: Subscription | null
   loginWithGoogle: () => Promise<void>
   loginWithApple: () => Promise<void>
   loginWithEmail: (email: string, password: string) => Promise<void>
@@ -31,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -62,8 +72,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           unsubscribeFirestore = onSnapshot(userRef, async (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data()
-              // Auto-update premium status instantly
-              setIsPremium(data.isPremium === true)
+              // Auto-update premium & subscription status
+              const isPremium = data.isPremium === true
+
+              // Parse detailed subscription info
+              const subscription = data.subscription || {
+                status: 'inactive',
+                planId: null,
+                periodEnd: null
+              }
+
+              // Check if subscription is actually active (expired?)
+              const now = new Date()
+              const periodEnd = subscription.periodEnd ? new Date(subscription.periodEnd.seconds * 1000) : null
+              const isActive = isPremium || (subscription.status === 'active' && periodEnd && periodEnd > now)
+
+              setIsPremium(!!isActive)
+              setSubscription(subscription)
             } else {
               // Create profile if missing
               await setDoc(userRef, {
@@ -75,13 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setIsPremium(false)
             }
           }, (error) => {
-             console.error("Firestore Listener Error:", error)
+            console.error("Firestore Listener Error:", error)
           })
-          
+
         } else {
           setIsPremium(false)
         }
-        
+
         setLoading(false)
       }
     )
@@ -94,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ... (Keep existing login/logout functions exactly as they are) ...
-  
+
   const loginWithGoogle = async () => {
     if (!auth) throw new Error("Firebase auth not initialized.")
     const provider = new GoogleAuthProvider()
@@ -141,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isPremium, loginWithGoogle, loginWithApple, loginWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, loading, isPremium, subscription, loginWithGoogle, loginWithApple, loginWithEmail, logout }}>
       {children}
     </AuthContext.Provider>
   )
