@@ -18,18 +18,22 @@ export async function POST(req: NextRequest) {
         // Determine amount based on planType
         // Default (subscription) = ₹499.00 -> 49900 paise
         // One-time = ₹199.99 -> ~19999 paise
-        let amount = 49900;
-        let description = "Pro Subscription (Lifetime)";
+        // 2. Determine Amount based on Plan Type
+        let amount = 49900; // Default: Monthly (₹499.00)
+        let description = "Pro Subscription (Monthly)";
 
-        if (planType === 'one-time') {
-            amount = 19999; // 199.99 INR
+        if (planType === 'quarterly') {
+            amount = 99900; // Quarterly (₹999.00)
+            description = "Pro Subscription (Quarterly)";
+        } else if (planType === 'one-time') {
+            amount = 19999; // One-Time (₹199.99)
             description = "Single Document Unlock";
         }
 
         const options = {
             amount: amount,
             currency: "INR",
-            receipt: userId,
+            receipt: "rcpt_" + Date.now(),
             notes: { userId, planType },
         };
 
