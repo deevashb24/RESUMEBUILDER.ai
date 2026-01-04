@@ -59,7 +59,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     }
   }
 
-  const handleRazorpayCheckout = async () => {
+  const handleRazorpayCheckout = async (planType: 'subscription' | 'one-time' = 'subscription') => {
     if (!user) return
     setLoading('razorpay')
 
@@ -68,7 +68,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.uid }),
+        body: JSON.stringify({ userId: user.uid, planType }),
       })
       const data = await res.json()
 
@@ -80,7 +80,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         amount: data.amount,
         currency: "INR",
         name: "ResumeBuilder.ai",
-        description: "Pro Subscription (Lifetime)",
+        description: data.description || "Pro Subscription",
         order_id: data.orderId,
         handler: function (response: any) {
           // In a real app, you might want to verify the payment on the backend here too
@@ -125,95 +125,228 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
             </DialogDescription>
           </DialogHeader>
 
-          <div className={`grid gap-6 mt-6 ${generationId ? "md:grid-cols-2" : "grid-cols-1 max-w-md mx-auto"}`}>
-            {/* Subscription Option */}
-            <div className="border rounded-xl p-6 relative bg-primary/5 border-primary/20">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                Best Value
-              </div>
-              <h3 className="text-xl font-bold">Pro Subscription</h3>
-              <p className="text-muted-foreground text-sm mt-1">Unlimited access to all tools</p>
+          <div className="grid md:grid-cols-2 gap-8 mt-6">
 
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span className="text-sm">Unlimited Resume Generations</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span className="text-sm">Cover Letter & SOP Generator</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span className="text-sm">Instant PDF Downloads</span>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <Button
-                  onClick={() => handleCheckout('monthly')}
-                  disabled={!!loading}
-                  className="w-full"
-                >
-                  {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Monthly - $9.99/mo
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleCheckout('quarterly')}
-                  disabled={!!loading}
-                  className="w-full"
-                >
-                  {loading === 'quarterly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Quarterly - $19.99/3mo (Save 33%)
-                </Button>
-
-                {/* UPI OPTION */}
-                <div className="relative text-center text-xs text-muted-foreground my-2">
-                  <span className="bg-primary/5 px-2 relative z-10">OR</span>
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-primary/20"></div></div>
-                </div>
-
-                <Button
-                  onClick={handleRazorpayCheckout}
-                  disabled={!!loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all"
-                >
-                  {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Pay with UPI / Paytm
-                </Button>
-              </div>
-            </div>
-
-            {/* One-Time Option - Only if generationId is present */}
-            {generationId && (
-              <div className="border rounded-xl p-6 flex flex-col justify-between">
+            {/* LEFT COLUMN: Free Plan (Dashboard) OR Pro Plan (Unlock) */}
+            {!generationId ? (
+              // --- DASHBOARD MODE: Free Plan ---
+              <div className="border rounded-2xl p-8 flex flex-col justify-between bg-white hover:shadow-lg transition-shadow duration-300">
                 <div>
-                  <h3 className="text-xl font-bold">Single Unlock</h3>
-                  <p className="text-muted-foreground text-sm mt-1">Pay only for what you need</p>
+                  <div className="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold uppercase tracking-wide mb-4">
+                    Basic
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Free Plan</h3>
+                  <div className="mt-4 flex items-baseline text-gray-900">
+                    <span className="text-5xl font-extrabold tracking-tight">₹0</span>
+                    <span className="ml-1 text-xl font-semibold text-gray-500">/forever</span>
+                  </div>
+                  <p className="mt-4 text-gray-500 text-sm leading-relaxed">
+                    Good for getting started with basic resume needs.
+                  </p>
 
-                  <ul className="mt-4 space-y-3">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Unlock ONLY this document</span>
+                  <ul className="mt-8 space-y-4">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
+                      <span className="text-gray-600 text-sm">Basic Resume Templates</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Unlimited downloads for this item</span>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
+                      <span className="text-gray-600 text-sm">Export to TXT</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="h-5 w-5 rounded-full bg-yellow-100 flex items-center justify-center shrink-0 mr-3">
+                        <span className="text-[10px] font-bold text-yellow-600">!</span>
+                      </div>
+                      <span className="text-gray-600 text-sm">ResumeBuilder.ai Watermark</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mr-3">
+                        <span className="text-[10px] font-bold text-red-600">x</span>
+                      </div>
+                      <span className="text-gray-600 text-sm">No AI Writer Access</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="mt-8">
+                  <Button variant="outline" className="w-full py-6 text-lg" disabled>
+                    Current Plan
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // --- UNLOCK MODE: Pro Plan (Left side for comparison) ---
+              <div className="border-2 border-primary/20 rounded-2xl p-8 relative bg-primary/5 flex flex-col justify-between shadow-sm">
+                <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">
+                  RECOMMENDED
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Pro Subscription</h3>
+                  <p className="text-sm text-primary font-medium mt-1">Unlock Everything</p>
+
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-primary mr-3" />
+                      <span className="text-sm text-gray-700">Unlimited Resumes & Cover Letters</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-primary mr-3" />
+                      <span className="text-sm text-gray-700"><strong>120 Generations</strong> / month</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-primary mr-3" />
+                      <span className="text-sm text-gray-700">AI Score & Content Fixer</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 space-y-3">
+                  <Button
+                    onClick={() => handleCheckout('monthly')}
+                    disabled={!!loading}
+                    className="w-full py-6"
+                  >
+                    {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Monthly - $9.99/mo
+                  </Button>
+
+                  {/* UPI OPTION */}
+                  <div className="relative text-center text-xs text-muted-foreground my-2">
+                    <span className="bg-primary/5 px-2 relative z-10">OR</span>
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-primary/20"></div></div>
+                  </div>
+
+                  <Button
+                    onClick={() => handleRazorpayCheckout('subscription')}
+                    disabled={!!loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all py-6"
+                  >
+                    {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Pay with UPI (₹499)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+
+            {/* RIGHT COLUMN: Pro Plan (Dashboard) OR Single Unlock (Unlock) */}
+            {!generationId ? (
+              // --- DASHBOARD MODE: Pro Plan (Highlighted) ---
+              <div className="border-2 border-primary rounded-2xl p-8 relative bg-white shadow-xl transform scale-105 z-10 flex flex-col justify-between">
+                <div className="absolute top-0 inset-x-0 -mt-10 flex justify-center">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md uppercase tracking-wide">
+                    Most Popular
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Pro Subscription</h3>
+                  <div className="mt-4 flex items-baseline text-gray-900">
+                    <span className="text-5xl font-extrabold tracking-tight">₹499</span>
+                    <span className="ml-1 text-xl font-semibold text-gray-500">/mo</span>
+                  </div>
+                  <p className="mt-4 text-gray-500 text-sm">
+                    Everything you need to land your dream job.
+                  </p>
+
+                  <div className="mt-6 space-y-3">
+                    <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                      <span className="text-indigo-800 font-bold block text-sm">120 Generations Cap</span>
+                      <span className="text-indigo-600 text-xs">Per month refresh</span>
+                    </div>
+                  </div>
+
+                  <ul className="mt-6 space-y-4">
+                    <li className="flex items-start">
+                      <div className="p-1 bg-green-100 rounded-full mr-3 shrink-0">
+                        <Check className="h-3 w-3 text-green-700" />
+                      </div>
+                      <span className="text-gray-700 text-sm font-medium">Unlimited PDF Downloads</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="p-1 bg-green-100 rounded-full mr-3 shrink-0">
+                        <Check className="h-3 w-3 text-green-700" />
+                      </div>
+                      <span className="text-gray-700 text-sm font-medium">No Watermarks</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="p-1 bg-green-100 rounded-full mr-3 shrink-0">
+                        <Check className="h-3 w-3 text-green-700" />
+                      </div>
+                      <span className="text-gray-700 text-sm font-medium">GPT-4 AI Writer</span>
                     </li>
                   </ul>
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3">
-                  <div className="text-2xl font-bold mb-1">$2.99 <span className="text-sm font-normal text-muted-foreground">/ one-time</span></div>
+                <div className="mt-8 space-y-3">
+                  <Button
+                    onClick={() => handleCheckout('monthly')}
+                    disabled={!!loading}
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white py-6 text-lg"
+                  >
+                    {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Get Pro ($9.99/mo)
+                  </Button>
+
+                  <div className="text-center text-xs text-gray-400 font-medium my-2">- OR -</div>
+
+                  <Button
+                    onClick={() => handleRazorpayCheckout('subscription')}
+                    disabled={!!loading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all py-6"
+                  >
+                    {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Pay with UPI (₹499)
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // --- UNLOCK MODE: Single Unlock (Right side) ---
+              <div className="border rounded-2xl p-8 flex flex-col justify-between bg-white">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">Single Unlock</h3>
+                  <div className="mt-4 flex items-baseline text-gray-900">
+                    <span className="text-4xl font-extrabold tracking-tight">₹199</span>
+                    <span className="text-2xl font-bold tracking-tight">.99</span>
+                    <span className="ml-1 text-lg font-medium text-gray-500">/once</span>
+                  </div>
+                  <p className="mt-4 text-gray-500 text-sm">
+                    Just need this one document? We got you.
+                  </p>
+
+                  <ul className="mt-8 space-y-4">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
+                      <span className="text-gray-600 text-sm">Unlock ONLY this document</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
+                      <span className="text-gray-600 text-sm">Unlimited downloads for this item</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
+                      <span className="text-gray-600 text-sm">Remove Watermark</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-8 space-y-3">
                   <Button
                     onClick={() => handleCheckout('one-time')}
                     disabled={!!loading}
-                    className="w-full"
-                    variant="secondary"
+                    variant="outline"
+                    className="w-full py-6"
                   >
                     {loading === 'one-time' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Unlock This Resume ($2.99)
+                    Pay via Stripe ($2.99)
+                  </Button>
+
+                  <Button
+                    onClick={() => handleRazorpayCheckout('one-time')}
+                    disabled={!!loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all py-6"
+                  >
+                    {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Pay via UPI (₹199.99)
                   </Button>
                 </div>
               </div>

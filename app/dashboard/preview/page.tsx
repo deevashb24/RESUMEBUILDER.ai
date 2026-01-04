@@ -137,7 +137,7 @@ function PreviewContent() {
             {isLetter ? (
               <LetterPreview data={data} />
             ) : (
-              <ResumeRenderer layoutId={layoutId} data={data} />
+              <ResumeRenderer layoutId={layoutId} data={data} showWatermark={!isUnlocked} />
             )}
           </div>
         </div>
