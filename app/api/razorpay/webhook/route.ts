@@ -1,7 +1,7 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,10 +13,7 @@ export async function POST(req: NextRequest) {
         }
 
         const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-        if (!secret) {
-            console.error("RAZORPAY_WEBHOOK_SECRET is not set");
-            return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
-        }
+        if (!secret) return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
 
         // Verify signature
         const hmac = crypto.createHmac("sha256", secret);
@@ -29,28 +26,49 @@ export async function POST(req: NextRequest) {
 
         const payload = JSON.parse(rawBody);
         const event = payload.event;
+        console.log(`🔔 Razorpay Payload Event: ${event}`);
 
-        if (event === "payment.captured") {
-            const payment = payload.payload.payment.entity;
-            const userId = payment.notes?.userId;
+        // --- CASE 1: SUBSCRIPTION SUCCEEDED (Recurring) ---
+        if (event === "subscription.charged" || event === "subscription.activated") {
+            const sub = payload.payload.subscription.entity;
+            const userId = sub.notes?.userId;
 
             if (userId) {
-                console.log(`Processing Razorpay payment for User: ${userId}`);
-
+                console.log(`✅ Subscription Recurred for User: ${userId}`);
                 await adminDb.collection("users").doc(userId).set({
                     isPremium: true,
-                    paymentMethod: "Razorpay/UPI",
                     updatedAt: new Date().toISOString(),
                     subscription: {
                         status: "active",
-                        planId: "lifetime_razorpay", // Tracking it distinctly
-                        periodEnd: null, // Lifetime
+                        planId: sub.plan_id,
+                        periodEnd: sub.current_end,
+                        type: 'razorpay'
                     }
                 }, { merge: true });
+            }
+        }
 
-                console.log(`Successfully upgraded user ${userId} to Premium`);
+        // --- CASE 2: ONE-TIME PAYMENT (Single Unlock) ---
+        else if (event === "payment.captured") {
+            const payment = payload.payload.payment.entity;
+            const notes = payment.notes || {};
+            const userId = notes.userId;
+            const planType = notes.planType;
+
+            // Only process 'one-time' here (Subscriptions are handled above)
+            if (userId && planType === 'one-time') {
+                const generationId = notes.generationId;
+
+                if (generationId) {
+                    console.log(`🔓 Unlocking Generation ${generationId} for User ${userId}`);
+                    await adminDb.collection("users").doc(userId).update({
+                        unlockedGenerations: FieldValue.arrayUnion(generationId)
+                    });
+                } else {
+                    console.warn(`⚠️ Payment captured but Usage: generationId missing for user ${userId}`);
+                }
             } else {
-                console.warn("Payment captured but no userId found in notes");
+                console.log(`ℹ️ Payment captured ignored (likely subscription payment). Plan: ${planType}`);
             }
         }
 

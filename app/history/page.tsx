@@ -10,7 +10,7 @@ import { FileText, Calendar, ArrowRight, ArrowLeft, Clock } from "lucide-react" 
 import Link from "next/link"
 
 export default function HistoryPage() {
-  const { user, loading, isPremium } = useAuth()
+  const { user, loading, isPremium, unlockedGenerations } = useAuth()
   const router = useRouter()
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
@@ -72,43 +72,51 @@ export default function HistoryPage() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {history.map((item) => (
-              <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-gray-200">
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-semibold text-gray-900 line-clamp-1">{item.title}</h4>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="uppercase font-bold tracking-wider text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">
-                          {item.type || "RESUME"}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
+            {history.map((item) => {
+              const isItemUnlocked = isPremium || unlockedGenerations?.includes(item.id)
 
-                        {/* --- UNLOCK BADGE --- */}
-                        {(isPremium || item.isUnlocked) && (
-                          <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100 uppercase tracking-wide ml-2">
-                            Unlocked
+              return (
+                <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-gray-200">
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-gray-900 line-clamp-1">{item.title}</h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="uppercase font-bold tracking-wider text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">
+                            {item.type || "DOCUMENT"}
                           </span>
-                        )}
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+
+                          {/* --- UNLOCK BADGE --- */}
+                          {isItemUnlocked ? (
+                            <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100 uppercase tracking-wide ml-2">
+                              Unlocked
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-100 uppercase tracking-wide ml-2">
+                              Locked
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <Link href={`/dashboard/preview?id=${item.id}`}>
-                    <Button variant="ghost" size="sm" className="gap-2 text-gray-600 group-hover:text-blue-600">
-                      View & Download <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+                    <Link href={`/dashboard/preview?id=${item.id}`}>
+                      <Button variant="ghost" size="sm" className="gap-2 text-gray-600 group-hover:text-blue-600">
+                        View & Download <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         )}
       </div>

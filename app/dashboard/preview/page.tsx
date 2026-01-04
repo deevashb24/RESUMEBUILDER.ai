@@ -16,7 +16,7 @@ import { PricingModal } from "@/components/pricing-modal" // Pricing Modal
 function PreviewContent() {
   const searchParams = useSearchParams()
   const id = searchParams?.get("id")
-  const { isPremium } = useAuth() // Get Payment Status
+  const { isPremium, unlockedGenerations } = useAuth() // Get Granular Access
 
   const [data, setData] = useState<any>(null)
   const [docType, setDocType] = useState<string>("resume")
@@ -27,7 +27,10 @@ function PreviewContent() {
   const componentRef = useRef<HTMLDivElement>(null)
 
   // --- ACCESS CONTROL ---
-  const [isUnlocked, setIsUnlocked] = useState(false)
+  // Is this specific document unlocked via One-Time purchase?
+  const isSpecificallyUnlocked = id ? unlockedGenerations?.includes(id) : false
+  // Global Unlock status
+  const isUnlocked = isPremium || isSpecificallyUnlocked
 
   // --- PRINT / DOWNLOAD HANDLER ---
   const handlePrint = useReactToPrint({
@@ -56,11 +59,9 @@ function PreviewContent() {
         let foundData: any = null
         let type = "resume"
         let layout = "demo"
-        let unlocked = isPremium // Default to premium status
 
         const historyEntry = await getHistoryEntry(id!)
         if (historyEntry) {
-          if (historyEntry.isUnlocked) unlocked = true // Check specific unlock
           if (historyEntry.output) {
             try {
               const parsed = JSON.parse(historyEntry.output)
@@ -75,7 +76,6 @@ function PreviewContent() {
         if (!foundData) {
           const resumeEntry = await getResume(id!)
           if (resumeEntry) {
-            if (resumeEntry.isUnlocked) unlocked = true
             const content = (resumeEntry as any).generatedContent
             if (content) {
               if (content.type) type = content.type
@@ -89,13 +89,12 @@ function PreviewContent() {
         setData(foundData)
         setDocType(type)
         setLayoutId(layout)
-        setIsUnlocked(unlocked || isPremium) // Double check premium
 
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
     }
     loadData()
-  }, [id, isPremium]) // Re-run if premium status changes
+  }, [id])
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading preview... </div>
   if (!data) return <div className="p-8 text-center text-muted-foreground">No data found.</div>

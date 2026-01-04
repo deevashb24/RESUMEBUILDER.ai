@@ -16,7 +16,7 @@ import { ArrowRight } from "lucide-react"
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  
+
   // Get everything from Global Context
   const {
     selectedOption, setSelectedOption,
@@ -38,8 +38,8 @@ export default function DashboardPage() {
   // Reset "View Result" state when mounting dashboard so they can generate again
   useEffect(() => {
     if (!isGenerating && generationFinished) {
-       // Optional: Keep the result visible or reset? 
-       // For now, we let them see the state.
+      // Optional: Keep the result visible or reset? 
+      // For now, we let them see the state.
     }
   }, [])
 
@@ -67,16 +67,16 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Upload Resume</CardTitle>
-            <CardDescription className="text-sm">Drag and drop your resume (PDF/DOCX)</CardDescription>
+            <CardTitle className="text-lg font-semibold">Upload Document</CardTitle>
+            <CardDescription className="text-sm">Drag and drop your previous resume (PDF/DOCX)</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Note: In this version handleFileSelect does both select + upload process automatically for simplicity based on your previous request, or you can separate them in the context */}
-            <FileUpload 
-              onFileSelect={handleFileSelect} 
+            <FileUpload
+              onFileSelect={handleFileSelect}
               onUpload={processUpload} // Context handles upload on select now
-              uploadedFile={uploadedFile} 
-              isUploading={isUploading} 
+              uploadedFile={uploadedFile}
+              isUploading={isUploading}
               isParsed={!!parsedResume}
             />
           </CardContent>
@@ -102,11 +102,11 @@ export default function DashboardPage() {
       {parsedResume && selectedOption === "resume" && (
         <Card className="border-0 shadow-sm">
           <CardHeader>
-             <CardTitle className="text-lg font-semibold">Choose Layout</CardTitle>
+            <CardTitle className="text-lg font-semibold">Choose Layout</CardTitle>
           </CardHeader>
           <CardContent>
-             {/* Simplified for now, context can hold layout state if needed */}
-             <div className="text-sm text-muted-foreground">Default Professional Layout Selected</div>
+            {/* Simplified for now, context can hold layout state if needed */}
+            <div className="text-sm text-muted-foreground">Default Professional Layout Selected</div>
           </CardContent>
         </Card>
       )}
@@ -118,20 +118,20 @@ export default function DashboardPage() {
           <CardDescription className="text-sm">Create your document</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          
+
           {isGenerating || generationFinished ? (
             <div className="space-y-4">
-               <GenerationProgress 
-                  isFinished={generationFinished} 
-                  finalStats={generationStats} 
-                  generationType={selectedOption} 
-               />
-               
-               {generationFinished && (
-                 <Button onClick={handleViewResult} className="w-full h-12 text-lg bg-green-600 hover:bg-green-700">
-                    View Result <ArrowRight className="ml-2 h-5 w-5" />
-                 </Button>
-               )}
+              <GenerationProgress
+                isFinished={generationFinished}
+                finalStats={generationStats}
+                generationType={selectedOption}
+              />
+
+              {generationFinished && (
+                <Button onClick={handleViewResult} className="w-full h-12 text-lg bg-green-600 hover:bg-green-700">
+                  View Result <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              )}
             </div>
           ) : (
             <>

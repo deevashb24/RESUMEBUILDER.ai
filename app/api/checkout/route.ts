@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
     const storeId = process.env.LEMONSQUEEZY_STORE_ID
     // Use variantId from request body if available, else fallback to env (default)
     const variantId = body.variantId || process.env.LEMONSQUEEZY_VARIANT_ID
+    // Get custom redirect URL
+    const redirectUrl = body.redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`
 
     if (!storeId || !variantId) {
       const msg = "Missing LEMONSQUEEZY_STORE_ID or variant ID"
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing userId or userEmail" }, { status: 400 })
     }
 
-    console.log("Creating checkout for:", { storeId, variantId, userEmail })
+    console.log("Creating checkout for:", { storeId, variantId, userEmail, redirectUrl })
 
     // 3. Create Checkout (Convert IDs to numbers to be safe)
     const checkout = await createCheckout(
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
           }
         },
         productOptions: {
-          redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
+          redirectUrl: redirectUrl,
           receiptButtonText: "Go to Dashboard",
         }
       }

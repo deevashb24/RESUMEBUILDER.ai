@@ -40,7 +40,8 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         body: JSON.stringify({
           userId: user.uid,
           userEmail: user.email,
-          variantId: variantId
+          variantId: variantId,
+          redirectUrl: window.location.href // STAY ON SAME PAGE
         }),
       })
 
@@ -65,29 +66,28 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     setLoading('razorpay')
 
     try {
-      // 1. Create Order
+      // 1. Create Order OR Subscription
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.uid, planType }),
+        body: JSON.stringify({
+          userId: user.uid,
+          planType,
+          generationId: generationId // Pass if we are unlocking specific doc
+        }),
       })
       const data = await res.json()
 
       if (!res.ok) throw new Error(data.error || "Failed to create order")
 
       // 2. Initialize Razorpay
-      const options = {
+      // Determine if it's a Subscription or One-Time
+      const options: any = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        amount: data.amount,
-        currency: "INR",
         name: "ResumeBuilder.ai",
         description: data.description || "Pro Subscription",
-        order_id: data.orderId,
         handler: function (response: any) {
-          // In a real app, you might want to verify the payment on the backend here too
-          // But for now, we rely on the webhook to handle the actual database update
-          // We can optimistically reload or show success
-          alert("Payment Successful! Your account will be upgraded shortly.")
+          alert("Payment Successful! Access granted.")
           window.location.reload()
         },
         prefill: {
@@ -96,6 +96,21 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         theme: {
           color: "#000000",
         },
+        // Modal specific options
+        modal: {
+          ondismiss: function () {
+            setLoading(null)
+          }
+        }
+      }
+
+      // Attach ID based on mode
+      if (data.subscriptionId) {
+        options.subscription_id = data.subscriptionId; // Recurring
+      } else {
+        options.order_id = data.orderId; // One-time
+        options.amount = data.amount;
+        options.currency = "INR";
       }
 
       const rzp1 = new window.Razorpay(options)
@@ -145,7 +160,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
           <div className="p-4 pb-0 text-center">
             <DialogTitle className="text-xl font-bold text-gray-900">Upgrade Plan</DialogTitle>
             <DialogDescription className="text-xs text-gray-500 mt-1">
-              Unlock the full power of AI Resume Builder
+              Unlock the full power of AI Document Builder
             </DialogDescription>
           </div>
 

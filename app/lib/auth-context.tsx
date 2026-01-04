@@ -10,9 +10,8 @@ import {
   OAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  AuthError,
 } from "firebase/auth"
-import { doc, onSnapshot, setDoc } from "firebase/firestore" // CHANGED: Import onSnapshot
+import { doc, onSnapshot, setDoc } from "firebase/firestore"
 import { auth, db } from "./firebase"
 
 export interface Subscription {
@@ -28,6 +27,7 @@ interface AuthContextValue {
   loading: boolean
   isPremium: boolean
   subscription: Subscription | null
+  unlockedGenerations: string[] // <--- ADDED THIS
   loginWithGoogle: () => Promise<void>
   loginWithApple: () => Promise<void>
   loginWithEmail: (email: string, password: string) => Promise<void>
@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [unlockedGenerations, setUnlockedGenerations] = useState<string[]>([]) // <--- ADDED STATE
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -53,14 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    let unsubscribeFirestore: () => void; // To clean up listener
+    let unsubscribeFirestore: () => void;
 
     const unsubscribeAuth = onAuthStateChanged(
       auth,
       async (firebaseUser) => {
         setUser(firebaseUser)
 
-        // Clean up previous listener if user switches
         if (unsubscribeFirestore) {
           unsubscribeFirestore()
         }
@@ -68,36 +68,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (firebaseUser && db) {
           const userRef = doc(db, "users", firebaseUser.uid)
 
-          // --- REAL-TIME LISTENER LOGIC ---
           unsubscribeFirestore = onSnapshot(userRef, async (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data()
-              // Auto-update premium & subscription status
-              const isPremium = data.isPremium === true
 
-              // Parse detailed subscription info
-              const subscription = data.subscription || {
+              // 1. Premium Logic
+              const isPremiumBool = data.isPremium === true
+
+              // 2. Subscription Logic
+              const subData = data.subscription || {
                 status: 'inactive',
                 planId: null,
                 periodEnd: null
               }
 
-              // Check if subscription is actually active (expired?)
+              // Check expiry
               const now = new Date()
-              const periodEnd = subscription.periodEnd ? new Date(subscription.periodEnd.seconds * 1000) : null
-              const isActive = isPremium || (subscription.status === 'active' && periodEnd && periodEnd > now)
+              // Handle Firestore Timestamp or ISO string
+              let periodEndDates: Date | null = null
+              if (subData.periodEnd) {
+                if (typeof subData.periodEnd === 'string') {
+                  periodEndDates = new Date(subData.periodEnd)
+                } else if (subData.periodEnd.seconds) {
+                  periodEndDates = new Date(subData.periodEnd.seconds * 1000)
+                }
+              }
+
+              const isActive = isPremiumBool || (subData.status === 'active' && periodEndDates && periodEndDates > now)
+
+              // 3. One-Time Unlocks Logic (CRITICAL FIX)
+              const unlocked = data.unlockedGenerations || []
 
               setIsPremium(!!isActive)
-              setSubscription(subscription)
+              setSubscription(subData)
+              setUnlockedGenerations(unlocked) // <--- UPDATE STATE
+
             } else {
               // Create profile if missing
               await setDoc(userRef, {
                 email: firebaseUser.email,
                 createdAt: new Date().toISOString(),
                 isPremium: false,
+                unlockedGenerations: [], // <--- Initialize Empty
                 provider: "google/email",
               })
               setIsPremium(false)
+              setUnlockedGenerations([])
             }
           }, (error) => {
             console.error("Firestore Listener Error:", error)
@@ -105,20 +121,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         } else {
           setIsPremium(false)
+          setUnlockedGenerations([])
         }
 
         setLoading(false)
       }
     )
 
-    // Clean up both listeners on unmount
     return () => {
       unsubscribeAuth()
       if (unsubscribeFirestore) unsubscribeFirestore()
     }
   }, [])
-
-  // ... (Keep existing login/logout functions exactly as they are) ...
 
   const loginWithGoogle = async () => {
     if (!auth) throw new Error("Firebase auth not initialized.")
@@ -159,6 +173,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signOut(auth)
       setUser(null)
       setIsPremium(false)
+      setSubscription(null)
+      setUnlockedGenerations([])
     } catch (error) {
       console.error("Error signing out:", error)
       throw error
@@ -166,7 +182,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isPremium, subscription, loginWithGoogle, loginWithApple, loginWithEmail, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isPremium,
+      subscription,
+      unlockedGenerations, // <--- EXPOSE TO APP
+      loginWithGoogle,
+      loginWithApple,
+      loginWithEmail,
+      logout
+    }}>
       {children}
     </AuthContext.Provider>
   )

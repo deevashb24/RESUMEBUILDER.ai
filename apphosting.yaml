@@ -119,3 +119,15 @@ env:
     availability:
       - BUILD
       - RUNTIME
+
+  - variable: RAZORPAY_PLAN_ID_MONTHLY
+    value: "plan_Rzg35T5oW1Krtq"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: RAZORPAY_PLAN_ID_QUARTERLY
+    value: "plan_Rzg3l9Ia9SFYJG"
+    availability:
+      - BUILD
+      - RUNTIME

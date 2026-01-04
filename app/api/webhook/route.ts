@@ -5,7 +5,7 @@ import { adminDb } from "@/lib/firebase-admin"
 export async function POST(request: NextRequest) {
   try {
     const text = await request.text()
-    
+
     // 1. Verify Secret
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
     if (!secret) {
@@ -42,31 +42,43 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(text)
     const eventName = payload.meta.event_name
-    
+
     // FIX: Check for both 'userId' AND 'user_id'
     const customData = payload.meta.custom_data || {}
     const userId = customData.userId || customData.user_id
+    const generationId = customData.generationId // Check for specific unlock
 
     console.log(`🔔 Webhook Verified: ${eventName} for User: ${userId}`)
 
     if (eventName === "order_created" || eventName === "subscription_created") {
       if (userId) {
-         try {
-           // 6. DB Write (Protected from crashing the whole webhook)
-           await adminDb.collection("users").doc(userId).set({ 
-             isPremium: true,
-             premiumSince: new Date().toISOString(),
-             updatedAt: new Date().toISOString()
-           }, { merge: true })
-           
-           console.log(`✅ DATABASE UPDATED: Premium active for ${userId}`)
-         } catch (dbError) {
-           console.error("❌ Firestore Write Error:", dbError)
-           // Return 200 anyway so Lemon Squeezy stops retrying (since logic failed, not connection)
-           return NextResponse.json({ error: "Database error" }, { status: 200 })
-         }
+        try {
+          // 6. DB Write Logic
+
+          if (generationId) {
+            // --- ONE-TIME UNLOCK ---
+            const { FieldValue } = require('firebase-admin/firestore');
+            console.log(`🔓 Unlocking Generation ${generationId} for User ${userId}`);
+            await adminDb.collection("users").doc(userId).update({
+              unlockedGenerations: FieldValue.arrayUnion(generationId)
+            });
+          } else {
+            // --- SUBSCRIPTION / PREMIUM GRANT ---
+            await adminDb.collection("users").doc(userId).set({
+              isPremium: true,
+              premiumSince: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }, { merge: true })
+            console.log(`✅ DATABASE UPDATED: Global Premium active for ${userId}`)
+          }
+
+        } catch (dbError) {
+          console.error("❌ Firestore Write Error:", dbError)
+          // Return 200 anyway so Lemon Squeezy stops retrying (since logic failed, not connection)
+          return NextResponse.json({ error: "Database error" }, { status: 200 })
+        }
       } else {
-         console.warn("⚠️ User ID missing in webhook metadata")
+        console.warn("⚠️ User ID missing in webhook metadata")
       }
     }
 
