@@ -17,7 +17,8 @@ interface PricingModalProps {
 
 export function PricingModal({ open, onClose, generationId }: PricingModalProps) {
   const { user } = useAuth()
-  const [loading, setLoading] = useState<string | null>(null) // 'monthly', 'quarterly', 'one-time'
+  const [loading, setLoading] = useState<string | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('monthly')
 
   const handleCheckout = async (type: 'monthly' | 'quarterly' | 'one-time') => {
     if (!user) return
@@ -108,6 +109,39 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     }
   }
 
+  const PlanSelection = () => (
+    <div className="space-y-3 mb-6">
+      <div
+        onClick={() => setSelectedPlan('monthly')}
+        className={`p-4 border rounded-xl cursor-pointer transition-all flex justify-between items-center ${selectedPlan === 'monthly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedPlan === 'monthly' ? 'border-primary' : 'border-gray-300'}`}>
+            {selectedPlan === 'monthly' && <div className="w-3 h-3 rounded-full bg-primary" />}
+          </div>
+          <span className="font-semibold text-gray-900">Monthly</span>
+        </div>
+        <span className="font-bold text-gray-900">$9.99/mo</span>
+      </div>
+
+      <div
+        onClick={() => setSelectedPlan('quarterly')}
+        className={`p-4 border rounded-xl cursor-pointer transition-all flex justify-between items-center ${selectedPlan === 'quarterly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedPlan === 'quarterly' ? 'border-primary' : 'border-gray-300'}`}>
+            {selectedPlan === 'quarterly' && <div className="w-3 h-3 rounded-full bg-primary" />}
+          </div>
+          <div>
+            <span className="font-semibold text-gray-900 block">Quarterly</span>
+            <span className="text-xs text-green-600 font-bold">Save 33%</span>
+          </div>
+        </div>
+        <span className="font-bold text-gray-900">$19.99/3mo</span>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <Script
@@ -117,7 +151,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
       />
 
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-2xl bg-white border border-border shadow-xl">
+        <DialogContent className="sm:max-w-4xl bg-white border border-border shadow-xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-3xl font-bold text-center">Unlock Your Content</DialogTitle>
             <DialogDescription className="text-center text-lg">
@@ -174,7 +208,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                 </div>
               </div>
             ) : (
-              // --- UNLOCK MODE: Pro Plan (Left side for comparison) ---
+              // --- UNLOCK MODE: Pro Plan (Left side) ---
               <div className="border-2 border-primary/20 rounded-2xl p-8 relative bg-primary/5 flex flex-col justify-between shadow-sm">
                 <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">
                   RECOMMENDED
@@ -183,7 +217,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                   <h3 className="text-2xl font-bold text-gray-900">Pro Subscription</h3>
                   <p className="text-sm text-primary font-medium mt-1">Unlock Everything</p>
 
-                  <div className="mt-6 space-y-4">
+                  <div className="mt-6 space-y-4 mb-6">
                     <div className="flex items-center">
                       <Check className="h-5 w-5 text-primary mr-3" />
                       <span className="text-sm text-gray-700">Unlimited Resumes & Cover Letters</span>
@@ -197,16 +231,20 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                       <span className="text-sm text-gray-700">AI Score & Content Fixer</span>
                     </div>
                   </div>
+
+                  {/* Plan Selection Component */}
+                  <PlanSelection />
+
                 </div>
 
-                <div className="mt-8 space-y-3">
+                <div className="mt-0 space-y-3">
                   <Button
-                    onClick={() => handleCheckout('monthly')}
+                    onClick={() => handleCheckout(selectedPlan)}
                     disabled={!!loading}
                     className="w-full py-6"
                   >
-                    {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Monthly - $9.99/mo
+                    {loading === selectedPlan && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {selectedPlan === 'monthly' ? 'Monthly - $9.99/mo (Card/PayPal)' : 'Quarterly - $19.99/3mo (Card/PayPal)'}
                   </Button>
 
                   {/* UPI OPTION */}
@@ -221,7 +259,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all py-6"
                   >
                     {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Pay with UPI (₹499)
+                    Pay with UPI (Razorpay)
                   </Button>
                 </div>
               </div>
@@ -231,8 +269,9 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
             {/* RIGHT COLUMN: Pro Plan (Dashboard) OR Single Unlock (Unlock) */}
             {!generationId ? (
               // --- DASHBOARD MODE: Pro Plan (Highlighted) ---
-              <div className="border-2 border-primary rounded-2xl p-8 relative bg-white shadow-xl transform scale-105 z-10 flex flex-col justify-between">
-                <div className="absolute top-0 inset-x-0 -mt-10 flex justify-center">
+              // Added mt-4 to container to fix badge overlap
+              <div className="border-2 border-primary rounded-2xl p-8 pt-10 relative bg-white shadow-xl transform scale-105 z-10 flex flex-col justify-between mt-4 md:mt-0">
+                <div className="absolute top-0 inset-x-0 -mt-3 flex justify-center">
                   <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md uppercase tracking-wide">
                     Most Popular
                   </div>
@@ -250,12 +289,12 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
 
                   <div className="mt-6 space-y-3">
                     <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                      <span className="text-indigo-800 font-bold block text-sm">120 Generations Cap</span>
+                      <span className="text-indigo-800 font-bold block text-sm">120 Generations</span>
                       <span className="text-indigo-600 text-xs">Per month refresh</span>
                     </div>
                   </div>
 
-                  <ul className="mt-6 space-y-4">
+                  <ul className="mt-6 space-y-4 mb-6">
                     <li className="flex items-start">
                       <div className="p-1 bg-green-100 rounded-full mr-3 shrink-0">
                         <Check className="h-3 w-3 text-green-700" />
@@ -275,16 +314,20 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                       <span className="text-gray-700 text-sm font-medium">GPT-4 AI Writer</span>
                     </li>
                   </ul>
+
+                  {/* Plan Selection Component */}
+                  <PlanSelection />
+
                 </div>
 
-                <div className="mt-8 space-y-3">
+                <div className="mt-0 space-y-3">
                   <Button
-                    onClick={() => handleCheckout('monthly')}
+                    onClick={() => handleCheckout(selectedPlan)}
                     disabled={!!loading}
                     className="w-full bg-gray-900 hover:bg-gray-800 text-white py-6 text-lg"
                   >
-                    {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Get Pro ($9.99/mo)
+                    {loading === selectedPlan && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {selectedPlan === 'monthly' ? 'Get Pro ($9.99/mo) - Card/PayPal' : 'Get Pro ($19.99/3mo) - Card/PayPal'}
                   </Button>
 
                   <div className="text-center text-xs text-gray-400 font-medium my-2">- OR -</div>
@@ -295,7 +338,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all py-6"
                   >
                     {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Pay with UPI (₹499)
+                    Pay with UPI (Razorpay)
                   </Button>
                 </div>
               </div>
@@ -352,7 +395,6 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
               </div>
             )}
           </div>
-
         </DialogContent>
       </Dialog>
     </>
