@@ -125,7 +125,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid md:grid-cols-2 gap-6 mt-6">
+          <div className={`grid gap-6 mt-6 ${generationId ? "md:grid-cols-2" : "grid-cols-1 max-w-md mx-auto"}`}>
             {/* Subscription Option */}
             <div className="border rounded-xl p-6 relative bg-primary/5 border-primary/20">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
@@ -167,56 +167,57 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                   {loading === 'quarterly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Quarterly - $19.99/3mo (Save 33%)
                 </Button>
-              </div>
-            </div>
-
-            {/* One-Time Option */}
-            <div className="border rounded-xl p-6 flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-bold">Single Unlock</h3>
-                <p className="text-muted-foreground text-sm mt-1">Pay only for what you need</p>
-
-                <ul className="mt-4 space-y-3">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Unlock ONLY this document</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Unlimited downloads for this item</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-3">
-                <div className="text-2xl font-bold mb-1">$2.99 <span className="text-sm font-normal text-muted-foreground">/ one-time</span></div>
-                <Button
-                  onClick={() => handleCheckout('one-time')}
-                  disabled={!!loading}
-                  className="w-full"
-                  variant="secondary"
-                >
-                  {loading === 'one-time' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Unlock This Resume ($2.99)
-                </Button>
 
                 {/* UPI OPTION */}
-                <div className="relative text-center text-xs text-muted-foreground my-1">
-                  <span className="bg-white px-2 relative z-10">OR</span>
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+                <div className="relative text-center text-xs text-muted-foreground my-2">
+                  <span className="bg-primary/5 px-2 relative z-10">OR</span>
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-primary/20"></div></div>
                 </div>
 
                 <Button
                   onClick={handleRazorpayCheckout}
                   disabled={!!loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all"
                 >
                   {loading === 'razorpay' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Pay with UPI / Paytm (₹499)
+                  Pay with UPI / Paytm
                 </Button>
-
               </div>
             </div>
+
+            {/* One-Time Option - Only if generationId is present */}
+            {generationId && (
+              <div className="border rounded-xl p-6 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold">Single Unlock</h3>
+                  <p className="text-muted-foreground text-sm mt-1">Pay only for what you need</p>
+
+                  <ul className="mt-4 space-y-3">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Unlock ONLY this document</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Unlimited downloads for this item</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3">
+                  <div className="text-2xl font-bold mb-1">$2.99 <span className="text-sm font-normal text-muted-foreground">/ one-time</span></div>
+                  <Button
+                    onClick={() => handleCheckout('one-time')}
+                    disabled={!!loading}
+                    className="w-full"
+                    variant="secondary"
+                  >
+                    {loading === 'one-time' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Unlock This Resume ($2.99)
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
         </DialogContent>
