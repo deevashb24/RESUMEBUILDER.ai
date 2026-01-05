@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
                 notes: {
                     userId,
                     planType,
-                    generationId: generationId || "" // IMPORTANT: Pass generationId for specific unlock
+                    generationIdValue: generationId || "" // Store as explicit string
                 },
             };
 

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
             // Only process 'one-time' here (Subscriptions are handled above)
             if (userId && planType === 'one-time') {
-                const generationId = notes.generationId;
+                const generationId = notes.generationIdValue || notes.generationId;
 
                 if (generationId) {
                     console.log(`🔓 Unlocking Generation ${generationId} for User ${userId}`);

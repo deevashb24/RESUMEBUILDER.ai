@@ -73,7 +73,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         body: JSON.stringify({
           userId: user.uid,
           planType,
-          generationId: generationId // Pass if we are unlocking specific doc
+          generationId: generationId || undefined // Pass if we are unlocking specific doc
         }),
       })
       const data = await res.json()

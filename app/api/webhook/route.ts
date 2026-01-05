@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
     // FIX: Check for both 'userId' AND 'user_id'
     const customData = payload.meta.custom_data || {}
     const userId = customData.userId || customData.user_id
-    const generationId = customData.generationId // Check for specific unlock
+    // Check for specific unlock (make sure to match what you send in checkout)
+    const generationId = customData.generationId || customData.generation_id
 
     console.log(`🔔 Webhook Verified: ${eventName} for User: ${userId}`)
 
