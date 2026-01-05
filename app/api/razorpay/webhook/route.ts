@@ -7,34 +7,22 @@ export async function POST(req: NextRequest) {
     try {
         const rawBody = await req.text();
         const signature = req.headers.get("x-razorpay-signature");
-
-        if (!signature) {
-            return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-        }
-
         const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-        if (!secret) return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
 
-        // Verify signature
+        if (!signature || !secret) return NextResponse.json({ error: "Config/Sig missing" }, { status: 400 });
+
         const hmac = crypto.createHmac("sha256", secret);
         hmac.update(rawBody);
-        const generatedSignature = hmac.digest("hex");
-
-        if (generatedSignature !== signature) {
-            return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-        }
+        if (hmac.digest("hex") !== signature) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 
         const payload = JSON.parse(rawBody);
         const event = payload.event;
-        console.log(`🔔 Razorpay Payload Event: ${event}`);
 
-        // --- CASE 1: SUBSCRIPTION SUCCEEDED (Recurring) ---
+        // 1. Handle Recurring Subscription
         if (event === "subscription.charged" || event === "subscription.activated") {
             const sub = payload.payload.subscription.entity;
             const userId = sub.notes?.userId;
-
             if (userId) {
-                console.log(`✅ Subscription Recurred for User: ${userId}`);
                 await adminDb.collection("users").doc(userId).set({
                     isPremium: true,
                     updatedAt: new Date().toISOString(),
@@ -45,30 +33,23 @@ export async function POST(req: NextRequest) {
                         type: 'razorpay'
                     }
                 }, { merge: true });
+                console.log(`✅ Subscription Active: ${userId}`);
             }
         }
 
-        // --- CASE 2: ONE-TIME PAYMENT (Single Unlock) ---
+        // 2. Handle One-Time Unlock
         else if (event === "payment.captured") {
             const payment = payload.payload.payment.entity;
             const notes = payment.notes || {};
-            const userId = notes.userId;
-            const planType = notes.planType;
 
-            // Only process 'one-time' here (Subscriptions are handled above)
-            if (userId && planType === 'one-time') {
-                const generationId = notes.generationIdValue || notes.generationId;
-
+            if (notes.userId && notes.planType === 'one-time') {
+                const generationId = notes.generationId;
                 if (generationId) {
-                    console.log(`🔓 Unlocking Generation ${generationId} for User ${userId}`);
-                    await adminDb.collection("users").doc(userId).update({
+                    await adminDb.collection("users").doc(notes.userId).update({
                         unlockedGenerations: FieldValue.arrayUnion(generationId)
                     });
-                } else {
-                    console.warn(`⚠️ Payment captured but Usage: generationId missing for user ${userId}`);
+                    console.log(`🔓 Unlocked Doc ${generationId} for ${notes.userId}`);
                 }
-            } else {
-                console.log(`ℹ️ Payment captured ignored (likely subscription payment). Plan: ${planType}`);
             }
         }
 

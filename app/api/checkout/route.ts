@@ -2,76 +2,49 @@ import { NextRequest, NextResponse } from "next/server"
 import { createCheckout } from "@lemonsqueezy/lemonsqueezy.js"
 import { configureLemonSqueezy } from "@/lib/lemonsqueezy"
 
-
-
 export async function POST(request: NextRequest) {
-  console.log("DEBUG ENV VARS:", {
-    storeId: process.env.LEMONSQUEEZY_STORE_ID,
-    defaultVariantId: process.env.LEMONSQUEEZY_VARIANT_ID
-  })
-
   configureLemonSqueezy()
 
   try {
     const body = await request.json()
-    const { userId, userEmail } = body
+    const { userId, userEmail, variantId, redirectUrl, generationId } = body // <--- Read generationId
 
-    // 1. Validate Env Vars & Inputs
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID
-    // Use variantId from request body if available, else fallback to env (default)
-    const variantId = body.variantId || process.env.LEMONSQUEEZY_VARIANT_ID
-    // Get custom redirect URL
-    const redirectUrl = body.redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`
-
-    if (!storeId || !variantId) {
-      const msg = "Missing LEMONSQUEEZY_STORE_ID or variant ID"
-      console.error(msg)
-      return NextResponse.json({ error: msg }, { status: 500 })
+    if (!process.env.LEMONSQUEEZY_STORE_ID || !variantId) {
+      return NextResponse.json({ error: "Missing Store/Variant ID" }, { status: 500 })
     }
 
-    // 2. Validate User Data
-    if (!userId || !userEmail) {
-      return NextResponse.json({ error: "Missing userId or userEmail" }, { status: 400 })
+    const checkoutData: any = {
+      email: userEmail,
+      custom: {
+        userId: userId
+      }
     }
 
-    console.log("Creating checkout for:", { storeId, variantId, userEmail, redirectUrl })
+    // FIX: Add generationId to custom data if present
+    if (generationId) {
+      checkoutData.custom.generationId = generationId
+    }
 
-    // 3. Create Checkout (Convert IDs to numbers to be safe)
     const checkout = await createCheckout(
-      parseInt(storeId),
+      parseInt(process.env.LEMONSQUEEZY_STORE_ID),
       parseInt(variantId),
       {
-        checkoutData: {
-          email: userEmail,
-          custom: {
-            userId: userId
-          }
-        },
+        checkoutData,
         productOptions: {
-          redirectUrl: redirectUrl,
+          redirectUrl: redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
           receiptButtonText: "Go to Dashboard",
         }
       }
     )
 
-    // 4. Validate Response
     if (!checkout.data?.data?.attributes?.url) {
-      console.error("Lemon Squeezy Response Error:", JSON.stringify(checkout, null, 2))
-      return NextResponse.json({ error: "Lemon Squeezy did not return a checkout URL" }, { status: 500 })
+      return NextResponse.json({ error: "Lemon Squeezy did not return a URL" }, { status: 500 })
     }
 
     return NextResponse.json({ url: checkout.data.data.attributes.url })
 
   } catch (error: any) {
-    // 5. DEEP LOGGING
-    console.error("CRITICAL CHECKOUT ERROR:", error)
-
-    // Check if it's an API error from Lemon Squeezy
-    if (error.errors && Array.isArray(error.errors)) {
-      console.error("API Error Details:", JSON.stringify(error.errors, null, 2))
-      return NextResponse.json({ error: error.errors[0]?.detail || "Lemon Squeezy API Error" }, { status: 500 })
-    }
-
-    return NextResponse.json({ error: error.message || "Unknown Server Error" }, { status: 500 })
+    console.error("Checkout Error:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
