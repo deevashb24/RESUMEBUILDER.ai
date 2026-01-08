@@ -13,6 +13,13 @@ export interface Layout {
   component?: React.ComponentType<{ data: any }>
 }
 
+// Import Layout Components
+import { SimpleResumeLayout } from "@/components/layouts/demo"
+import { ModernLayout } from "@/components/layouts/modern"
+import { MinimalLayout } from "@/components/layouts/minimal"
+import { CreativeLayout } from "@/components/layouts/creative"
+import { ParsedResumeData } from "@/lib/resume"
+
 // Available layouts (can be extended)
 export const LAYOUTS: Layout[] = [
   {
@@ -20,25 +27,35 @@ export const LAYOUTS: Layout[] = [
     name: "Professional",
     description: "Clean two-column layout with header",
     preview: "/layouts/layout-demo.png",
+    component: SimpleResumeLayout
   },
   {
     id: "modern",
     name: "Modern",
-    description: "Clean and professional design",
+    description: "Clean and professional design with sidebar",
     preview: "/layouts/layout-modern.png",
+    component: ModernLayout
   },
   {
-    id: "classic",
-    name: "Classic",
-    description: "Traditional resume format",
-    preview: "/layouts/layout-classic.png",
+    id: "minimal",
+    name: "Minimal",
+    description: "Elegant single-column with serif typography",
+    preview: "/layouts/layout-minimal.png",
+    component: MinimalLayout
   },
   {
     id: "creative",
     name: "Creative",
-    description: "Eye-catching design for creative roles",
+    description: "Eye-catching design with bold header",
     preview: "/layouts/layout-creative.png",
+    component: CreativeLayout
   },
+]
+
+export const LETTER_LAYOUTS = [
+  { id: 'classic', name: 'Classic (Serif)' },
+  { id: 'modern', name: 'Modern (Bold)' },
+  { id: 'minimal', name: 'Minimal (Clean)' }
 ]
 
 /**

@@ -2,17 +2,22 @@ import { Card } from "@/components/ui/card"
 
 interface LetterPreviewProps {
   data: any
+  layoutId?: string
 }
 
-export function LetterPreview({ data }: LetterPreviewProps) {
+export function LetterPreview({ data, layoutId = 'classic' }: LetterPreviewProps) {
   if (!data) return null
-  
+
   // Distinguish between SOP (Essay style) and Cover Letter (Business Letter style)
   const isSOP = data.type === "sop"
 
+  // Layout Classes
+  const fontClass = layoutId === 'modern' ? 'font-sans' : (layoutId === 'minimal' ? 'font-sans' : 'font-serif')
+  const containerClass = "w-full bg-white shadow-lg p-[15mm] md:p-[20mm] text-gray-800 leading-relaxed min-h-[297mm]"
+
   return (
-    <div className="w-full bg-white shadow-lg p-[15mm] md:p-[20mm] text-gray-800 font-serif leading-relaxed min-h-[297mm]">
-      
+    <div className={`${containerClass} ${fontClass} ${layoutId === 'modern' ? 'border-t-8 border-blue-600' : ''}`}>
+
       {/* --- HEADER (Cover Letter Only) --- */}
       {!isSOP && (
         <div className="mb-10 border-b border-gray-100 pb-6">
@@ -30,7 +35,7 @@ export function LetterPreview({ data }: LetterPreviewProps) {
       {!isSOP && (
         <div className="mb-8 text-sm text-gray-700">
           <p className="font-bold mb-4">{data.date}</p>
-          
+
           <div className="space-y-0.5">
             <p className="font-bold">{data.recipientInfo?.managerName}</p>
             <p>{data.recipientInfo?.company}</p>

@@ -2,6 +2,7 @@
 
 import { ParsedResumeData } from "@/lib/resume"
 import { SimpleResumeLayout } from "./layouts/demo"
+import { LAYOUTS } from "@/lib/layouts"
 
 interface ResumeRendererProps {
   layoutId: string
@@ -16,28 +17,11 @@ interface ResumeRendererProps {
  * Currently supports: demo layout
  */
 export function ResumeRenderer({ layoutId, data, showWatermark = false }: ResumeRendererProps) {
-  let content;
+  // REGISTRY PATTERN: Look up the component directly
+  const layout = LAYOUTS.find(l => l.id === layoutId) || LAYOUTS[0] // Fallback to first (demo)
+  const LayoutComponent = layout.component || SimpleResumeLayout
 
-  // Map layout IDs to their components
-  switch (layoutId) {
-    case "demo":
-      content = <SimpleResumeLayout data={data} />;
-      break;
-    case "modern":
-    case "classic":
-    case "creative":
-      // Placeholder for other layouts - can be added later
-      content = (
-        <div className="w-[210mm] h-[297mm] mx-auto bg-white shadow-2xl p-12 flex items-center justify-center border-2 border-dashed border-gray-300">
-          <p className="text-gray-400">
-            {layoutId.charAt(0).toUpperCase() + layoutId.slice(1)} layout coming soon
-          </p>
-        </div>
-      );
-      break;
-    default:
-      content = <SimpleResumeLayout data={data} />;
-  }
+  const content = <LayoutComponent data={data} />
 
   return (
     <div className="relative h-full w-full print:w-auto print:h-auto">

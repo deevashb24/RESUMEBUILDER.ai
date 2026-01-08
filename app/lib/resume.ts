@@ -65,6 +65,7 @@ export interface ParsedResumeData {
     linkedin: string
     location: string
     summary: string
+    picture?: string // Optional URL for profile picture
   }
   experience: ExperienceItem[]
   education: EducationItem[]
