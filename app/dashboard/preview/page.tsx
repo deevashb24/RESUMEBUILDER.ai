@@ -15,7 +15,7 @@ import { useReactToPrint } from "react-to-print"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { doc, updateDoc } from "firebase/firestore"
+import { doc, updateDoc, getDoc } from "firebase/firestore" // Added getDoc
 import { db, storage } from "@/lib/firebase"
 import Image from "next/image"
 
@@ -35,8 +35,11 @@ function PreviewContent() {
   const [data, setData] = useState<any>(null)
   const [docType, setDocType] = useState<string>("resume")
 
-  // State for Layout (Defaults to demo, updates on load)
+  // State for Layout
   const [selectedLayout, setSelectedLayout] = useState<string>("demo")
+
+  // Track where this data came from: 'history' or 'resume'
+  const [sourceCollection, setSourceCollection] = useState<'history' | 'resume' | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [showPricing, setShowPricing] = useState(false)
@@ -84,13 +87,47 @@ function PreviewContent() {
       }
       setData(updatedData)
 
-      // 3. Persist to Firestore (Resume Doc)
-      if (docType === "resume") {
-        // Update both the raw parsed data AND the generated content
+      // 3. Persist to Firestore (Resume OR History)
+      if (sourceCollection === 'resume') {
+        // CASE A: Standard Resume
         await updateDoc(doc(db, "resumes", id), {
           "parsedData.personal.picture": url,
           "generatedContent.parsedData.personal.picture": url
         })
+      } else if (sourceCollection === 'history') {
+        // CASE B: History Snapshot (Complex update)
+        // We need to fetch the history doc, parse the JSON, update it, and save it back stringified.
+        const historyRef = doc(db, `users/${user.uid}/history`, id)
+        const historySnap = await getDoc(historyRef)
+
+        if (historySnap.exists()) {
+          const historyData = historySnap.data()
+          if (historyData.output) {
+            try {
+              // Parse the JSON string
+              const jsonOutput = JSON.parse(historyData.output)
+
+              // Update the picture deeply inside the structure
+              if (jsonOutput.parsedData && jsonOutput.parsedData.personal) {
+                jsonOutput.parsedData.personal.picture = url
+              } else if (jsonOutput.personal) {
+                // Fallback structure
+                jsonOutput.personal.picture = url
+              }
+
+              // Stringify back to JSON
+              const newOutputString = JSON.stringify(jsonOutput)
+
+              // Update Firestore
+              await updateDoc(historyRef, {
+                output: newOutputString
+              })
+              console.log("Updated history snapshot with new photo")
+            } catch (err) {
+              console.error("Failed to parse/update history JSON", err)
+            }
+          }
+        }
       }
 
     } catch (error) {
@@ -113,6 +150,7 @@ function PreviewContent() {
         let foundData: any = null
         let type = "resume"
         let initialLayout = "demo"
+        let source: 'history' | 'resume' | null = null
 
         // 1. Try History
         const historyEntry = await getHistoryEntry(id!)
@@ -122,29 +160,28 @@ function PreviewContent() {
             if (parsed.type) type = parsed.type
             if (parsed.layoutId) initialLayout = parsed.layoutId
             foundData = parsed.parsedData || parsed
+            source = 'history' // Found in history
           } catch (e) { console.error(e) }
         }
 
-        // 2. Fallback to Resume DB
+        // 2. Fallback to Resume DB (If not found in history)
         if (!foundData) {
           const resumeEntry = await getResume(id!)
           if (resumeEntry) {
             const content = (resumeEntry as any).generatedContent
-            // If generated content exists, use that. Otherwise use raw parsed data.
             if (content) {
               if (content.type) type = content.type
               foundData = content.parsedData || resumeEntry.parsedData
             } else {
               foundData = resumeEntry.parsedData
             }
-            // Also check if layoutId was saved in the resume entry
             if (resumeEntry.layoutId) initialLayout = resumeEntry.layoutId
+            source = 'resume' // Found in resumes
           }
         }
 
         // --- SMART IMAGE LOGIC ---
-        // Requirement: "if a image is already in the resume uploaded then it takes it from that file only"
-        // Implementation: We only use the User Profile Pic if foundData.personal.picture is MISSING.
+        // Only default to User Profile Pic if NO picture exists in the doc
         if (foundData && foundData.personal && !foundData.personal.picture && user?.photoURL) {
           foundData.personal.picture = user.photoURL
         }
@@ -152,6 +189,7 @@ function PreviewContent() {
         setData(foundData)
         setDocType(type)
         setSelectedLayout(initialLayout)
+        setSourceCollection(source)
 
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
@@ -272,7 +310,6 @@ function PreviewContent() {
             )}
           </div>
 
-          {/* Locked Overlay Hint */}
           {!isUnlocked && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center"></div>
           )}
