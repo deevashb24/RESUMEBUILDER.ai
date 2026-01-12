@@ -22,9 +22,13 @@ interface GenerationContextType {
   resumeIdToView: string | null
   error: string | null
 
+  // Layout State (Exposed)
+  selectedLayout: string
+  setSelectedLayout: (layoutId: string) => void
+
   // Actions
   handleFileSelect: (file: File | null) => Promise<void>
-  processUpload: () => Promise<void> // ✅ EXPOSED NOW
+  processUpload: () => Promise<void>
   handleGenerate: () => Promise<void>
   resetGeneration: () => void
 }
@@ -45,7 +49,9 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
 
   const [isUploading, setIsUploading] = useState(false)
   const [parsedResume, setParsedResume] = useState<ParsedResumeData | null>(null)
-  const [selectedLayout, setSelectedLayout] = useState<string | null>("demo")
+
+  // Layout State (Defaults to 'demo')
+  const [selectedLayout, setSelectedLayout] = useState<string>("demo")
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationFinished, setGenerationFinished] = useState(false)
@@ -58,7 +64,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
   const handleFileSelect = async (file: File | null) => {
     if (!user) return
 
-    // 1. Handle REMOVAL
+    // 1. Handle REMOVAL of previous file
     if (!file) {
       if (storagePath) await deleteResumeFile(storagePath)
       if (currentResumeId) await deleteResume(currentResumeId)
@@ -70,7 +76,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // 2. Handle NEW SELECTION (But don't upload yet)
+    // 2. Handle NEW SELECTION (Cleanup old, set new)
     if (storagePath) await deleteResumeFile(storagePath)
     if (currentResumeId) await deleteResume(currentResumeId)
 
@@ -79,7 +85,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     setError(null)
   }
 
-  // Helper to trigger the actual upload/parse logic (Called by UI button)
+  // Trigger Upload & Parsing
   const processUpload = async () => {
     if (!user || !uploadedFile) return
     setIsUploading(true)
@@ -120,6 +126,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
+      // Ensure we have a resume ID
       let resumeId = currentResumeId
       if (!resumeId) {
         if (uploadedFile) {
@@ -134,6 +141,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       let stats: any
       let finalIdForPreview: string = resumeId!
 
+      // --- GENERATION LOGIC ---
       if (selectedOption === "resume") {
         const response = await fetch("/api/tailor-resume", {
           method: "POST",
@@ -147,7 +155,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         stats = result.stats
 
         const resumeContent = {
-          layoutId: selectedLayout,
+          layoutId: selectedLayout, // <--- SAVES SELECTED LAYOUT
           parsedData: generatedData,
           jobDescription,
           generatedAt: new Date().toISOString(),
@@ -157,6 +165,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
 
         finalIdForPreview = resumeId!
       } else {
+        // Cover Letter / SOP
         const resumeTextString = JSON.stringify(parsedResume)
         const resultString = await generateContent(resumeTextString, jobDescription, selectedOption)
         const result = JSON.parse(resultString)
@@ -164,9 +173,10 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         stats = result.stats
       }
 
+      // --- HISTORY SAVING ---
       const finalHistoryContent = {
         type: selectedOption,
-        layoutId: selectedLayout,
+        layoutId: selectedLayout, // <--- SAVES SELECTED LAYOUT
         parsedData: generatedData,
         jobDescription,
         generatedAt: new Date().toISOString(),
@@ -214,8 +224,9 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       generationStats,
       resumeIdToView,
       error,
+      selectedLayout, setSelectedLayout, // <--- EXPOSED HERE
       handleFileSelect,
-      processUpload, // ✅ Passed to consumers
+      processUpload,
       handleGenerate,
       resetGeneration
     }}>

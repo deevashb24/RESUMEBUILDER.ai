@@ -1,35 +1,28 @@
 import { ParsedResumeData } from "@/lib/resume"
 
-interface UserAvatarProps {
-    data: ParsedResumeData
-    className?: string
-}
+export function UserAvatar({ data, className = "" }: { data: ParsedResumeData, className?: string }) {
+    // 1. Try Resume Picture (Specific to this resume)
+    // 2. Fallback to Initials
 
-export function UserAvatar({ data, className = "" }: UserAvatarProps) {
-    const { name, picture } = data.personal || { name: "" }
+    const imageSrc = data.personal.picture
+    const initials = data.personal.name
+        ? data.personal.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+        : "Me"
 
-    if (picture) {
+    if (imageSrc) {
+        // We use a standard img tag for printing support (Next.js Image can be tricky with print)
         return (
             <img
-                src={picture}
-                alt={name}
-                className={`object-cover ${className}`}
-            // Fallback to initials on error could be added, but minimal img tag is safer for print
+                src={imageSrc}
+                alt={data.personal.name}
+                className={`object-cover object-top rounded-full ${className}`}
             />
         )
     }
 
-    // Generate Initials
-    const initials = name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase()
-
     return (
-        <div className={`flex items-center justify-center font-bold text-white bg-indigo-600 print:!bg-indigo-600 print-color-adjust-exact ${className}`}>
-            {initials || "ME"}
+        <div className={`flex items-center justify-center bg-slate-200 text-slate-600 font-bold rounded-full ${className}`}>
+            {initials}
         </div>
     )
 }

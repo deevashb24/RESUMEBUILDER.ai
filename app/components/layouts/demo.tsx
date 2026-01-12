@@ -1,4 +1,5 @@
 import { ParsedResumeData } from "@/lib/resume"
+import { UserAvatar } from "./user-avatar"
 
 interface SimpleResumeLayoutProps {
   data: ParsedResumeData | null
@@ -7,10 +8,10 @@ interface SimpleResumeLayoutProps {
 // Helper: Converts "**text**" into <strong>text</strong>
 const MarkdownRenderer = ({ text }: { text: string }) => {
   if (!text) return null
-  
+
   // Split by double asterisks
   const parts = text.split(/(\*\*.*?\*\*)/g)
-  
+
   return (
     <span>
       {parts.map((part, index) => {
@@ -38,21 +39,31 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
 
   return (
     <div className="w-full h-full bg-white p-8 text-sm leading-relaxed text-gray-800" id="resume-preview">
-      <header className="border-b-2 border-gray-900 pb-4 mb-6">
-        <h1 className="text-3xl font-bold uppercase tracking-wide text-gray-900">
-          <MarkdownRenderer text={data.personal.name || "Your Name"} />
-        </h1>
-        <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
-          {data.personal.email && <span>{data.personal.email}</span>}
-          {data.personal.phone && <span>• {data.personal.phone}</span>}
-          {data.personal.linkedin && <span>• {data.personal.linkedin}</span>}
-          {data.personal.location && <span>• {data.personal.location}</span>}
-        </div>
-        {data.personal.summary && (
-          <div className="mt-4 text-gray-700 italic">
-            <MarkdownRenderer text={data.personal.summary} />
+
+      {/* HEADER: Updated to support Avatar */}
+      <header className="border-b-2 border-gray-900 pb-6 mb-6 flex items-start justify-between gap-6">
+
+        {/* LEFT: Personal Info */}
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold uppercase tracking-wide text-gray-900">
+            <MarkdownRenderer text={data.personal.name || "Your Name"} />
+          </h1>
+          <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
+            {data.personal.email && <span>{data.personal.email}</span>}
+            {data.personal.phone && <span>• {data.personal.phone}</span>}
+            {data.personal.linkedin && <span>• {data.personal.linkedin}</span>}
+            {data.personal.location && <span>• {data.personal.location}</span>}
           </div>
-        )}
+          {data.personal.summary && (
+            <div className="mt-4 text-gray-700 italic">
+              <MarkdownRenderer text={data.personal.summary} />
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: User Avatar */}
+        <UserAvatar data={data} className="w-24 h-24 border-2 border-gray-100 shadow-sm shrink-0" />
+
       </header>
 
       {/* SKILLS */}
@@ -63,7 +74,7 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             {data.skills.languages?.length > 0 && <><span className="font-semibold">Languages:</span><span>{data.skills.languages.join(", ")}</span></>}
             {data.skills.tools?.length > 0 && <><span className="font-semibold">Tools:</span><span>{data.skills.tools.join(", ")}</span></>}
             {data.skills.frameworks?.length > 0 && <><span className="font-semibold">Frameworks:</span><span>{data.skills.frameworks.join(", ")}</span></>}
-             {data.skills.concepts?.length > 0 && <><span className="font-semibold">Concepts:</span><span>{data.skills.concepts.join(", ")}</span></>}
+            {data.skills.concepts?.length > 0 && <><span className="font-semibold">Concepts:</span><span>{data.skills.concepts.join(", ")}</span></>}
           </div>
         </section>
       )}
@@ -117,12 +128,12 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
       {filterVisible(data.education).length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3">Education</h2>
-           <div className="space-y-4">
+          <div className="space-y-4">
             {filterVisible(data.education).map((edu: any) => (
               <div key={edu.id || Math.random()} className="flex justify-between">
                 <div>
-                   <div className="font-bold text-gray-900"><MarkdownRenderer text={edu.school} /></div>
-                   <div><MarkdownRenderer text={edu.degree} /> {edu.field ? `in ${edu.field}` : ""}</div>
+                  <div className="font-bold text-gray-900"><MarkdownRenderer text={edu.school} /></div>
+                  <div><MarkdownRenderer text={edu.degree} /> {edu.field ? `in ${edu.field}` : ""}</div>
                 </div>
                 <div className="text-right text-sm text-gray-600">
                   <div>{edu.start} – {edu.end}</div>

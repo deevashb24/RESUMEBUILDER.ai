@@ -7,17 +7,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea"
 import { FileUpload } from "@/components/file-upload"
 import { GenerationOptions } from "@/components/generation-options"
-import { LayoutSelector } from "@/components/layout-selector"
 import { useAuth } from "@/lib/auth-context"
-import { useGeneration } from "@/lib/generation-context" // Use the context
+import { useGeneration } from "@/lib/generation-context"
 import { GenerationProgress } from "@/components/generation-progress"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, CheckCircle, LayoutTemplate } from "lucide-react"
+import Image from "next/image"
+
+// --- LAYOUT DEFINITIONS ---
+const LAYOUT_OPTIONS = [
+  { id: "demo", name: "Professional", imageSrc: "/images/layouts/demo.png" },
+  { id: "modern", name: "Modern Sidebar", imageSrc: "/images/layouts/modern.png" },
+  { id: "minimal", name: "Minimalist", imageSrc: "/images/layouts/minimal.png" },
+  { id: "creative", name: "Creative Bold", imageSrc: "/images/layouts/creative.png" },
+]
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  // Get everything from Global Context
   const {
     selectedOption, setSelectedOption,
     jobDescription, setJobDescription,
@@ -32,14 +39,13 @@ export default function DashboardPage() {
     error,
     handleFileSelect,
     handleGenerate,
-    resetGeneration // To reset view if they come back
+    selectedLayout, setSelectedLayout // <--- Layout State from Context
   } = useGeneration()
 
-  // Reset "View Result" state when mounting dashboard so they can generate again
+  // Reset view logic if user returns
   useEffect(() => {
     if (!isGenerating && generationFinished) {
-      // Optional: Keep the result visible or reset? 
-      // For now, we let them see the state.
+      // Optional: You can reset generation state here if needed
     }
   }, [])
 
@@ -63,7 +69,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Upload & JD */}
+      {/* --- 1. UPLOAD & JD SECTION --- */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="border-0 shadow-sm">
           <CardHeader>
@@ -71,10 +77,9 @@ export default function DashboardPage() {
             <CardDescription className="text-sm">Drag and drop your previous resume (PDF/DOCX)</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Note: In this version handleFileSelect does both select + upload process automatically for simplicity based on your previous request, or you can separate them in the context */}
             <FileUpload
               onFileSelect={handleFileSelect}
-              onUpload={processUpload} // Context handles upload on select now
+              onUpload={processUpload}
               uploadedFile={uploadedFile}
               isUploading={isUploading}
               isParsed={!!parsedResume}
@@ -98,20 +103,65 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Layout - ONLY for Resumes */}
+      {/* --- 2. LAYOUT SELECTOR (New Feature) --- */}
+      {/* Only show if Parsed Resume exists AND we are generating a Resume (not SOP/Letter) */}
       {parsedResume && selectedOption === "resume" && (
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Choose Layout</CardTitle>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <LayoutTemplate className="w-5 h-5 text-gray-500" />
+              Choose Layout
+            </CardTitle>
+            <CardDescription className="text-sm">Select the design for your generated resume</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Simplified for now, context can hold layout state if needed */}
-            <div className="text-sm text-muted-foreground">Default Professional Layout Selected</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {LAYOUT_OPTIONS.map((option) => (
+                <div
+                  key={option.id}
+                  onClick={() => setSelectedLayout(option.id)}
+                  className={`relative group cursor-pointer rounded-xl border-2 transition-all overflow-hidden bg-white
+                    ${selectedLayout === option.id
+                      ? "border-blue-600 ring-2 ring-blue-100 shadow-lg scale-[1.02]"
+                      : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                    }`}
+                >
+                  {/* Image Preview Container (A4 Ratio) */}
+                  <div className="relative aspect-[210/297] bg-gray-50 w-full">
+                    {/* Text Fallback if Image fails/missing */}
+                    <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 font-medium z-0">
+                      {option.name}
+                    </div>
+                    {/* Uncomment this when you add images to /public/images/layouts/ */}
+                    {/* <Image 
+                       src={option.imageSrc} 
+                       alt={option.name} 
+                       fill 
+                       className="object-cover object-top z-10 transition-opacity"
+                     /> 
+                     */}
+                  </div>
+
+                  {/* Footer Label */}
+                  <div className={`p-2 text-center text-xs font-medium border-t transition-colors
+                    ${selectedLayout === option.id ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-white text-gray-600 border-gray-100"}`}>
+                    {option.name}
+                  </div>
+
+                  {/* Checkmark Badge */}
+                  {selectedLayout === option.id && (
+                    <div className="absolute top-2 right-2 z-20 bg-blue-600 text-white rounded-full p-1 shadow-md">
+                      <CheckCircle className="w-3 h-3" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* GENERATE SECTION */}
+      {/* --- 3. GENERATE SECTION --- */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-semibold">Generate</CardTitle>
