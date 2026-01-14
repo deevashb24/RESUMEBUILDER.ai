@@ -15,26 +15,21 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
         const handleResize = () => {
             if (!containerRef.current || !contentRef.current) return
 
-            // A4 dimensions in pixels (approximate at 96 DPI)
-            // We use the container's width to determine the baseline
             const containerHeight = containerRef.current.clientHeight
             const contentHeight = contentRef.current.scrollHeight
 
-            // Logic: If content is taller than the page, scale it down.
-            // If content is smaller, we keep scale at 1 (we don't stretch text, just layout).
+            // If content is taller than A4 (297mm), shrink it to fit
             if (contentHeight > containerHeight) {
                 const newScale = containerHeight / contentHeight
-                // Add a tiny buffer (0.98) to prevent edge cutting
-                setScale(newScale * 0.99)
+                // Buffer of 0.98 to avoid cutting off bottom border
+                setScale(newScale * 0.98)
             } else {
                 setScale(1)
             }
         }
 
-        // Run initially and set up observer for content changes
         handleResize()
-
-        // Observer ensures if images load or data changes, we re-calc
+        // Re-calculate if content changes (e.g. image loads)
         const observer = new ResizeObserver(handleResize)
         if (contentRef.current) observer.observe(contentRef.current)
 
@@ -43,18 +38,17 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
 
     return (
         <div
-            id="print-content-root" // Matches CSS ID
-            className="a4-page-container mx-auto" // Matches CSS Class
             ref={containerRef}
+            className="a4-page-container mx-auto origin-top"
         >
             <div
                 ref={contentRef}
                 style={{
                     transform: `scale(${scale})`,
                     transformOrigin: "top center",
-                    height: "100%",
                     width: "100%",
-                    // Flex column ensures if content is small, footer can push down (if layout supports it)
+                    // If content is short, let it fill height naturally
+                    height: scale === 1 ? "100%" : "auto",
                     display: "flex",
                     flexDirection: "column"
                 }}

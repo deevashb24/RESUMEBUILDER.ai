@@ -135,26 +135,21 @@
   body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    margin: 0;
-    padding: 0;
     background-color: white;
   }
 
-  /* Hide everything else when printing */
-  body>*:not(#print-content-root) {
-    display: none !important;
-  }
-
-  /* Ensure the print root is visible and resets layout */
-  #print-content-root {
-    display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 210mm;
-    height: 297mm;
-    overflow: hidden;
-    /* Force single page clipping */
+  /* SAFE FIX: We do NOT hide body children anymore.
+     react-to-print handles isolation automatically.
+     We just ensure our specific container respects the layout.
+  */
+  .a4-page-container {
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
   }
 }
 
