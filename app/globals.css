@@ -129,18 +129,24 @@
   @page {
     size: A4;
     margin: 0mm;
-    /* Removes default browser margins */
+    /* Removes default browser margins on the sheet */
   }
 
+  html,
   body {
+    width: 210mm !important;
+    height: 297mm !important;
+    /* Force exact A4 height */
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    /* HARD CROP: Prevents page 2 from ever appearing */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background-color: white;
   }
 
-  /* SAFE FIX: We do NOT hide body children anymore.
-     react-to-print handles isolation automatically.
-  */
+  /* Ensure the container matches strictly */
   .a4-page-container {
     margin: 0 !important;
     box-shadow: none !important;
@@ -149,6 +155,7 @@
     overflow: hidden !important;
     page-break-after: avoid !important;
     page-break-before: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

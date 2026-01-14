@@ -15,22 +15,23 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
         const handleResize = () => {
             if (!containerRef.current || !contentRef.current) return
 
-            // A4 height in pixels (approximate for calculation)
+            // A4 dimensions
             const containerHeight = containerRef.current.clientHeight
             const contentHeight = contentRef.current.scrollHeight
 
             // If content is taller than the container, shrink it
             if (contentHeight > containerHeight) {
                 const newScale = containerHeight / contentHeight
-                // Buffer of 0.98 to prevent bottom edge clipping
-                setScale(newScale * 0.98)
+                // INCREASED BUFFER: 0.96 (4% margin) ensures it fits comfortably without 
+                // touching the exact pixel edge, preventing "Double Page" glitch.
+                setScale(newScale * 0.96)
             } else {
                 setScale(1)
             }
         }
 
         handleResize()
-        // Watch for content changes (images loading, etc)
+        // Watch for content changes (e.g. images loading)
         const observer = new ResizeObserver(handleResize)
         if (contentRef.current) observer.observe(contentRef.current)
 
