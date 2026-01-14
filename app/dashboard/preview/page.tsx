@@ -35,7 +35,10 @@ function PreviewContent() {
   const [data, setData] = useState<any>(null)
   const [docType, setDocType] = useState<string>("resume")
   const [selectedLayout, setSelectedLayout] = useState<string>("demo")
+
+  // Track Data Source & Structure
   const [dataSource, setDataSource] = useState<'history' | 'resume' | null>(null)
+  const [hasGeneratedContent, setHasGeneratedContent] = useState(false) // <--- NEW FLAG
 
   const [loading, setLoading] = useState(true)
   const [showPricing, setShowPricing] = useState(false)
@@ -60,7 +63,7 @@ function PreviewContent() {
     handlePrint()
   }
 
-  // --- IMAGE UPLOAD LOGIC (FIXED) ---
+  // --- IMAGE UPLOAD LOGIC (FIXED PERSISTENCE) ---
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user || !id) return
@@ -84,15 +87,13 @@ function PreviewContent() {
 
       // 3. Persist to Firestore based on Source
       if (dataSource === 'resume') {
-        // CASE A: Standard Resume Doc
-        // We construct the update object dynamically to avoid errors
+        // CASE A: Resume Document
         const updatePayload: any = {
-          "parsedData.personal.picture": url
+          "parsedData.personal.picture": url // Always update the source
         }
 
-        // Only try to update generatedContent if it actually exists in our data
-        // otherwise Firestore throws "Document contains invalid path"
-        if (data.generatedContent) {
+        // CRITICAL FIX: Explicitly update generated content if it exists
+        if (hasGeneratedContent) {
           updatePayload["generatedContent.parsedData.personal.picture"] = url
         }
 
@@ -108,15 +109,14 @@ function PreviewContent() {
           if (historyData.output) {
             try {
               const jsonOutput = JSON.parse(historyData.output)
-
               let updated = false
 
-              // Path 1: parsedData.personal.picture
+              // Path 1: parsedData.personal.picture (The generated result)
               if (jsonOutput.parsedData?.personal) {
                 jsonOutput.parsedData.personal.picture = url
                 updated = true
               }
-              // Path 2: personal.picture (Fallback)
+              // Path 2: personal.picture (Direct structure)
               else if (jsonOutput.personal) {
                 jsonOutput.personal.picture = url
                 updated = true
@@ -136,7 +136,7 @@ function PreviewContent() {
 
     } catch (error) {
       console.error("Photo upload failed:", error)
-      alert("Failed to upload photo. Check console for details.")
+      alert("Failed to upload photo. Please try again.")
     } finally {
       setUploadingPhoto(false)
     }
@@ -155,6 +155,7 @@ function PreviewContent() {
         let type = "resume"
         let initialLayout = "demo"
         let source: 'history' | 'resume' | null = null
+        let hasGen = false
 
         // 1. Try History
         const historyEntry = await getHistoryEntry(id!)
@@ -174,9 +175,12 @@ function PreviewContent() {
           if (resumeEntry) {
             const content = (resumeEntry as any).generatedContent
             if (content) {
+              // We are viewing Generated Content
               if (content.type) type = content.type
               foundData = content.parsedData || resumeEntry.parsedData
+              hasGen = true // <--- Mark as having Generated Content
             } else {
+              // We are viewing Raw Parsed Content
               foundData = resumeEntry.parsedData
             }
             if (resumeEntry.layoutId) initialLayout = resumeEntry.layoutId
@@ -185,6 +189,7 @@ function PreviewContent() {
         }
 
         // --- SMART DEFAULT ---
+        // Only use Profile Pic if Resume has NO picture at all
         if (foundData && foundData.personal && !foundData.personal.picture && user?.photoURL) {
           foundData.personal.picture = user.photoURL
         }
@@ -193,6 +198,7 @@ function PreviewContent() {
         setDocType(type)
         setSelectedLayout(initialLayout)
         setDataSource(source)
+        setHasGeneratedContent(hasGen) // <--- Save flag
 
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
