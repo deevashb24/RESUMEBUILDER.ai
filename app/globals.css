@@ -118,7 +118,52 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* --- PRINT & PDF GENERATION FIXES --- */
+@media print {
+  @page {
+    size: A4;
+    margin: 0mm;
+    /* Crucial: Removes browser defaults */
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+  }
+
+  /* Hide everything else when printing */
+  body>*:not(#print-content-root) {
+    display: none !important;
+  }
+
+  /* Ensure the print root is visible and resets layout */
+  #print-content-root {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    /* Force single page clipping */
+  }
+}
+
+/* Screen Preview Helpers */
+.a4-page-container {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
