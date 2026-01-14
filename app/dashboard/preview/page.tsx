@@ -15,7 +15,7 @@ import { useReactToPrint } from "react-to-print"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { doc, updateDoc, getDoc } from "firebase/firestore" // Added getDoc
+import { doc, updateDoc, getDoc } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
 import Image from "next/image"
 
@@ -34,12 +34,8 @@ function PreviewContent() {
 
   const [data, setData] = useState<any>(null)
   const [docType, setDocType] = useState<string>("resume")
-
-  // State for Layout
   const [selectedLayout, setSelectedLayout] = useState<string>("demo")
-
-  // Track where this data came from: 'history' or 'resume'
-  const [sourceCollection, setSourceCollection] = useState<'history' | 'resume' | null>(null)
+  const [dataSource, setDataSource] = useState<'history' | 'resume' | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [showPricing, setShowPricing] = useState(false)
@@ -48,7 +44,6 @@ function PreviewContent() {
   const componentRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // --- ACCESS CONTROL ---
   const isSpecificallyUnlocked = id ? unlockedGenerations?.includes(id) : false
   const isUnlocked = isPremium || isSpecificallyUnlocked
 
@@ -65,7 +60,7 @@ function PreviewContent() {
     handlePrint()
   }
 
-  // --- IMAGE UPLOAD LOGIC ---
+  // --- IMAGE UPLOAD LOGIC (FIXED) ---
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user || !id) return
@@ -87,42 +82,51 @@ function PreviewContent() {
       }
       setData(updatedData)
 
-      // 3. Persist to Firestore (Resume OR History)
-      if (sourceCollection === 'resume') {
-        // CASE A: Standard Resume
-        await updateDoc(doc(db, "resumes", id), {
-          "parsedData.personal.picture": url,
-          "generatedContent.parsedData.personal.picture": url
-        })
-      } else if (sourceCollection === 'history') {
-        // CASE B: History Snapshot (Complex update)
-        // We need to fetch the history doc, parse the JSON, update it, and save it back stringified.
-        const historyRef = doc(db, `users/${user.uid}/history`, id)
+      // 3. Persist to Firestore based on Source
+      if (dataSource === 'resume') {
+        // CASE A: Standard Resume Doc
+        // We construct the update object dynamically to avoid errors
+        const updatePayload: any = {
+          "parsedData.personal.picture": url
+        }
+
+        // Only try to update generatedContent if it actually exists in our data
+        // otherwise Firestore throws "Document contains invalid path"
+        if (data.generatedContent) {
+          updatePayload["generatedContent.parsedData.personal.picture"] = url
+        }
+
+        await updateDoc(doc(db, "resumes", id), updatePayload)
+
+      } else if (dataSource === 'history') {
+        // CASE B: History Snapshot
+        const historyRef = doc(db, "history", id)
         const historySnap = await getDoc(historyRef)
 
         if (historySnap.exists()) {
           const historyData = historySnap.data()
           if (historyData.output) {
             try {
-              // Parse the JSON string
               const jsonOutput = JSON.parse(historyData.output)
 
-              // Update the picture deeply inside the structure
-              if (jsonOutput.parsedData && jsonOutput.parsedData.personal) {
+              let updated = false
+
+              // Path 1: parsedData.personal.picture
+              if (jsonOutput.parsedData?.personal) {
                 jsonOutput.parsedData.personal.picture = url
-              } else if (jsonOutput.personal) {
-                // Fallback structure
+                updated = true
+              }
+              // Path 2: personal.picture (Fallback)
+              else if (jsonOutput.personal) {
                 jsonOutput.personal.picture = url
+                updated = true
               }
 
-              // Stringify back to JSON
-              const newOutputString = JSON.stringify(jsonOutput)
-
-              // Update Firestore
-              await updateDoc(historyRef, {
-                output: newOutputString
-              })
-              console.log("Updated history snapshot with new photo")
+              if (updated) {
+                await updateDoc(historyRef, {
+                  output: JSON.stringify(jsonOutput)
+                })
+              }
             } catch (err) {
               console.error("Failed to parse/update history JSON", err)
             }
@@ -132,7 +136,7 @@ function PreviewContent() {
 
     } catch (error) {
       console.error("Photo upload failed:", error)
-      alert("Failed to upload photo.")
+      alert("Failed to upload photo. Check console for details.")
     } finally {
       setUploadingPhoto(false)
     }
@@ -160,11 +164,11 @@ function PreviewContent() {
             if (parsed.type) type = parsed.type
             if (parsed.layoutId) initialLayout = parsed.layoutId
             foundData = parsed.parsedData || parsed
-            source = 'history' // Found in history
+            source = 'history'
           } catch (e) { console.error(e) }
         }
 
-        // 2. Fallback to Resume DB (If not found in history)
+        // 2. Fallback to Resume DB
         if (!foundData) {
           const resumeEntry = await getResume(id!)
           if (resumeEntry) {
@@ -176,12 +180,11 @@ function PreviewContent() {
               foundData = resumeEntry.parsedData
             }
             if (resumeEntry.layoutId) initialLayout = resumeEntry.layoutId
-            source = 'resume' // Found in resumes
+            source = 'resume'
           }
         }
 
-        // --- SMART IMAGE LOGIC ---
-        // Only default to User Profile Pic if NO picture exists in the doc
+        // --- SMART DEFAULT ---
         if (foundData && foundData.personal && !foundData.personal.picture && user?.photoURL) {
           foundData.personal.picture = user.photoURL
         }
@@ -189,7 +192,7 @@ function PreviewContent() {
         setData(foundData)
         setDocType(type)
         setSelectedLayout(initialLayout)
-        setSourceCollection(source)
+        setDataSource(source)
 
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
@@ -258,7 +261,7 @@ function PreviewContent() {
         </div>
       </div>
 
-      {/* --- LAYOUT SELECTOR (RESUMES ONLY) --- */}
+      {/* --- LAYOUT SELECTOR --- */}
       {!isLetter && (
         <div className="max-w-5xl mx-auto mt-8 px-4">
           <div className="flex items-center gap-2 mb-4 text-gray-700 font-semibold">
@@ -281,7 +284,7 @@ function PreviewContent() {
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
                     <span>{option.name}</span>
                   </div>
-                  {/* Uncomment when images are added */}
+                  {/* UNCOMMENT FOR IMAGES */}
                   {/* <Image src={option.imageSrc} alt={option.name} fill className="object-cover object-top" /> */}
                 </div>
                 <div className={`p-2 text-center text-xs font-medium border-t transition-colors
@@ -309,10 +312,6 @@ function PreviewContent() {
               <ResumeRenderer layoutId={selectedLayout} data={data} showWatermark={!isUnlocked} />
             )}
           </div>
-
-          {!isUnlocked && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center"></div>
-          )}
         </div>
       </div>
 
