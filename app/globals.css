@@ -129,7 +129,7 @@
   @page {
     size: A4;
     margin: 0mm;
-    /* Crucial: Removes browser defaults */
+    /* Removes default browser margins */
   }
 
   body {
@@ -140,7 +140,6 @@
 
   /* SAFE FIX: We do NOT hide body children anymore.
      react-to-print handles isolation automatically.
-     We just ensure our specific container respects the layout.
   */
   .a4-page-container {
     margin: 0 !important;

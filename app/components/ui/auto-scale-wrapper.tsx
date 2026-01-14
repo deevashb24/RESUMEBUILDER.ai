@@ -15,13 +15,14 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
         const handleResize = () => {
             if (!containerRef.current || !contentRef.current) return
 
+            // A4 height in pixels (approximate for calculation)
             const containerHeight = containerRef.current.clientHeight
             const contentHeight = contentRef.current.scrollHeight
 
-            // If content is taller than A4 (297mm), shrink it to fit
+            // If content is taller than the container, shrink it
             if (contentHeight > containerHeight) {
                 const newScale = containerHeight / contentHeight
-                // Buffer of 0.98 to avoid cutting off bottom border
+                // Buffer of 0.98 to prevent bottom edge clipping
                 setScale(newScale * 0.98)
             } else {
                 setScale(1)
@@ -29,7 +30,7 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
         }
 
         handleResize()
-        // Re-calculate if content changes (e.g. image loads)
+        // Watch for content changes (images loading, etc)
         const observer = new ResizeObserver(handleResize)
         if (contentRef.current) observer.observe(contentRef.current)
 
@@ -39,7 +40,7 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
     return (
         <div
             ref={containerRef}
-            className="a4-page-container mx-auto origin-top"
+            className="a4-page-container mx-auto origin-top bg-white"
         >
             <div
                 ref={contentRef}
@@ -47,7 +48,7 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
                     transform: `scale(${scale})`,
                     transformOrigin: "top center",
                     width: "100%",
-                    // If content is short, let it fill height naturally
+                    // If content is small, let it fill height naturally
                     height: scale === 1 ? "100%" : "auto",
                     display: "flex",
                     flexDirection: "column"
