@@ -43,13 +43,23 @@ export function ModernLayout({ data }: LayoutProps) {
                     {data.personal.email && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">Email</div>
-                            <div className="text-white break-all">{data.personal.email}</div>
+                            <a
+                                href={`mailto:${data.personal.email}`}
+                                className="text-white break-all hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.email}
+                            </a>
                         </div>
                     )}
                     {data.personal.phone && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">Phone</div>
-                            <div className="text-white">{data.personal.phone}</div>
+                            <a
+                                href={`tel:${data.personal.phone.replace(/[^\d+]/g, '')}`}
+                                className="text-white hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.phone}
+                            </a>
                         </div>
                     )}
                     {data.personal.location && (
@@ -61,7 +71,14 @@ export function ModernLayout({ data }: LayoutProps) {
                     {data.personal.linkedin && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">LinkedIn</div>
-                            <div className="text-white truncate">{data.personal.linkedin}</div>
+                            <a
+                                href={data.personal.linkedin.startsWith('http') ? data.personal.linkedin : `https://${data.personal.linkedin}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-white truncate block hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.linkedin.replace(/^https?:\/\/(www\.)?/, '')}
+                            </a>
                         </div>
                     )}
                 </div>
@@ -180,7 +197,15 @@ export function ModernLayout({ data }: LayoutProps) {
                             {visible(data.projects).map((proj: any, i) => (
                                 <div key={i}>
                                     <div className="flex justify-between items-baseline">
-                                        <h4 className="font-bold text-slate-900"><MarkdownRenderer text={proj.title} /></h4>
+                                        <h4 className="font-bold text-slate-900">
+                                            {proj.link ? (
+                                                <a href={proj.link} target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">
+                                                    <MarkdownRenderer text={proj.title} />
+                                                </a>
+                                            ) : (
+                                                <MarkdownRenderer text={proj.title} />
+                                            )}
+                                        </h4>
                                         <div className="flex gap-2">
                                             {proj.tech?.map((t: string, idx: number) => (
                                                 <span key={idx} className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{t}</span>

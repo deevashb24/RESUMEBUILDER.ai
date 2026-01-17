@@ -34,9 +34,35 @@ export function MinimalLayout({ data }: LayoutProps) {
 
                 <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm font-sans text-gray-500 tracking-wide">
                     {data.personal.location && <span>{data.personal.location}</span>}
-                    {data.personal.email && <span>{data.personal.email}</span>}
-                    {data.personal.phone && <span>{data.personal.phone}</span>}
-                    {data.personal.linkedin && <span>{data.personal.linkedin}</span>}
+
+                    {data.personal.email && (
+                        <a
+                            href={`mailto:${data.personal.email}`}
+                            className="hover:text-gray-900 hover:underline transition-colors"
+                        >
+                            {data.personal.email}
+                        </a>
+                    )}
+
+                    {data.personal.phone && (
+                        <a
+                            href={`tel:${data.personal.phone.replace(/[^\d+]/g, '')}`}
+                            className="hover:text-gray-900 hover:underline transition-colors"
+                        >
+                            {data.personal.phone}
+                        </a>
+                    )}
+
+                    {data.personal.linkedin && (
+                        <a
+                            href={data.personal.linkedin.startsWith('http') ? data.personal.linkedin : `https://${data.personal.linkedin}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hover:text-gray-900 hover:underline transition-colors"
+                        >
+                            {data.personal.linkedin.replace(/^https?:\/\/(www\.)?/, '')}
+                        </a>
+                    )}
                 </div>
             </header>
 

@@ -109,10 +109,27 @@ export function CreativeLayout({ data }: LayoutProps) {
                     <div className="bg-slate-900 text-slate-300 p-6 rounded-xl shadow-lg print:!bg-slate-900 print:!text-slate-300">
                         <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-4 border-b border-slate-700 pb-2">Contact</h3>
                         <div className="space-y-3 text-sm font-medium">
-                            {data.personal.email && <div className="break-all">{data.personal.email}</div>}
-                            {data.personal.phone && <div>{data.personal.phone}</div>}
+                            {data.personal.email && (
+                                <a href={`mailto:${data.personal.email}`} className="block break-all hover:text-indigo-400 transition-colors">
+                                    {data.personal.email}
+                                </a>
+                            )}
+                            {data.personal.phone && (
+                                <a href={`tel:${data.personal.phone.replace(/[^\d+]/g, '')}`} className="block hover:text-indigo-400 transition-colors">
+                                    {data.personal.phone}
+                                </a>
+                            )}
                             {data.personal.location && <div>{data.personal.location}</div>}
-                            {data.personal.linkedin && <div className="text-indigo-400">{data.personal.linkedin}</div>}
+                            {data.personal.linkedin && (
+                                <a
+                                    href={data.personal.linkedin.startsWith('http') ? data.personal.linkedin : `https://${data.personal.linkedin}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
+                                >
+                                    {data.personal.linkedin.replace(/^https?:\/\/(www\.)?/, '')}
+                                </a>
+                            )}
                         </div>
                     </div>
 

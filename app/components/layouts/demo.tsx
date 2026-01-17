@@ -40,7 +40,7 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
   return (
     <div className="w-full h-full bg-white p-8 text-sm leading-relaxed text-gray-800" id="resume-preview">
 
-      {/* HEADER: Updated to support Avatar */}
+      {/* HEADER: Updated to support Avatar & Clickable Links */}
       <header className="border-b-2 border-gray-900 pb-6 mb-6 flex items-start justify-between gap-6">
 
         {/* LEFT: Personal Info */}
@@ -49,11 +49,46 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             <MarkdownRenderer text={data.personal.name || "Your Name"} />
           </h1>
           <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
-            {data.personal.email && <span>{data.personal.email}</span>}
-            {data.personal.phone && <span>• {data.personal.phone}</span>}
-            {data.personal.linkedin && <span>• {data.personal.linkedin}</span>}
+            {/* EMAIL - Clickable */}
+            {data.personal.email && (
+              <a
+                href={`mailto:${data.personal.email}`}
+                className="hover:text-blue-600 hover:underline transition-colors"
+              >
+                {data.personal.email}
+              </a>
+            )}
+
+            {/* PHONE - Clickable */}
+            {data.personal.phone && (
+              <span>•
+                <a
+                  href={`tel:${data.personal.phone.replace(/[^\d+]/g, '')}`}
+                  className="ml-1 hover:text-blue-600 hover:underline transition-colors"
+                >
+                  {data.personal.phone}
+                </a>
+              </span>
+            )}
+
+            {/* LINKEDIN - Clickable */}
+            {data.personal.linkedin && (
+              <span>•
+                <a
+                  href={data.personal.linkedin.startsWith('http') ? data.personal.linkedin : `https://${data.personal.linkedin}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-1 hover:text-blue-600 hover:underline transition-colors"
+                >
+                  {data.personal.linkedin.replace(/^https?:\/\/(www\.)?/, '')}
+                </a>
+              </span>
+            )}
+
+            {/* LOCATION - Plain Text */}
             {data.personal.location && <span>• {data.personal.location}</span>}
           </div>
+
           {data.personal.summary && (
             <div className="mt-4 text-gray-700 italic">
               <MarkdownRenderer text={data.personal.summary} />
@@ -110,7 +145,21 @@ export function SimpleResumeLayout({ data }: SimpleResumeLayoutProps) {
             {filterVisible(data.projects).map((proj: any) => (
               <div key={proj.id || Math.random()}>
                 <div className="flex justify-between items-baseline">
-                  <h3 className="font-bold text-gray-900"><MarkdownRenderer text={proj.title} /></h3>
+                  <h3 className="font-bold text-gray-900">
+                    {/* Check if link exists */}
+                    {proj.link ? (
+                      <a
+                        href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-blue-600 hover:underline"
+                      >
+                        <MarkdownRenderer text={proj.title} />
+                      </a>
+                    ) : (
+                      <MarkdownRenderer text={proj.title} />
+                    )}
+                  </h3>
                   {proj.tech?.length > 0 && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{proj.tech.join(" • ")}</span>}
                 </div>
                 <ul className="list-disc list-outside ml-4 mt-1 space-y-1 text-gray-700">
