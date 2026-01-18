@@ -19,6 +19,7 @@ import { ModernLayout } from "@/components/layouts/modern"
 import { MinimalLayout } from "@/components/layouts/minimal"
 import { CreativeLayout } from "@/components/layouts/creative"
 import { ParsedResumeData } from "@/lib/resume"
+import { IitkLayout } from "@/components/layouts/iitk"
 
 // Available layouts (can be extended)
 export const LAYOUTS: Layout[] = [
@@ -49,6 +50,13 @@ export const LAYOUTS: Layout[] = [
     description: "Eye-catching design with bold header",
     preview: "/layouts/layout-creative.png",
     component: CreativeLayout
+  },
+  {
+    id: "iitk",
+    name: "IIT Kanpur (Classic)",
+    description: "Traditional single-column layout optimized for IIT Kanpur format",
+    component: IitkLayout,
+    preview: "/layouts/layout-iitk.png"
   },
 ]
 
