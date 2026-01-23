@@ -12,6 +12,7 @@ import { useGeneration } from "@/lib/generation-context"
 import { GenerationProgress } from "@/components/generation-progress"
 import { ArrowRight, CheckCircle, LayoutTemplate } from "lucide-react"
 import Image from "next/image"
+import { motion } from "framer-motion"
 
 // --- LAYOUT DEFINITIONS ---
 const LAYOUT_OPTIONS = [
@@ -39,7 +40,7 @@ export default function DashboardPage() {
     error,
     handleFileSelect,
     handleGenerate,
-    selectedLayout, setSelectedLayout // <--- Layout State from Context
+    selectedLayout, setSelectedLayout
   } = useGeneration()
 
   // Reset view logic if user returns
@@ -62,7 +63,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 mb-20">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="max-w-6xl mx-auto space-y-6 mb-20"
+    >
       {error && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-4 text-sm text-red-600 font-medium">{error}</CardContent>
@@ -71,6 +77,7 @@ export default function DashboardPage() {
 
       {/* --- 1. UPLOAD & JD SECTION --- */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* ... Card 1 ... */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Upload Document</CardTitle>
@@ -87,6 +94,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* ... Card 2 ... */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Job Description / Requirements</CardTitle>
@@ -104,7 +112,6 @@ export default function DashboardPage() {
       </div>
 
       {/* --- 2. LAYOUT SELECTOR (New Feature) --- */}
-      {/* Only show if Parsed Resume exists AND we are generating a Resume (not SOP/Letter) */}
       {parsedResume && selectedOption === "resume" && (
         <Card className="border-0 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <CardHeader>
@@ -126,29 +133,17 @@ export default function DashboardPage() {
                       : "border-gray-200 hover:border-blue-300 hover:shadow-md"
                     }`}
                 >
-                  {/* Image Preview Container (A4 Ratio) */}
                   <div className="relative aspect-[210/297] bg-gray-50 w-full">
-                    {/* Text Fallback if Image fails/missing */}
                     <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 font-medium z-0">
                       {option.name}
                     </div>
-                    {/* Uncomment this when you add images to /public/images/layouts/ */}
-                    {/* <Image 
-                       src={option.imageSrc} 
-                       alt={option.name} 
-                       fill 
-                       className="object-cover object-top z-10 transition-opacity"
-                     /> 
-                     */}
                   </div>
 
-                  {/* Footer Label */}
                   <div className={`p-2 text-center text-xs font-medium border-t transition-colors
                     ${selectedLayout === option.id ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-white text-gray-600 border-gray-100"}`}>
                     {option.name}
                   </div>
 
-                  {/* Checkmark Badge */}
                   {selectedLayout === option.id && (
                     <div className="absolute top-2 right-2 z-20 bg-blue-600 text-white rounded-full p-1 shadow-md">
                       <CheckCircle className="w-3 h-3" />
@@ -198,6 +193,6 @@ export default function DashboardPage() {
 
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
