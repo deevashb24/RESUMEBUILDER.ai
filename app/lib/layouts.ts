@@ -17,7 +17,7 @@ export interface Layout {
 import { SimpleResumeLayout } from "@/components/layouts/demo"
 import { ModernLayout } from "@/components/layouts/modern"
 import { MinimalLayout } from "@/components/layouts/minimal"
-import { CreativeLayout } from "@/components/layouts/creative"
+
 import { ParsedResumeData } from "@/lib/resume"
 import { IitkLayout } from "@/components/layouts/iitk"
 
@@ -44,13 +44,7 @@ export const LAYOUTS: Layout[] = [
     preview: "/layouts/layout-minimal.png",
     component: MinimalLayout
   },
-  {
-    id: "creative",
-    name: "Creative",
-    description: "Eye-catching design with bold header",
-    preview: "/layouts/layout-creative.png",
-    component: CreativeLayout
-  },
+
   {
     id: "iitk",
     name: "IIT Kanpur (Classic)",

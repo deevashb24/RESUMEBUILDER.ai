@@ -16,9 +16,9 @@ import Image from "next/image"
 // --- LAYOUT DEFINITIONS ---
 const LAYOUT_OPTIONS = [
   { id: "demo", name: "Professional", imageSrc: "/images/layouts/demo.png" },
+  { id: "iitk", name: "IIT Kanpur (Classic)", imageSrc: "/images/layouts/iitk.png" },
   { id: "modern", name: "Modern Sidebar", imageSrc: "/images/layouts/modern.png" },
   { id: "minimal", name: "Minimalist", imageSrc: "/images/layouts/minimal.png" },
-  { id: "creative", name: "Creative Bold", imageSrc: "/images/layouts/creative.png" },
 ]
 
 export default function DashboardPage() {
