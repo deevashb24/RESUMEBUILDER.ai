@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   description: "AI-Powered Resume Builder",
 }
 
+import { Footer } from "@/components/footer"
+
+
+
 export default function RootLayout({
   children,
 }: {
@@ -26,11 +30,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-800 selection:bg-indigo-100 selection:text-indigo-700`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-800 selection:bg-indigo-100 selection:text-indigo-700 flex flex-col min-h-screen`}>
         <AuthProvider>
           {/* Wrap App in GenerationProvider */}
           <GenerationProvider>
-            {children}
+            <div className="flex-grow">
+              {children}
+            </div>
+            <Footer />
           </GenerationProvider>
         </AuthProvider>
       </body>
