@@ -23,6 +23,10 @@ import { Footer } from "@/components/footer"
 
 
 
+import { LanguageProvider } from "@/lib/language-context"
+
+// ... imports ...
+
 export default function RootLayout({
   children,
 }: {
@@ -32,13 +36,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-800 selection:bg-indigo-100 selection:text-indigo-700 flex flex-col min-h-screen`}>
         <AuthProvider>
-          {/* Wrap App in GenerationProvider */}
-          <GenerationProvider>
-            <div className="flex-grow">
-              {children}
-            </div>
-            <Footer />
-          </GenerationProvider>
+          <LanguageProvider>
+            <GenerationProvider>
+              <div className="flex-grow">
+                {children}
+              </div>
+              <Footer />
+            </GenerationProvider>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

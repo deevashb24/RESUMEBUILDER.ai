@@ -5,17 +5,26 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
-import { Sparkles, ShieldCheck } from "lucide-react"
+import { Sparkles, ShieldCheck, Globe } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
-import { UserProfilePopup } from "@/components/user-profile-popup" // Import new component
+import { UserProfilePopup } from "@/components/user-profile-popup"
+import { useLanguage } from "@/lib/language-context"
+import { languages } from "@/lib/translations"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function DashboardNavbar() {
   const { user, logout, isPremium } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
 
   const [showPricing, setShowPricing] = useState(false)
-  const [showProfile, setShowProfile] = useState(false) // Toggle for profile popup
+  const [showProfile, setShowProfile] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -29,7 +38,6 @@ export function DashboardNavbar() {
 
   const getUserInitials = () => {
     if (!user) return "JD"
-    // Use display name if available, otherwise email
     if (user.displayName) {
       return user.displayName
         .split(" ")
@@ -67,11 +75,27 @@ export function DashboardNavbar() {
           {/* Right Actions */}
           <div className="flex items-center gap-4">
 
-            {/* Language Selector (Mock with simple dropdown style) */}
-            <div className="hidden md:flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors border-r border-border pr-4 mr-2">
-              <span>EN</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-            </div>
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors border-r border-border pr-4 mr-2">
+                  <Globe className="w-4 h-4" />
+                  <span>{languages[language]}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 ml-1"><path d="m6 9 6 6 6-6" /></svg>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32 bg-white border-border">
+                {Object.entries(languages).map(([code, name]) => (
+                  <DropdownMenuItem
+                    key={code}
+                    onClick={() => setLanguage(code as any)}
+                    className={language === code ? "bg-primary/5 font-bold text-primary" : ""}
+                  >
+                    {name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Premium Status / Upgrade Button */}
             {!isPremium ? (
@@ -81,7 +105,7 @@ export function DashboardNavbar() {
                 className="hidden md:flex bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 shadow-md transition-all hover:scale-105"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Upgrade to Pro
+                {t.nav.upgrade}
               </Button>
             ) : (
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide border border-green-200 cursor-default select-none">
@@ -92,7 +116,7 @@ export function DashboardNavbar() {
 
             <div className="h-6 w-px bg-border mx-1 hidden md:block"></div>
 
-            {/* Avatar - Now clickable! */}
+            {/* Avatar */}
             <div className="relative">
               <button
                 onClick={() => setShowProfile(!showProfile)}
