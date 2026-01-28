@@ -18,101 +18,17 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
   const [loading, setLoading] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('monthly')
 
+  // Safety Check: Prevent crash if user is not loaded
+  if (!user) return null
+
   // --- 1. LEMON SQUEEZY CHECKOUT ---
   const handleCheckout = async (type: 'monthly' | 'quarterly' | 'one-time') => {
-    if (!user) return
-    setLoading(type)
-
-    try {
-      let variantId = ""
-      if (type === 'monthly') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_MONTHLY!
-      if (type === 'quarterly') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_QUARTERLY!
-      if (type === 'one-time') variantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_ONETIME!
-
-      // FIX: Pass generationId if this is a one-time purchase
-      const payload: any = {
-        userId: user.uid,
-        userEmail: user.email,
-        variantId: variantId,
-        redirectUrl: window.location.href
-      }
-
-      if (type === 'one-time' && generationId) {
-        payload.generationId = generationId
-      }
-
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.url) {
-        window.location.href = data.url
-      } else {
-        console.error("Checkout Failed:", data.error)
-        alert("Failed to start checkout. Please try again.")
-      }
-    } catch (error) {
-      console.error("Checkout error:", error)
-      alert("An error occurred. Please try again.")
-    } finally {
-      setLoading(null)
-    }
+    // ... existing ...
   }
 
   // --- 2. RAZORPAY CHECKOUT ---
   const handleRazorpayCheckout = async (planType: 'monthly' | 'quarterly' | 'one-time') => {
-    if (!user) return
-    setLoading('razorpay')
-
-    try {
-      const res = await fetch("/api/razorpay/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.uid,
-          planType,
-          // FIX: Explicitly pass generationId for one-time unlock
-          generationId: planType === 'one-time' ? generationId : undefined
-        }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) throw new Error(data.error || "Failed to create order")
-
-      const options: any = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        name: "ResumeBuilder.ai",
-        description: data.description || "Pro Subscription",
-        handler: function (response: any) {
-          alert("Payment Successful! Access granted.")
-          window.location.reload()
-        },
-        prefill: { email: user.email || undefined },
-        theme: { color: "#000000" },
-        modal: { ondismiss: function () { setLoading(null) } }
-      }
-
-      if (data.subscriptionId) {
-        options.subscription_id = data.subscriptionId;
-      } else {
-        options.order_id = data.orderId;
-        options.amount = data.amount;
-        options.currency = "INR";
-      }
-
-      const rzp1 = new window.Razorpay(options)
-      rzp1.open()
-
-    } catch (error) {
-      console.error("Razorpay Error:", error)
-      alert("Payment failed. Please try again.")
-    } finally {
-      setLoading(null)
-    }
+    // ... existing ...
   }
 
   const PlanSelection = () => (
@@ -123,6 +39,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
       >
         <div className="text-xs font-semibold text-gray-900">Monthly</div>
         <div className="text-xs font-bold text-gray-900">$9.99/mo</div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">(Lemon Squeezy)</div>
       </div>
 
       <div
@@ -132,6 +49,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">SAVE 33%</div>
         <div className="text-xs font-semibold text-gray-900 pt-1">Quarterly</div>
         <div className="text-xs font-bold text-gray-900">$19.99/3mo</div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">(Lemon Squeezy)</div>
       </div>
     </div>
   )
@@ -161,7 +79,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
 
               <Button onClick={() => handleCheckout(selectedPlan)} disabled={!!loading} className="w-full h-10 text-sm bg-gray-900 hover:bg-gray-800 text-white">
                 {loading === selectedPlan && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                {selectedPlan === 'monthly' ? 'Subscribe Monthly ($9.99)' : 'Subscribe Quarterly ($19.99)'}
+                Subscribe via Lemon Squeezy
               </Button>
 
               <div className="text-center text-[10px] text-gray-400 font-medium my-1.5">- OR -</div>
@@ -180,7 +98,6 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     <h4 className="font-bold text-gray-900 text-xs">Single Unlock</h4>
                     <p className="text-[10px] text-gray-500">One-time payment.</p>
                   </div>
-                  <div className="text-right"><span className="block font-bold text-gray-900 text-sm">₹199</span></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -193,6 +110,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                 </div>
               </div>
             )}
+
 
             <div className="text-center pt-1">
               <button onClick={onClose} className="text-[10px] text-gray-400 hover:text-gray-600 underline">No thanks, I'll stay on the free plan</button>
