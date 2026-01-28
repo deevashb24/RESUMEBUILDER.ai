@@ -67,6 +67,12 @@ export function DashboardNavbar() {
           {/* Right Actions */}
           <div className="flex items-center gap-4">
 
+            {/* Language Selector (Mock with simple dropdown style) */}
+            <div className="hidden md:flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors border-r border-border pr-4 mr-2">
+              <span>EN</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+
             {/* Premium Status / Upgrade Button */}
             {!isPremium ? (
               <Button
@@ -102,6 +108,16 @@ export function DashboardNavbar() {
           </div>
         </div>
       </nav>
+
+      {/* Floating Help Button */}
+      <button className="fixed bottom-6 right-6 z-50 bg-black text-white hover:bg-gray-800 transition-all rounded-full p-3 shadow-xl hover:scale-110 group">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Get Help
+        </span>
+      </button>
 
       {/* --- Modals & Popups --- */}
 

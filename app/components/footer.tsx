@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShieldCheck, Mail, Github, Twitter } from "lucide-react"
+import { ShieldCheck, Mail, Github, Twitter, MessageSquare } from "lucide-react"
 
 export function Footer() {
     const currentYear = new Date().getFullYear()
@@ -19,11 +19,19 @@ export function Footer() {
                             Empowering job seekers with AI-driven resume optimization and professional cover letter generation.
                         </p>
                         <div className="mt-6 flex gap-4">
-                            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                                <Twitter className="w-5 h-5" />
+                            {/* X (Formerly Twitter) */}
+                            <a href="https://x.com/your-profile" className="text-muted-foreground hover:text-primary transition-colors">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z" /></svg>
                             </a>
-                            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+
+                            {/* GitHub */}
+                            <a href="https://github.com/your-username" className="text-muted-foreground hover:text-primary transition-colors">
                                 <Github className="w-5 h-5" />
+                            </a>
+
+                            {/* Reddit */}
+                            <a href="https://reddit.com/u/your-username" className="text-muted-foreground hover:text-primary transition-colors">
+                                <MessageSquare className="w-5 h-5" />
                             </a>
                         </div>
                     </div>
