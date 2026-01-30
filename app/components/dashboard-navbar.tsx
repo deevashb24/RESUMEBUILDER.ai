@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -25,6 +25,12 @@ export function DashboardNavbar() {
 
   const [showPricing, setShowPricing] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Fix: Ensure component is mounted to prevent hydration mismatch with the Dialog
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -52,6 +58,8 @@ export function DashboardNavbar() {
     return "JD"
   }
 
+  if (!mounted) return null
+
   return (
     <>
       <nav className="border-b border-border bg-card relative z-40">
@@ -63,11 +71,13 @@ export function DashboardNavbar() {
               ResumeBuilder<span className="text-primary">.ai</span>
             </Link>
             <div className="flex items-center gap-4">
+              {/* FIXED: Replaced hardcoded "Generate" with translation */}
               <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Generate
+                {t.nav.generate}
               </Link>
+              {/* FIXED: Replaced hardcoded "History" with translation */}
               <Link href="/history" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                History
+                {t.nav.history}
               </Link>
             </div>
           </div>
@@ -110,7 +120,7 @@ export function DashboardNavbar() {
             ) : (
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide border border-green-200 cursor-default select-none">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                PRO
+                {t.nav.pro}
               </div>
             )}
 
@@ -139,7 +149,7 @@ export function DashboardNavbar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          Get Help
+          {language === 'hi' ? 'सहायता प्राप्त करें' : 'Get Help'}
         </span>
       </button>
 
