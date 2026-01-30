@@ -2,6 +2,7 @@ import { ParsedResumeData } from "@/lib/resume"
 
 interface LayoutProps {
     data: ParsedResumeData | null
+    labels?: any
 }
 
 const MarkdownRenderer = ({ text }: { text: string }) => {
@@ -38,8 +39,16 @@ const ItemHeader = ({ left, right }: { left: React.ReactNode; right?: string }) 
     </div>
 )
 
-export function IitkLayout({ data }: LayoutProps) {
+export function IitkLayout({ data, labels }: LayoutProps) {
     if (!data || !data.personal) return null
+
+    const L = labels || {
+        experience: "Professional Experience",
+        education: "Academic Qualifications",
+        skills: "Technical Skills",
+        projects: "Key Projects"
+    }
+
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
@@ -85,7 +94,7 @@ export function IitkLayout({ data }: LayoutProps) {
             <div className="border-b-2 border-black w-full my-2"></div>
 
             {/* --- ACADEMIC QUALIFICATIONS (TABLE) --- */}
-            <SectionHeader title="Academic Qualifications" />
+            <SectionHeader title={L.education} />
             <div className="w-full">
                 <table className="w-full border-collapse border border-gray-400 text-[10pt]">
                     <thead>
@@ -120,7 +129,7 @@ export function IitkLayout({ data }: LayoutProps) {
             {/* --- PROFESSIONAL EXPERIENCE --- */}
             {visible(data.experience).length > 0 && (
                 <>
-                    <SectionHeader title="Professional Experience" />
+                    <SectionHeader title={L.experience} />
                     {visible(data.experience).map((exp: any, i) => (
                         <div key={i} className="mb-2">
                             <ItemHeader
@@ -142,7 +151,7 @@ export function IitkLayout({ data }: LayoutProps) {
             {/* --- KEY PROJECTS --- */}
             {visible(data.projects).length > 0 && (
                 <>
-                    <SectionHeader title="Key Projects" />
+                    <SectionHeader title={L.projects} />
                     {visible(data.projects).map((proj: any, i) => (
                         <div key={i} className="mb-2">
                             <ItemHeader
@@ -167,7 +176,7 @@ export function IitkLayout({ data }: LayoutProps) {
             {/* --- TECHNICAL SKILLS (TABLE STYLE) --- */}
             {data.skills && (
                 <>
-                    <SectionHeader title="Technical Skills" />
+                    <SectionHeader title={L.skills} />
                     <div className="w-full border border-gray-400">
                         <table className="w-full border-collapse text-[10pt]">
                             <tbody>

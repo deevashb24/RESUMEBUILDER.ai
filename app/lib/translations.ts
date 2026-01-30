@@ -19,22 +19,65 @@ export const translations = {
         dashboard: {
             uploadTitle: "Upload Document",
             uploadDesc: "Drag and drop your previous resume (PDF/DOCX)",
-            jdTitle: "Job Description / Requirements",
-            jdPlaceholder: "Paste the JD or Program Details here...",
+            jdTitle: "Job Description",
+            jdPlaceholder: "Paste the job description or program details here...",
             layoutTitle: "Choose Layout",
             layoutDesc: "Select the design for your generated resume",
             generateTitle: "Generate",
             generateDesc: "Create your document",
-            viewResult: "View Result",
-            generateBtn: "Generate",
-            generating: "Generating...",
-            viewBtn: "View Result"
+            viewBtn: "View Result",
+            generateBtn: "Generate"
+        },
+        // NEW: Resume Layout Headers (The text inside the PDF)
+        resume: {
+            personalInfo: "Personal Info",
+            summary: "Professional Summary",
+            experience: "Experience",
+            education: "Education",
+            projects: "Projects",
+            skills: "Skills",
+            languages: "Languages",
+            tools: "Tools",
+            contact: "Contact"
+        },
+        history: {
+            title: "Your History",
+            subtitle: "Access and download your previously generated documents.",
+            loading: "Loading history...",
+            emptyTitle: "No history yet",
+            emptyDesc: "Generate your first document to see it here.",
+            goDashboard: "Go to Dashboard",
+            download: "Download PDF",
+            unlock: "Unlock Document",
+            locked: "Locked",
+            unlocked: "Unlocked"
+        },
+        progress: {
+            scanning: "Scanning Job Description...",
+            analyzing: "Analyzing Keywords & Gaps...",
+            grammar: "Checking Grammar & Originality...",
+            finalizingResume: "Finalizing Resume Structure...",
+            finalizingCover: "Finalizing Cover Letter...",
+            finalizingSop: "Finalizing Statement of Purpose...",
+            successTitle: "Document Generated!",
+            successDesc: "We optimized your document for the highest success rate.",
+            ats: "ATS Score",
+            impact: "Impact",
+            unique: "Originality"
+        },
+        legal: {
+            privacyTitle: "Privacy Policy",
+            termsTitle: "Terms of Service",
+            lastUpdated: "Last Updated",
+            backToDashboard: "Back to Dashboard"
         },
         footer: {
             tagline: "Empowering job seekers with AI-driven resume optimization.",
             product: "Product",
             legal: "Legal",
             contact: "Contact",
+            madeWith: "Made with",
+            byBuilders: "by Builders for Builders",
             links: {
                 generate: "Generate Resume",
                 history: "History",
@@ -42,151 +85,77 @@ export const translations = {
                 privacy: "Privacy Policy",
                 terms: "Terms of Service",
                 cookies: "Cookie Policy"
-            },
-            madeWith: "Made with",
-            byBuilders: "by Builders for Builders"
-        }
-    },
-    es: {
-        nav: {
-            generate: "Generar",
-            history: "Historial",
-            upgrade: "Mejorar a Pro",
-            pro: "PRO"
-        },
-        dashboard: {
-            uploadTitle: "Subir Documento",
-            uploadDesc: "Arrastra y suelta tu currículum anterior (PDF/DOCX)",
-            jdTitle: "Descripción del Trabajo",
-            jdPlaceholder: "Pega aquí la descripción del puesto...",
-            layoutTitle: "Elegir Diseño",
-            layoutDesc: "Selecciona el diseño para tu currículum",
-            generateTitle: "Generar",
-            generateDesc: "Crea tu documento",
-            viewResult: "Ver Resultado",
-            generateBtn: "Generar",
-            generating: "Generando...",
-            viewBtn: "Ver Resultado"
-        },
-        footer: {
-            tagline: "Empoderando a los solicitantes de empleo con IA.",
-            product: "Producto",
-            legal: "Legal",
-            contact: "Contacto",
-            links: {
-                generate: "Generar Currículum",
-                history: "Historial",
-                pricing: "Precios",
-                privacy: "Política de Privacidad",
-                terms: "Términos de Servicio",
-                cookies: "Política de Cookies"
-            },
-            madeWith: "Hecho con",
-            byBuilders: "por Constructores para Constructores"
-        }
-    },
-    fr: {
-        nav: {
-            generate: "Générer",
-            history: "Historique",
-            upgrade: "Passer à Pro",
-            pro: "PRO"
-        },
-        dashboard: {
-            uploadTitle: "Télécharger un document",
-            uploadDesc: "Glissez et déposez votre ancien CV (PDF/DOCX)",
-            jdTitle: "Description du poste",
-            jdPlaceholder: "Collez la description du poste ici...",
-            layoutTitle: "Choisir la mise en page",
-            layoutDesc: "Sélectionnez le design de votre CV",
-            generateTitle: "Générer",
-            generateDesc: "Créez votre document",
-            viewResult: "Voir le résultat",
-            generateBtn: "Générer",
-            generating: "Génération...",
-            viewBtn: "Voir le résultat"
-        },
-        footer: {
-            tagline: "Optimisation de CV propulsée par l'IA.",
-            product: "Produit",
-            legal: "Légal",
-            contact: "Contact",
-            links: {
-                generate: "Générer un CV",
-                history: "Historique",
-                pricing: "Tarifs",
-                privacy: "Politique de confidentialité",
-                terms: "Conditions d'utilisation",
-                cookies: "Politique de cookies"
-            },
-            madeWith: "Fait avec",
-            byBuilders: "par des Bâtisseurs pour des Bâtisseurs"
-        }
-    },
-    de: {
-        nav: {
-            generate: "Generieren",
-            history: "Verlauf",
-            upgrade: "Upgrade auf Pro",
-            pro: "PRO"
-        },
-        dashboard: {
-            uploadTitle: "Dokument hochladen",
-            uploadDesc: "Ziehen Sie Ihren alten Lebenslauf hierher (PDF/DOCX)",
-            jdTitle: "Stellenbeschreibung",
-            jdPlaceholder: "Fügen Sie hier die Stellenbeschreibung ein...",
-            layoutTitle: "Layout wählen",
-            layoutDesc: "Wählen Sie das Design für Ihren Lebenslauf",
-            generateTitle: "Generieren",
-            generateDesc: "Erstellen Sie Ihr Dokument",
-            viewResult: "Ergebnis ansehen",
-            generateBtn: "Generieren",
-            generating: "Generieren...",
-            viewBtn: "Ergebnis ansehen"
-        },
-        footer: {
-            tagline: "KI-gesteuerte Lebenslaufoptimierung.",
-            product: "Produkt",
-            legal: "Rechtliches",
-            contact: "Kontakt",
-            links: {
-                generate: "Lebenslauf erstellen",
-                history: "Verlauf",
-                pricing: "Preise",
-                privacy: "Datenschutz",
-                terms: "Nutzungsbedingungen",
-                cookies: "Cookie-Richtlinie"
-            },
-            madeWith: "Gemacht mit",
-            byBuilders: "von Buildern für Builder"
+            }
         }
     },
     hi: {
         nav: {
             generate: "बनाएं",
             history: "इतिहास",
-            upgrade: "अपग्रेड करें",
+            upgrade: "प्रो में अपग्रेड करें",
             pro: "प्रो"
         },
         dashboard: {
             uploadTitle: "दस्तावेज़ अपलोड करें",
-            uploadDesc: "अपना पुराना बायोडाटा यहाँ डालें (PDF/DOCX)",
+            uploadDesc: "अपना पिछला बायोडाटा यहाँ खींचें (PDF/DOCX)",
             jdTitle: "नौकरी का विवरण",
-            jdPlaceholder: "यहाँ नौकरी या प्रोग्राम का विवरण पेस्ट करें...",
+            jdPlaceholder: "यहाँ नौकरी या कार्यक्रम का विवरण पेस्ट करें...",
             layoutTitle: "लेआउट चुनें",
             layoutDesc: "अपने बायोडाटा के लिए डिज़ाइन चुनें",
             generateTitle: "बनाएं",
             generateDesc: "अपना दस्तावेज़ तैयार करें",
-            viewResult: "परिणाम देखें",
-            generateBtn: "बनाएं",
-            generating: "बन रहा है...",
-            viewBtn: "परिणाम देखें"
+            viewBtn: "परिणाम देखें",
+            generateBtn: "बनाएं"
+        },
+        resume: {
+            personalInfo: "व्यक्तिगत जानकारी",
+            summary: "पेशेवर सारांश",
+            experience: "अनुभव",
+            education: "शिक्षा",
+            projects: "परियोजनाएं",
+            skills: "कौशल",
+            languages: "भाषाएं",
+            tools: "उपकरण",
+            contact: "संपर्क"
+        },
+        history: {
+            title: "आपका इतिहास",
+            subtitle: "अपने पहले बनाए गए दस्तावेज़ों तक पहुंचें और डाउनलोड करें।",
+            loading: "इतिहास लोड हो रहा है...",
+            emptyTitle: "अभी कोई इतिहास नहीं है",
+            emptyDesc: "इसे यहाँ देखने के लिए अपना पहला दस्तावेज़ बनाएं।",
+            goDashboard: "डैशबोर्ड पर जाएं",
+            download: "PDF डाउनलोड करें",
+            unlock: "दस्तावेज़ अनलॉक करें",
+            locked: "लॉक है",
+            unlocked: "अनलॉक है"
+        },
+        progress: {
+            scanning: "नौकरी विवरण स्कैन किया जा रहा है...",
+            analyzing: "कीवर्ड और कमियों का विश्लेषण...",
+            grammar: "व्याकरण और मौलिकता की जाँच...",
+            finalizingResume: "बायोडाटा संरचना को अंतिम रूप दिया जा रहा है...",
+            finalizingCover: "कवर लेटर को अंतिम रूप दिया जा रहा है...",
+            finalizingSop: "SOP को अंतिम रूप दिया जा रहा है...",
+            successTitle: "दस्तावेज़ तैयार है!",
+            successDesc: "हमने उच्चतम सफलता दर के लिए आपके दस्तावेज़ को अनुकूलित किया है।",
+            ats: "ATS स्कोर",
+            impact: "प्रभाव",
+            unique: "मौलिकता"
+        },
+        legal: {
+            privacyTitle: "गोपनीयता नीति",
+            termsTitle: "सेवा की शर्तें",
+            lastUpdated: "अंतिम अपडेट",
+            backToDashboard: "डैशबोर्ड पर वापस जाएं"
         },
         footer: {
-            tagline: "एआई के साथ अपने बायोडाटा को बेहतर बनाएं।",
+            tagline: "एआई-संचालित बायोडाटा अनुकूलन के साथ नौकरी चाहने वालों को सशक्त बनाना।",
             product: "उत्पाद",
             legal: "कानूनी",
             contact: "संपर्क",
+            madeWith: "द्वारा निर्मित",
+            byBuilders: "बिल्डर्स के लिए",
             links: {
                 generate: "बायोडाटा बनाएं",
                 history: "इतिहास",
@@ -194,12 +163,19 @@ export const translations = {
                 privacy: "गोपनीयता नीति",
                 terms: "सेवा की शर्तें",
                 cookies: "कुकी नीति"
-            },
-            madeWith: "द्वारा निर्मित",
-            byBuilders: "बिल्डर्स के लिए"
+            }
         }
-    }
+    },
+    // Add placeholders for others to avoid errors
+    es: {} as any,
+    fr: {} as any,
+    de: {} as any
 }
+
+// Quick Helper to Fill Missing Languages (Copy English to others for safety)
+translations.es = { ...translations.en }
+translations.fr = { ...translations.en }
+translations.de = { ...translations.en }
 
 export function getTranslation(lang: Language) {
     return translations[lang] || translations['en']

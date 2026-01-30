@@ -3,6 +3,7 @@ import { UserAvatar } from "./user-avatar"
 
 interface LayoutProps {
     data: ParsedResumeData | null
+    labels?: any
 }
 
 const MarkdownRenderer = ({ text }: { text: string }) => {
@@ -20,8 +21,17 @@ const MarkdownRenderer = ({ text }: { text: string }) => {
     )
 }
 
-export function CreativeLayout({ data }: LayoutProps) {
+export function CreativeLayout({ data, labels }: LayoutProps) {
     if (!data || !data.personal) return null
+
+    const L = labels || {
+        experience: "Experience",
+        education: "Education",
+        skills: "Skills",
+        projects: "Projects",
+        contact: "Contact"
+    }
+
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
@@ -69,7 +79,7 @@ export function CreativeLayout({ data }: LayoutProps) {
                         <section>
                             <h2 className="text-2xl font-black text-indigo-900 mb-6 flex items-center gap-3">
                                 <span className="bg-indigo-100 p-2 rounded-lg text-indigo-600 print:!bg-indigo-100 print:!text-indigo-600">EXP</span>
-                                Experience
+                                {L.experience}
                             </h2>
 
                             <div className="space-y-8 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-indigo-100">
@@ -107,7 +117,7 @@ export function CreativeLayout({ data }: LayoutProps) {
 
                     {/* CONTACT CARD */}
                     <div className="bg-slate-900 text-slate-300 p-6 rounded-xl shadow-lg print:!bg-slate-900 print:!text-slate-300">
-                        <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-4 border-b border-slate-700 pb-2">Contact</h3>
+                        <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-4 border-b border-slate-700 pb-2">{L.contact}</h3>
                         <div className="space-y-3 text-sm font-medium">
                             {data.personal.email && (
                                 <a href={`mailto:${data.personal.email}`} className="block break-all hover:text-indigo-400 transition-colors">
@@ -136,7 +146,7 @@ export function CreativeLayout({ data }: LayoutProps) {
                     {/* MASONRY SKILLS */}
                     {data.skills && (
                         <div>
-                            <h3 className="text-xl font-black text-indigo-900 mb-4">Skills</h3>
+                            <h3 className="text-xl font-black text-indigo-900 mb-4">{L.skills}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {[
                                     ...(data.skills.languages || []),
@@ -161,7 +171,7 @@ export function CreativeLayout({ data }: LayoutProps) {
                     {/* PROJECTS */}
                     {visible(data.projects).length > 0 && (
                         <section>
-                            <h2 className="text-xl font-black text-indigo-900 mb-4">Projects</h2>
+                            <h2 className="text-xl font-black text-indigo-900 mb-4">{L.projects}</h2>
                             <div className="space-y-4">
                                 {visible(data.projects).map((proj: any, i) => (
                                     <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">

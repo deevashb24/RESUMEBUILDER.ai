@@ -2,6 +2,7 @@ import { ParsedResumeData } from "@/lib/resume"
 
 interface LayoutProps {
     data: ParsedResumeData | null
+    labels?: any
 }
 
 const MarkdownRenderer = ({ text }: { text: string }) => {
@@ -19,8 +20,16 @@ const MarkdownRenderer = ({ text }: { text: string }) => {
     )
 }
 
-export function MinimalLayout({ data }: LayoutProps) {
+export function MinimalLayout({ data, labels }: LayoutProps) {
     if (!data || !data.personal) return null
+
+    const L = labels || {
+        experience: "Experience",
+        education: "Education",
+        skills: "Expertise",
+        projects: "Projects"
+    }
+
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
@@ -81,7 +90,7 @@ export function MinimalLayout({ data }: LayoutProps) {
             {/* EXPERIENCE */}
             {visible(data.experience).length > 0 && (
                 <section className="mb-10">
-                    <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 text-center">Experience</h2>
+                    <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 text-center">{L.experience}</h2>
 
                     <div className="space-y-8">
                         {visible(data.experience).map((exp: any, i) => (
@@ -115,7 +124,7 @@ export function MinimalLayout({ data }: LayoutProps) {
                 {/* EDUCATION */}
                 {visible(data.education).length > 0 && (
                     <section>
-                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Education</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">{L.education}</h2>
                         <div className="space-y-6">
                             {visible(data.education).map((edu: any, i) => (
                                 <div key={i}>
@@ -131,7 +140,7 @@ export function MinimalLayout({ data }: LayoutProps) {
                 {/* SKILLS */}
                 {data.skills && (
                     <section>
-                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Expertise</h2>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">{L.skills}</h2>
                         <div className="text-sm space-y-4 font-sans text-gray-700">
                             {data.skills.languages?.length > 0 && (
                                 <div>
