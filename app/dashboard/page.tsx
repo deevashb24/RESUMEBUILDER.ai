@@ -11,8 +11,9 @@ import { useAuth } from "@/lib/auth-context"
 import { useGeneration } from "@/lib/generation-context"
 import { GenerationProgress } from "@/components/generation-progress"
 import { ArrowRight, CheckCircle, LayoutTemplate } from "lucide-react"
-import Image from "next/image"
 import { motion } from "framer-motion"
+// IMPORT THE LANGUAGE HOOK
+import { useLanguage } from "@/lib/language-context"
 
 // --- LAYOUT DEFINITIONS ---
 const LAYOUT_OPTIONS = [
@@ -24,6 +25,7 @@ const LAYOUT_OPTIONS = [
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
+  const { t } = useLanguage() // GET TRANSLATIONS
   const router = useRouter()
 
   const {
@@ -80,8 +82,8 @@ export default function DashboardPage() {
         {/* ... Card 1 ... */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Upload Document</CardTitle>
-            <CardDescription className="text-sm">Drag and drop your previous resume (PDF/DOCX)</CardDescription>
+            <CardTitle className="text-lg font-semibold">{t.dashboard.uploadTitle}</CardTitle>
+            <CardDescription className="text-sm">{t.dashboard.uploadDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUpload
@@ -97,12 +99,12 @@ export default function DashboardPage() {
         {/* ... Card 2 ... */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Job Description / Requirements</CardTitle>
-            <CardDescription className="text-sm">Paste the JD or Program Details here</CardDescription>
+            <CardTitle className="text-lg font-semibold">{t.dashboard.jdTitle}</CardTitle>
+            <CardDescription className="text-sm">{t.dashboard.jdTitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder={selectedOption === 'sop' ? "Paste university program details..." : "Paste job description..."}
+              placeholder={t.dashboard.jdPlaceholder}
               className="min-h-32 resize-none"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
@@ -117,9 +119,9 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <LayoutTemplate className="w-5 h-5 text-gray-500" />
-              Choose Layout
+              {t.dashboard.layoutTitle}
             </CardTitle>
-            <CardDescription className="text-sm">Select the design for your generated resume</CardDescription>
+            <CardDescription className="text-sm">{t.dashboard.layoutDesc}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -159,8 +161,8 @@ export default function DashboardPage() {
       {/* --- 3. GENERATE SECTION --- */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Generate</CardTitle>
-          <CardDescription className="text-sm">Create your document</CardDescription>
+          <CardTitle className="text-lg font-semibold">{t.dashboard.generateTitle}</CardTitle>
+          <CardDescription className="text-sm">{t.dashboard.generateDesc}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
 
@@ -174,7 +176,7 @@ export default function DashboardPage() {
 
               {generationFinished && (
                 <Button onClick={handleViewResult} className="w-full h-12 text-lg bg-green-600 hover:bg-green-700">
-                  View Result <ArrowRight className="ml-2 h-5 w-5" />
+                  {t.dashboard.viewBtn} <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               )}
             </div>
@@ -186,7 +188,7 @@ export default function DashboardPage() {
                 disabled={!parsedResume || !jobDescription.trim()}
                 className="w-full h-11 bg-primary text-primary-foreground font-medium text-base"
               >
-                Generate {selectedOption === 'sop' ? 'SOP' : selectedOption === 'cover-letter' ? 'Cover Letter' : 'Resume'}
+                {t.dashboard.generateBtn} {selectedOption === 'sop' ? 'SOP' : selectedOption === 'cover-letter' ? 'Cover Letter' : 'Resume'}
               </Button>
             </>
           )}

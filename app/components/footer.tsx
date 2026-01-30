@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import { Github } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
 export function Footer() {
     const currentYear = new Date().getFullYear()
+    const { t } = useLanguage()
 
     return (
         <footer className="border-t border-border bg-card/50 mt-auto">
@@ -16,7 +18,7 @@ export function Footer() {
                             ResumeBuilder<span className="text-primary">.ai</span>
                         </Link>
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs leading-relaxed">
-                            Empowering job seekers with AI-driven resume optimization and professional cover letter generation.
+                            {t.footer.tagline}
                         </p>
                         <div className="mt-6 flex gap-4">
                             {/* X (Twitter) */}
@@ -42,27 +44,27 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">Product</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">{t.footer.product}</h3>
                         <ul className="space-y-3">
-                            <li><Link href="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">Generate Resume</Link></li>
-                            <li><Link href="/history" className="text-sm text-muted-foreground hover:text-primary transition-colors">History</Link></li>
-                            <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
+                            <li><Link href="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.generate}</Link></li>
+                            <li><Link href="/history" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.history}</Link></li>
+                            <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.pricing}</Link></li>
                         </ul>
                     </div>
 
                     {/* Legal Section */}
                     <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">Legal</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">{t.footer.legal}</h3>
                         <ul className="space-y-3">
-                            <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
-                            <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
-                            <li><Link href="/cookies" className="text-sm text-muted-foreground hover:text-primary transition-colors">Cookie Policy</Link></li>
+                            <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.privacy}</Link></li>
+                            <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.terms}</Link></li>
+                            <li><Link href="/cookies" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t.footer.links.cookies}</Link></li>
                         </ul>
                     </div>
 
                     {/* Newsletter / Contact */}
                     <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">Contact</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">{t.footer.contact}</h3>
                         <p className="text-sm text-muted-foreground mb-4">Questions? We're here to help.</p>
                         <a href="mailto:support@resumebuilder.ai" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
                             support@resumebuilder.ai
@@ -75,9 +77,9 @@ export function Footer() {
                         &copy; {currentYear} ResumeBuilder.ai. All rights reserved.
                     </p>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span>Made with</span>
+                        <span>{t.footer.madeWith}</span>
                         <svg className="w-3 h-3 text-red-500 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
-                        <span>by Builders for Builders</span>
+                        <span>{t.footer.byBuilders}</span>
                     </div>
                 </div>
             </div>
