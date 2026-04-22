@@ -3,6 +3,7 @@ import { UserAvatar } from "./user-avatar"
 
 interface LayoutProps {
     data: ParsedResumeData | null
+    labels?: any
 }
 
 const MarkdownRenderer = ({ text }: { text: string }) => {
@@ -20,8 +21,17 @@ const MarkdownRenderer = ({ text }: { text: string }) => {
     )
 }
 
-export function ModernLayout({ data }: LayoutProps) {
+export function ModernLayout({ data, labels }: LayoutProps) {
     if (!data || !data.personal) return null
+
+    const L = labels || {
+        experience: "Experience",
+        education: "Education",
+        skills: "Skills",
+        projects: "Projects",
+        languages: "Languages",
+        tools: "Tools"
+    }
 
     // Helper to filter hidden items
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
@@ -43,13 +53,23 @@ export function ModernLayout({ data }: LayoutProps) {
                     {data.personal.email && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">Email</div>
-                            <div className="text-white break-all">{data.personal.email}</div>
+                            <a
+                                href={`mailto:${data.personal.email}`}
+                                className="text-white break-all hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.email}
+                            </a>
                         </div>
                     )}
                     {data.personal.phone && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">Phone</div>
-                            <div className="text-white">{data.personal.phone}</div>
+                            <a
+                                href={`tel:${data.personal.phone.replace(/[^\d+]/g, '')}`}
+                                className="text-white hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.phone}
+                            </a>
                         </div>
                     )}
                     {data.personal.location && (
@@ -61,7 +81,14 @@ export function ModernLayout({ data }: LayoutProps) {
                     {data.personal.linkedin && (
                         <div>
                             <div className="uppercase font-bold text-xs text-slate-500 mb-0.5">LinkedIn</div>
-                            <div className="text-white truncate">{data.personal.linkedin}</div>
+                            <a
+                                href={data.personal.linkedin.startsWith('http') ? data.personal.linkedin : `https://${data.personal.linkedin}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-white truncate block hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {data.personal.linkedin.replace(/^https?:\/\/(www\.)?/, '')}
+                            </a>
                         </div>
                     )}
                 </div>
@@ -69,12 +96,12 @@ export function ModernLayout({ data }: LayoutProps) {
                 {/* Skills (Progress Bars) */}
                 {data.skills && (
                     <div className="mt-4">
-                        <h3 className="uppercase font-bold text-sm tracking-widest border-b border-slate-700 pb-2 mb-4 text-white">Skills</h3>
+                        <h3 className="uppercase font-bold text-sm tracking-widest border-b border-slate-700 pb-2 mb-4 text-white">{L.skills}</h3>
 
                         <div className="space-y-4">
                             {data.skills.languages?.length > 0 && (
                                 <div>
-                                    <div className="font-semibold text-slate-400 mb-1 text-xs">Languages</div>
+                                    <div className="font-semibold text-slate-400 mb-1 text-xs">{L.languages}</div>
                                     <div className="flex flex-wrap gap-1">
                                         {data.skills.languages.map((skill, i) => (
                                             <span key={i} className="bg-slate-800 px-2 py-1 rounded text-xs print:!bg-slate-800 print:!text-white">{skill}</span>
@@ -84,7 +111,7 @@ export function ModernLayout({ data }: LayoutProps) {
                             )}
                             {data.skills.tools?.length > 0 && (
                                 <div>
-                                    <div className="font-semibold text-slate-400 mb-1 text-xs">Tools</div>
+                                    <div className="font-semibold text-slate-400 mb-1 text-xs">{L.tools}</div>
                                     <div className="flex flex-wrap gap-1">
                                         {data.skills.tools.map((skill, i) => (
                                             <span key={i} className="bg-slate-800 px-2 py-1 rounded text-xs print:!bg-slate-800 print:!text-white">{skill}</span>
@@ -121,7 +148,7 @@ export function ModernLayout({ data }: LayoutProps) {
                     <section className="mb-8">
                         <h2 className="text-xl font-bold uppercase tracking-widest text-slate-900 mb-5 flex items-center gap-2">
                             <span className="w-1 h-6 bg-blue-600 rounded-sm print:!bg-blue-600"></span>
-                            Experience
+                            {L.experience}
                         </h2>
                         <div className="space-y-6 border-l-2 border-slate-100 ml-1.5 pl-6">
                             {visible(data.experience).map((exp: any, i) => (
@@ -150,7 +177,7 @@ export function ModernLayout({ data }: LayoutProps) {
                     <section className="mb-8">
                         <h2 className="text-xl font-bold uppercase tracking-widest text-slate-900 mb-5 flex items-center gap-2">
                             <span className="w-1 h-6 bg-blue-600 rounded-sm print:!bg-blue-600"></span>
-                            Education
+                            {L.education}
                         </h2>
                         <div className="grid gap-4">
                             {visible(data.education).map((edu: any, i) => (
@@ -174,13 +201,21 @@ export function ModernLayout({ data }: LayoutProps) {
                     <section>
                         <h2 className="text-xl font-bold uppercase tracking-widest text-slate-900 mb-5 flex items-center gap-2">
                             <span className="w-1 h-6 bg-blue-600 rounded-sm print:!bg-blue-600"></span>
-                            Projects
+                            {L.projects}
                         </h2>
                         <div className="space-y-4">
                             {visible(data.projects).map((proj: any, i) => (
                                 <div key={i}>
                                     <div className="flex justify-between items-baseline">
-                                        <h4 className="font-bold text-slate-900"><MarkdownRenderer text={proj.title} /></h4>
+                                        <h4 className="font-bold text-slate-900">
+                                            {proj.link ? (
+                                                <a href={proj.link} target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">
+                                                    <MarkdownRenderer text={proj.title} />
+                                                </a>
+                                            ) : (
+                                                <MarkdownRenderer text={proj.title} />
+                                            )}
+                                        </h4>
                                         <div className="flex gap-2">
                                             {proj.tech?.map((t: string, idx: number) => (
                                                 <span key={idx} className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{t}</span>

@@ -44,13 +44,7 @@ export const LAYOUTS: Layout[] = [
     preview: "/layouts/layout-minimal.png",
     component: MinimalLayout
   },
-  {
-    id: "creative",
-    name: "Creative",
-    description: "Eye-catching design with bold header",
-    preview: "/layouts/layout-creative.png",
-    component: CreativeLayout
-  },
+
   {
     id: "iitk",
     name: "IITK Layout",

@@ -7,9 +7,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 export type GenerationType = "resume" | "cover-letter" | "sop"
 
 export async function generateContent(
-  resumeText: string, 
-  jobDescription: string, 
-  type: GenerationType
+  resumeText: string,
+  jobDescription: string,
+  type: GenerationType,
+  language: string = 'en'
 ) {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
@@ -25,8 +26,8 @@ export async function generateContent(
     jsonStructure = `
       { "personalInfo": "..." }
     `
-  } 
-  
+  }
+
   // --- 2. COVER LETTER CONFIG ---
   else if (type === "cover-letter") {
     systemInstruction = `
@@ -76,6 +77,10 @@ export async function generateContent(
   const prompt = `
     ${systemInstruction}
     
+    IMPORTANT: The output MUST be in the following language: ${language}. 
+    Translate all headers, section titles, and content into ${language}. 
+    Maintain the original technical meaning but ensure natural localized phrasing.
+
     USER RESUME: "${resumeText.slice(0, 10000)}"
     TARGET JOB/PROGRAM: "${jobDescription.slice(0, 5000)}"
     

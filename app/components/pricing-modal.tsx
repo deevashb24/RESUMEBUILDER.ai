@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Check, Loader2 } from "lucide-react"
+import { Check, Loader2, CreditCard } from "lucide-react"
 import Script from "next/script"
 
 interface PricingModalProps {
@@ -17,6 +17,21 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
   const { user } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('monthly')
+
+  // Safety Check: Render Loading or Sign-In state if user is not loaded
+  if (!user && open) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-sm bg-white border border-border shadow-2xl p-6 text-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Please sign in to view pricing.</p>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // If not open, returning null is fine
+  if (!user) return null
 
   // --- 1. LEMON SQUEEZY CHECKOUT ---
   const handleCheckout = async (type: 'monthly' | 'quarterly' | 'one-time') => {
@@ -116,22 +131,24 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
   }
 
   const PlanSelection = () => (
-    <div className="grid grid-cols-2 gap-2 mb-3">
+    <div className="grid grid-cols-2 gap-3 mb-4">
       <div
         onClick={() => setSelectedPlan('monthly')}
-        className={`p-2 border rounded-lg cursor-pointer transition-all text-center ${selectedPlan === 'monthly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}
+        className={`p-3 border rounded-xl cursor-pointer transition-all text-center flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'monthly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/50'}`}
       >
-        <div className="text-xs font-semibold text-gray-900">Monthly</div>
-        <div className="text-xs font-bold text-gray-900">$9.99/mo</div>
+        <div className="text-xs font-semibold text-foreground/80">Monthly</div>
+        <div className="text-lg font-bold text-foreground mt-1">$9.99<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+        <div className="text-[10px] text-muted-foreground mt-1 px-2 py-0.5 bg-secondary rounded-full">Global</div>
       </div>
 
       <div
         onClick={() => setSelectedPlan('quarterly')}
-        className={`p-2 border rounded-lg cursor-pointer transition-all text-center relative ${selectedPlan === 'quarterly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}
+        className={`p-3 border rounded-xl cursor-pointer transition-all text-center relative flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'quarterly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/50'}`}
       >
-        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">SAVE 33%</div>
-        <div className="text-xs font-semibold text-gray-900 pt-1">Quarterly</div>
-        <div className="text-xs font-bold text-gray-900">$19.99/3mo</div>
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">BEST VALUE</div>
+        <div className="text-xs font-semibold text-foreground/80 mt-1">Quarterly</div>
+        <div className="text-lg font-bold text-foreground mt-1">$19.99<span className="text-xs font-normal text-muted-foreground">/3mo</span></div>
+        <div className="text-[10px] text-muted-foreground mt-1 px-2 py-0.5 bg-secondary rounded-full">Global</div>
       </div>
     </div>
   )
@@ -140,62 +157,82 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     <>
       <Script id="razorpay-checkout-js" src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-sm bg-white border border-border shadow-2xl p-0 overflow-hidden">
-          <div className="p-4 pb-0 text-center">
-            <DialogTitle className="text-xl font-bold text-gray-900">Upgrade Plan</DialogTitle>
-            <DialogDescription className="text-xs text-gray-500 mt-1">Unlock the full power of AI Document Builder</DialogDescription>
+        <DialogContent className="sm:max-w-md bg-white border border-border shadow-2xl p-0 overflow-hidden rounded-2xl">
+          <div className="p-6 pb-2 text-center">
+            <DialogTitle className="text-2xl font-bold text-foreground flex justify-center items-center gap-2">
+              <CreditCard className="w-6 h-6 text-primary" />
+              Upgrade Plan
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-2">Unlock the full power of AI Document Builder</DialogDescription>
           </div>
 
-          <div className="p-4 pt-3 space-y-3">
+          <div className="p-6 pt-2 space-y-5">
             {/* Subscription Section */}
-            <div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded">Pro Subscription</span>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <div className="flex items-center gap-2 mb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Pro Subscription</h4>
+                <span className="h-px flex-1 bg-slate-200"></span>
               </div>
+
               <PlanSelection />
 
-              <ul className="space-y-2 mb-3 bg-gray-50 p-3 rounded-lg">
-                <li className="flex items-start text-xs"><Check className="h-3.5 w-3.5 text-green-600 mr-2 shrink-0" /><span className="text-gray-700"><strong>Unlimited</strong> Resumes & Downloads</span></li>
-                <li className="flex items-start text-xs"><Check className="h-3.5 w-3.5 text-green-600 mr-2 shrink-0" /><span className="text-gray-700"><strong>120 Generations</strong> / month</span></li>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-green-500 mr-2 shrink-0" /><span className="text-slate-700"><strong>Unlimited</strong> Resumes & Downloads</span></li>
+                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-green-500 mr-2 shrink-0" /><span className="text-slate-700"><strong>120 Generations</strong> / month</span></li>
               </ul>
 
-              <Button onClick={() => handleCheckout(selectedPlan)} disabled={!!loading} className="w-full h-10 text-sm bg-gray-900 hover:bg-gray-800 text-white">
-                {loading === selectedPlan && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                {selectedPlan === 'monthly' ? 'Subscribe Monthly ($9.99)' : 'Subscribe Quarterly ($19.99)'}
-              </Button>
+              <div className="space-y-2">
+                <Button onClick={() => handleCheckout(selectedPlan)} disabled={!!loading} className="w-full h-11 text-sm font-medium bg-gradient-to-tr from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white shadow-lg shadow-gray-200/50 transition-all hover:scale-[1.01]">
+                  {loading === selectedPlan && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Subscribe via Lemon Squeezy
+                </Button>
+                <div className="flex justify-center gap-3 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
+                  {/* Simple CSS Icons for Visa/Mastercard/Amex */}
+                  <div className="h-5 w-8 bg-slate-200 rounded flex items-center justify-center text-[8px] font-bold text-slate-500">VISA</div>
+                  <div className="h-5 w-8 bg-slate-200 rounded flex items-center justify-center text-[8px] font-bold text-slate-500">MC</div>
+                </div>
+              </div>
 
-              <div className="text-center text-[10px] text-gray-400 font-medium my-1.5">- OR -</div>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200"></span></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-50 px-2 text-muted-foreground">Or pay via UPI</span></div>
+              </div>
 
-              <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} className="w-full h-10 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md text-white">
+              <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} variant="outline" className="w-full h-10 text-sm border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300">
                 {loading === 'razorpay' && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                Pay via UPI (Razorpay) - {selectedPlan === 'monthly' ? '₹499' : '₹999'}
+                Pay via Razorpay UPI - {selectedPlan === 'monthly' ? '₹499' : '₹999'}
               </Button>
             </div>
 
             {/* One-Time Unlock Section */}
             {generationId && (
-              <div className="border-t pt-2 mt-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="leading-tight">
-                    <h4 className="font-bold text-gray-900 text-xs">Single Unlock</h4>
-                    <p className="text-[10px] text-gray-500">One-time payment.</p>
+              <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-bold text-orange-900 text-sm">Single Document Unlock</h4>
+                    <p className="text-xs text-orange-700/80">One-time payment. No subscription.</p>
                   </div>
-                  <div className="text-right"><span className="block font-bold text-gray-900 text-sm">₹199</span></div>
+                  <div className="text-right">
+                    <span className="block font-bold text-orange-900 text-lg">₹199</span>
+                    <span className="text-[10px] text-orange-700/60 uppercase">/ $2.99</span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} variant="outline" className="w-full h-8 text-[10px]">
-                    Card / PayPal ($2.99)
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-white text-orange-900 border border-orange-200 hover:bg-orange-100 hover:border-orange-300 shadow-sm">
+                    Card ($2.99)
                   </Button>
-                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} variant="secondary" className="w-full h-8 text-[10px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 border">
+                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-orange-100 text-orange-800 border border-orange-200 hover:bg-orange-200 hover:text-orange-900 shadow-sm">
                     UPI (₹199)
                   </Button>
                 </div>
               </div>
             )}
 
-            <div className="text-center pt-1">
-              <button onClick={onClose} className="text-[10px] text-gray-400 hover:text-gray-600 underline">No thanks, I'll stay on the free plan</button>
+            <div className="text-center">
+              <button onClick={onClose} className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline transition-colors p-2">
+                No thanks, I'll continue on the free plan
+              </button>
             </div>
           </div>
         </DialogContent>

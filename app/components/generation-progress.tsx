@@ -1,19 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { 
-  Loader2, 
-  CheckCircle2, 
-  Circle, 
-  ShieldCheck, 
-  Zap, 
-  Wand2, 
-  Fingerprint
-} from "lucide-react"
+import { Loader2, CheckCircle2, Circle, ShieldCheck, Zap, Wand2, Fingerprint } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { GenerationType } from "@/actions/generate-content"
+// IMPORT LANGUAGE
+import { useLanguage } from "@/lib/language-context"
 
 interface GenerationProgressProps {
   isFinished: boolean
@@ -34,24 +28,26 @@ export function GenerationProgress({
   finalStats,
   generationType,
 }: GenerationProgressProps) {
+  const { t } = useLanguage() // Use Translation
   const [progress, setProgress] = useState(0)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
 
-  // Dynamic Label Logic
+  // Dynamic Label Logic with Translations
   const finalStepLabel =
     generationType === "resume"
-      ? "Finalizing Resume Structure..."
+      ? t.progress.finalizingResume
       : generationType === "sop"
-      ? "Finalizing Statement of Purpose..."
-      : "Finalizing Cover Letter..."
+        ? t.progress.finalizingSop
+        : t.progress.finalizingCover
 
   const STEPS = [
-    { id: "scan", label: "Scanning Job Description..." },
-    { id: "analyze", label: "Analyzing Keywords & Gaps..." },
-    { id: "grammar", label: "Checking Grammar & Originality..." },
+    { id: "scan", label: t.progress.scanning },
+    { id: "analyze", label: t.progress.analyzing },
+    { id: "grammar", label: t.progress.grammar },
     { id: "finalize", label: finalStepLabel },
   ]
 
+  // ... Keep useEffect logic exactly the same ...
   useEffect(() => {
     if (isFinished) {
       setProgress(100)
@@ -79,13 +75,14 @@ export function GenerationProgress({
     }
   }, [isFinished, STEPS.length])
 
-  // --- SCORE COLOR HELPER ---
+  // ... Keep getScoreColor ...
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-700"
     if (score >= 60) return "text-blue-600"
     if (score >= 40) return "text-orange-500"
     return "text-red-600"
   }
+
 
   // --- RENDER (Finished State) ---
   if (isFinished && finalStats) {
@@ -96,39 +93,38 @@ export function GenerationProgress({
           <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-green-100 mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
           </div>
-          
+
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-green-900">
-              {generationType === 'resume' ? 'Resume Tailored!' : 'Document Generated!'}
+              {t.progress.successTitle}
             </h3>
             <p className="text-green-700 max-w-md mx-auto">
-              We optimized your {generationType === 'sop' ? 'SOP' : generationType === 'cover-letter' ? 'Cover Letter' : 'resume'} for the highest success rate.
+              {t.progress.successDesc}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto py-6">
             <div className="bg-white/60 p-4 rounded-xl border border-green-100/50 shadow-sm backdrop-blur-sm">
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-4 h-4" /> ATS
+                <ShieldCheck className="w-4 h-4" /> {t.progress.ats}
               </div>
-              {/* Dynamic Color Applied Here */}
               <div className={cn("text-3xl font-black", getScoreColor(finalStats.atsScore))}>
                 {finalStats.atsScore}%
               </div>
             </div>
-            
+
             <div className="bg-white/60 p-4 rounded-xl border border-green-100/50 shadow-sm backdrop-blur-sm">
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
-                <Zap className="w-4 h-4" /> Impact
+                <Zap className="w-4 h-4" /> {t.progress.impact}
               </div>
               <div className={cn("text-3xl font-black", getScoreColor(finalStats.grammarScore))}>
                 {finalStats.grammarScore}%
               </div>
             </div>
-            
+
             <div className="bg-white/60 p-4 rounded-xl border border-green-100/50 shadow-sm backdrop-blur-sm">
               <div className="text-sm font-medium text-green-800 mb-1 flex items-center justify-center gap-1">
-                <Fingerprint className="w-4 h-4" /> Unique
+                <Fingerprint className="w-4 h-4" /> {t.progress.unique}
               </div>
               <div className={cn("text-3xl font-black", getScoreColor(finalStats.originalityScore))}>
                 {finalStats.originalityScore}%
@@ -146,14 +142,15 @@ export function GenerationProgress({
       <CardContent className="p-0 space-y-8">
         <div className="space-y-2 text-center">
           <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4 relative">
-             <Wand2 className="w-8 h-8 text-primary animate-pulse" />
-             <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+            <Wand2 className="w-8 h-8 text-primary animate-pulse" />
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
           </div>
+          {/* Translated Headers */}
           <h3 className="text-2xl font-bold text-gray-900">
-            Cafting your {generationType === 'sop' ? 'SOP' : generationType === 'cover-letter' ? 'Letter' : 'Resume'}
+            AI is working...
           </h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Analyzing standard industry patterns and optimizing for the specific job description...
+            Please wait while we optimize your document.
           </p>
         </div>
 
@@ -175,8 +172,8 @@ export function GenerationProgress({
                 <div key={step.id} className="flex items-center gap-3">
                   <div className={cn(
                     "w-6 h-6 rounded-full flex items-center justify-center border transition-colors duration-300",
-                    isCompleted ? "bg-green-500 border-green-500" : 
-                    isActive ? "border-primary bg-primary/10" : "border-gray-200"
+                    isCompleted ? "bg-green-500 border-green-500" :
+                      isActive ? "border-primary bg-primary/10" : "border-gray-200"
                   )}>
                     {isCompleted ? (
                       <CheckCircle2 className="w-4 h-4 text-white" />
@@ -188,8 +185,8 @@ export function GenerationProgress({
                   </div>
                   <span className={cn(
                     "text-sm transition-colors duration-300",
-                    isCompleted ? "text-gray-900 font-medium" : 
-                    isActive ? "text-primary font-bold" : "text-gray-400"
+                    isCompleted ? "text-gray-900 font-medium" :
+                      isActive ? "text-primary font-bold" : "text-gray-400"
                   )}>
                     {step.label}
                   </span>
