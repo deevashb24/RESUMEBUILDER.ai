@@ -18,6 +18,7 @@ import { SimpleResumeLayout } from "@/components/layouts/demo"
 import { ModernLayout } from "@/components/layouts/modern"
 import { MinimalLayout } from "@/components/layouts/minimal"
 import { CreativeLayout } from "@/components/layouts/creative"
+import { IITKLayout } from "@/components/layouts/iitk"
 import { ParsedResumeData } from "@/lib/resume"
 
 // Available layouts (can be extended)
@@ -49,6 +50,13 @@ export const LAYOUTS: Layout[] = [
     description: "Eye-catching design with bold header",
     preview: "/layouts/layout-creative.png",
     component: CreativeLayout
+  },
+  {
+    id: "iitk",
+    name: "IITK Layout",
+    description: "Academic LaTeX-inspired format",
+    preview: "/layouts/layout-iitk.png",
+    component: IITKLayout
   },
 ]
 

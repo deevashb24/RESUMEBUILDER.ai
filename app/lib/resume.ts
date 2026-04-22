@@ -72,6 +72,7 @@ export interface ParsedResumeData {
   projects: ProjectItem[]
   skills: SkillSet
   customSections: ResumeSection[]
+  layoutOverrides?: Record<string, any>
 }
 
 export interface SavedResume {
