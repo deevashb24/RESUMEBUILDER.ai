@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { adminDb } from "@/lib/firebase-admin"
-import { FieldValue } from "firebase-admin/firestore"
+import { createClient } from "@supabase/supabase-js"
+
+const getAdminClient = () => {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    // Using Service Role Key to bypass RLS, fallback to anon if missing
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,20 +33,26 @@ export async function POST(request: NextRequest) {
     const generationId = customData.generationId || customData.generation_id
 
     if ((eventName === "order_created" || eventName === "subscription_created") && userId) {
-      // --- LOGIC SPLIT ---
+      const supabase = getAdminClient()
+
       if (generationId) {
         // Case 1: One-Time Unlock
-        await adminDb.collection("users").doc(userId).update({
-          unlockedGenerations: FieldValue.arrayUnion(generationId)
-        });
+        const { data: user } = await supabase.from('users').select('unlockedGenerations').eq('id', userId).single()
+        const currentUnlocks = user?.unlockedGenerations || []
+
+        await supabase.from("users").update({
+          unlockedGenerations: Array.from(new Set([...currentUnlocks, generationId]))
+        }).eq('id', userId)
+
         console.log(`🔓 LemonSqueezy: Unlocked ${generationId} for ${userId}`);
       } else {
         // Case 2: Subscription -> Grant Premium
-        await adminDb.collection("users").doc(userId).set({
+        await supabase.from("users").upsert({
+          id: userId,
           isPremium: true,
           premiumSince: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-        }, { merge: true })
+        })
         console.log(`💎 LemonSqueezy: Premium Granted to ${userId}`);
       }
     }

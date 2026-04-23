@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         const data = await pdf(buffer)
         text = data.text
       } else if (
-        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || 
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
         file.name.endsWith(".docx")
       ) {
         const result = await mammoth.extractRawText({ buffer })
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       ${cleanedText}
     `
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" })
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: { responseMimeType: "application/json", temperature: 0 },

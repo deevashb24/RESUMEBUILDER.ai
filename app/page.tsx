@@ -4,14 +4,13 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import SignInModal from "@/components/sign-in-modal"
+import { SignInButton } from "@clerk/nextjs"
 import { FileText, BookOpen, Mail } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export default function Home() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [open, setOpen] = useState(false)
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -56,13 +55,14 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button
-                onClick={() => setOpen(true)}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg h-12 shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                size="lg"
-              >
-                Sign in
-              </Button>
+              <SignInButton mode="modal">
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-lg h-12 shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                  size="lg"
+                >
+                  Sign in
+                </Button>
+              </SignInButton>
             </CardContent>
           </Card>
         </div>
@@ -107,7 +107,7 @@ export default function Home() {
         </div>
       </div>
 
-      <SignInModal open={open} onClose={() => setOpen(false)} />
+
     </div>
   )
 }

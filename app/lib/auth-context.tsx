@@ -1,18 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import {
-  User as FirebaseUser,
-  onAuthStateChanged,
-  signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
-  OAuthProvider,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth"
-import { doc, onSnapshot, setDoc } from "firebase/firestore"
-import { auth, db } from "./firebase"
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react"
+import { useUser, useAuth as useClerkAuth } from "@clerk/nextjs"
+import { createClient } from "@/utils/supabase/client"
 
 export interface Subscription {
   status: 'active' | 'inactive' | 'past_due' | 'cancelled';
@@ -23,162 +13,121 @@ export interface Subscription {
 }
 
 interface AuthContextValue {
-  user: FirebaseUser | null
+  user: any | null
   loading: boolean
   isPremium: boolean
   subscription: Subscription | null
-  unlockedGenerations: string[] // <--- ADDED THIS
-  loginWithGoogle: () => Promise<void>
-  loginWithApple: () => Promise<void>
-  loginWithEmail: (email: string, password: string) => Promise<void>
+  unlockedGenerations: string[]
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<FirebaseUser | null>(null)
+  const { user: clerkUser, isLoaded } = useUser()
+  const { signOut } = useClerkAuth()
+
   const [loading, setLoading] = useState(true)
   const [isPremium, setIsPremium] = useState(false)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [unlockedGenerations, setUnlockedGenerations] = useState<string[]>([]) // <--- ADDED STATE
+  const [unlockedGenerations, setUnlockedGenerations] = useState<string[]>([])
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      setLoading(false)
-      return
-    }
+  const supabase = createClient()
 
-    if (!auth) {
-      setLoading(false)
-      return
-    }
-
-    let unsubscribeFirestore: () => void;
-
-    const unsubscribeAuth = onAuthStateChanged(
-      auth,
-      async (firebaseUser) => {
-        setUser(firebaseUser)
-
-        if (unsubscribeFirestore) {
-          unsubscribeFirestore()
-        }
-
-        if (firebaseUser && db) {
-          const userRef = doc(db, "users", firebaseUser.uid)
-
-          unsubscribeFirestore = onSnapshot(userRef, async (docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data()
-
-              // 1. Premium Logic
-              const isPremiumBool = data.isPremium === true
-
-              // 2. Subscription Logic
-              const subData = data.subscription || {
-                status: 'inactive',
-                planId: null,
-                periodEnd: null
-              }
-
-              // Check expiry
-              const now = new Date()
-              // Handle Firestore Timestamp or ISO string
-              let periodEndDates: Date | null = null
-              if (subData.periodEnd) {
-                if (typeof subData.periodEnd === 'string') {
-                  periodEndDates = new Date(subData.periodEnd)
-                } else if (subData.periodEnd.seconds) {
-                  periodEndDates = new Date(subData.periodEnd.seconds * 1000)
-                }
-              }
-
-              const isActive = isPremiumBool || (subData.status === 'active' && periodEndDates && periodEndDates > now)
-
-              // 3. One-Time Unlocks Logic (CRITICAL FIX)
-              const unlocked = data.unlockedGenerations || []
-
-              setIsPremium(!!isActive)
-              setSubscription(subData)
-              setUnlockedGenerations(unlocked) // <--- UPDATE STATE
-
-            } else {
-              // Create profile if missing
-              await setDoc(userRef, {
-                email: firebaseUser.email,
-                createdAt: new Date().toISOString(),
-                isPremium: false,
-                unlockedGenerations: [], // <--- Initialize Empty
-                provider: "google/email",
-              })
-              setIsPremium(false)
-              setUnlockedGenerations([])
-            }
-          }, (error) => {
-            console.error("Firestore Listener Error:", error)
-          })
-
-        } else {
-          setIsPremium(false)
-          setUnlockedGenerations([])
-        }
-
-        setLoading(false)
-      }
-    )
-
-    return () => {
-      unsubscribeAuth()
-      if (unsubscribeFirestore) unsubscribeFirestore()
-    }
-  }, [])
-
-  const loginWithGoogle = async () => {
-    if (!auth) throw new Error("Firebase auth not initialized.")
-    const provider = new GoogleAuthProvider()
-    provider.setCustomParameters({ prompt: "select_account" })
-    provider.addScope("profile")
-    provider.addScope("email")
+  const refreshUserData = useCallback(async (userId: string, emailStr?: string) => {
     try {
-      await signInWithPopup(auth, provider)
-    } catch (error: any) {
-      if (error.code === "auth/popup-blocked") throw new Error("Popup blocked.")
-      throw error
-    }
-  }
+      const { data, error } = await supabase.from('users').select('*').eq('id', userId).single()
 
-  const loginWithApple = async () => {
-    if (!auth) throw new Error("Firebase auth not initialized.")
-    const provider = new OAuthProvider("apple.com")
-    await signInWithPopup(auth, provider)
-  }
-
-  const loginWithEmail = async (email: string, password: string) => {
-    if (!auth) throw new Error("Firebase auth not initialized.")
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
-    } catch (error: any) {
-      if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
-        await createUserWithEmailAndPassword(auth, email, password)
-      } else {
+      if (error && error.code !== 'PGRST116') {
         throw error
       }
-    }
-  }
 
-  const logout = async () => {
-    if (!auth) return
-    try {
-      await signOut(auth)
-      setUser(null)
+      if (data) {
+        const isPremiumBool = data.isPremium === true || data.is_premium === true
+        const subData: Subscription = {
+          status: data.subscription?.status || data.subscription_status || 'inactive',
+          planId: data.subscription?.planId || data.subscription_plan_id || null,
+          periodEnd: data.subscription?.periodEnd || data.subscription_period_end || null,
+          lemonSqueezySubscriptionId: data.subscription?.lemonSqueezySubscriptionId || data.lemon_squeezy_subscription_id,
+          customerPortalUrl: data.subscription?.customerPortalUrl || data.customer_portal_url
+        }
+
+        const now = new Date()
+        let periodEndDates: Date | null = null
+        if (subData.periodEnd) {
+          periodEndDates = new Date(subData.periodEnd)
+        }
+
+        const isActive = isPremiumBool || (subData.status === 'active' && periodEndDates && periodEndDates > now)
+        const unlocked = data.unlockedGenerations || data.unlocked_generations || []
+
+        setIsPremium(!!isActive)
+        setSubscription(subData)
+        setUnlockedGenerations(unlocked)
+      } else {
+        if (emailStr) {
+          const newUser = {
+            id: userId,
+            email: emailStr,
+            isPremium: false,
+            unlockedGenerations: [],
+            provider: 'clerk'
+          }
+          try {
+            await supabase.from('users').insert(newUser)
+          } catch (e) { }
+        }
+        setIsPremium(false)
+        setUnlockedGenerations([])
+      }
+    } catch (err) {
+      console.error("Error fetching user data from Supabase:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    if (!isLoaded) {
+      setLoading(true)
+      return
+    }
+
+    if (clerkUser?.id) {
+      const emailStr = clerkUser.primaryEmailAddress?.emailAddress
+      refreshUserData(clerkUser.id, emailStr)
+
+      const realtimeChannel = supabase
+        .channel(`public:users:changes:${clerkUser.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users', filter: `id=eq.${clerkUser.id}` }, () => {
+          refreshUserData(clerkUser.id, emailStr)
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(realtimeChannel)
+      }
+    } else {
       setIsPremium(false)
       setSubscription(null)
       setUnlockedGenerations([])
-    } catch (error) {
-      console.error("Error signing out:", error)
-      throw error
+      setLoading(false)
     }
+  }, [clerkUser, isLoaded, refreshUserData, supabase])
+
+  const user = clerkUser ? {
+    id: clerkUser.id,
+    email: clerkUser.primaryEmailAddress?.emailAddress,
+    user_metadata: {
+      full_name: clerkUser.fullName,
+      avatar_url: clerkUser.imageUrl,
+      name: clerkUser.fullName,
+      picture: clerkUser.imageUrl
+    }
+  } : null
+
+  const logout = async () => {
+    await signOut()
   }
 
   return (
@@ -187,10 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isPremium,
       subscription,
-      unlockedGenerations, // <--- EXPOSE TO APP
-      loginWithGoogle,
-      loginWithApple,
-      loginWithEmail,
+      unlockedGenerations,
       logout
     }}>
       {children}

@@ -1,45 +1,41 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject, UploadResult } from "firebase/storage"
-import { storage } from "./firebase"
+import { createClient as createBrowserClient } from "@/utils/supabase/client"
 
 /**
- * Upload file to Firebase Storage
+ * Upload file to Supabase Storage
  */
 export async function uploadResumeFile(
   userId: string,
   file: File
 ): Promise<{ url: string; path: string }> {
-  if (!storage) {
-    throw new Error("Firebase Storage not initialized")
-  }
+  const supabase = createBrowserClient()
 
   const timestamp = Date.now()
   const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
   const storagePath = `resumes/${userId}/${timestamp}-${fileName}`
-  const storageRef = ref(storage, storagePath)
 
-  const arrayBuffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(arrayBuffer)
+  const { error } = await supabase.storage
+    .from('resumes')
+    .upload(storagePath, file, { contentType: file.type })
 
-  const snapshot: UploadResult = await uploadBytes(storageRef, bytes, {
-    contentType: file.type,
-  })
+  if (error) {
+    throw error
+  }
 
-  const url = await getDownloadURL(snapshot.ref)
+  const { data } = supabase.storage.from('resumes').getPublicUrl(storagePath)
 
   return {
-    url,
+    url: data.publicUrl,
     path: storagePath,
   }
 }
 
 /**
- * Delete file from Firebase Storage
+ * Delete file from Supabase Storage
  */
 export async function deleteResumeFile(path: string): Promise<void> {
-  if (!storage) return
+  const supabase = createBrowserClient()
   try {
-    const storageRef = ref(storage, path)
-    await deleteObject(storageRef)
+    await supabase.storage.from('resumes').remove([path])
   } catch (error) {
     console.error("Error deleting file from storage:", error)
   }

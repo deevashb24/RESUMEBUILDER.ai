@@ -14,9 +14,7 @@ import Link from "next/link"
 import { useReactToPrint } from "react-to-print"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { doc, updateDoc, getDoc } from "firebase/firestore"
-import { db, storage } from "@/lib/firebase"
+import { createClient } from "@/utils/supabase/client"
 import Image from "next/image"
 
 // --- LAYOUT OPTIONS ---
@@ -35,6 +33,7 @@ function PreviewContent() {
   const [data, setData] = useState<any>(null)
   const [docType, setDocType] = useState<string>("resume")
   const [selectedLayout, setSelectedLayout] = useState<string>("demo")
+  const supabase = createClient()
 
   // Track Data Source & Structure
   const [dataSource, setDataSource] = useState<'history' | 'resume' | null>(null)
@@ -71,9 +70,13 @@ function PreviewContent() {
     setUploadingPhoto(true)
     try {
       // 1. Upload to Storage
-      const storageRef = ref(storage, `resumes/${id}/profile_pic_${Date.now()}`)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
+      const fileExt = file.name.split('.').pop()
+      const storagePath = `resumes/${id}/profile_pic_${Date.now()}.${fileExt}`
+      const { error: uploadError } = await supabase.storage.from("resumes").upload(storagePath, file)
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(storagePath)
+      const url = urlData.publicUrl
 
       // 2. Update Local State (Immediate Feedback)
       const updatedData = {
@@ -89,23 +92,38 @@ function PreviewContent() {
       if (dataSource === 'resume') {
         // CASE A: Resume Document
         const updatePayload: any = {
-          "parsedData.personal.picture": url // Always update the source
+          "parsedData": {
+            ...data,
+            personal: { ...data.personal, picture: url }
+          }
         }
 
-        // CRITICAL FIX: Explicitly update generated content if it exists
         if (hasGeneratedContent) {
-          updatePayload["generatedContent.parsedData.personal.picture"] = url
+          // It's a bit tricky to dot-update JSONB in Supabase efficiently from the client hook
+          // usually we fetch, modify and save back whole json.
+          const { data: resumeData } = await supabase.from('resumes').select('generatedContent').eq('id', id).single()
+          if (resumeData?.generatedContent) {
+            updatePayload.generatedContent = {
+              ...resumeData.generatedContent,
+              parsedData: {
+                ...resumeData.generatedContent.parsedData,
+                personal: {
+                  ...resumeData.generatedContent.parsedData?.personal,
+                  picture: url
+                }
+              }
+            }
+          }
         }
 
-        await updateDoc(doc(db, "resumes", id), updatePayload)
+        await supabase.from('resumes').update(updatePayload).eq('id', id)
 
       } else if (dataSource === 'history') {
         // CASE B: History Snapshot
-        const historyRef = doc(db, "history", id)
-        const historySnap = await getDoc(historyRef)
+        const { data: historySnap } = await supabase.from('history').select('output').eq('id', id).single()
 
-        if (historySnap.exists()) {
-          const historyData = historySnap.data()
+        if (historySnap) {
+          const historyData = historySnap
           if (historyData.output) {
             try {
               const jsonOutput = JSON.parse(historyData.output)
@@ -123,9 +141,9 @@ function PreviewContent() {
               }
 
               if (updated) {
-                await updateDoc(historyRef, {
+                await supabase.from('history').update({
                   output: JSON.stringify(jsonOutput)
-                })
+                }).eq('id', id)
               }
             } catch (err) {
               console.error("Failed to parse/update history JSON", err)
@@ -190,8 +208,8 @@ function PreviewContent() {
 
         // --- SMART DEFAULT ---
         // Only use Profile Pic if Resume has NO picture at all
-        if (foundData && foundData.personal && !foundData.personal.picture && user?.photoURL) {
-          foundData.personal.picture = user.photoURL
+        if (foundData && foundData.personal && !foundData.personal.picture && (user?.user_metadata?.avatar_url || user?.user_metadata?.picture)) {
+          foundData.personal.picture = user.user_metadata.avatar_url || user.user_metadata.picture
         }
 
         setData(foundData)

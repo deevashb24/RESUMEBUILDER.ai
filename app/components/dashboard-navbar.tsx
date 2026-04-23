@@ -8,7 +8,6 @@ import Link from "next/link"
 import { Sparkles, ShieldCheck, Globe } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
-import { UserProfilePopup } from "@/components/user-profile-popup"
 import { useLanguage } from "@/lib/language-context"
 import { languages } from "@/lib/translations"
 import {
@@ -17,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { UserButton } from "@clerk/nextjs"
 
 export function DashboardNavbar() {
   const { user, logout, isPremium } = useAuth()
@@ -24,7 +24,6 @@ export function DashboardNavbar() {
   const router = useRouter()
 
   const [showPricing, setShowPricing] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   // Fix: Ensure component is mounted to prevent hydration mismatch with the Dialog
@@ -32,31 +31,7 @@ export function DashboardNavbar() {
     setMounted(true)
   }, [])
 
-  const handleLogout = async () => {
-    try {
-      setShowProfile(false)
-      await logout()
-      router.replace("/")
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
-  }
 
-  const getUserInitials = () => {
-    if (!user) return "JD"
-    if (user.displayName) {
-      return user.displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    }
-    if (user.email) {
-      return user.email[0].toUpperCase()
-    }
-    return "JD"
-  }
 
   if (!mounted) return null
 
@@ -128,16 +103,7 @@ export function DashboardNavbar() {
 
             {/* Avatar */}
             <div className="relative">
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className="rounded-full ring-offset-2 hover:ring-2 hover:ring-blue-500 transition-all focus:outline-none"
-              >
-                <Avatar className="h-9 w-9 bg-secondary border border-gray-200">
-                  <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-blue-50 to-indigo-50 text-indigo-600">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
+              <UserButton />
             </div>
           </div>
         </div>
@@ -161,12 +127,6 @@ export function DashboardNavbar() {
         onClose={() => setShowPricing(false)}
       />
 
-      {/* 2. User Profile Popup */}
-      <UserProfilePopup
-        isOpen={showProfile}
-        onClose={() => setShowProfile(false)}
-        onLogout={handleLogout}
-      />
     </>
   )
 }

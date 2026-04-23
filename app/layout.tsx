@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { GenerationProvider } from "@/lib/generation-context"
+import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,16 +36,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-800 selection:bg-indigo-100 selection:text-indigo-700 flex flex-col min-h-screen`}>
-        <AuthProvider>
-          <LanguageProvider>
-            <GenerationProvider>
-              <div className="flex-grow">
-                {children}
-              </div>
-              <Footer />
-            </GenerationProvider>
-          </LanguageProvider>
-        </AuthProvider>
+        <ClerkProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <GenerationProvider>
+                <div className="flex-grow">
+                  {children}
+                </div>
+                <Footer />
+              </GenerationProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </ClerkProvider>
       </body>
     </html>
   )

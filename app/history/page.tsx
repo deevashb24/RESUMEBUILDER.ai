@@ -21,7 +21,7 @@ export default function HistoryPage() {
   useEffect(() => {
     async function fetchHistory() {
       if (user) {
-        const data = await getHistory(user.uid)
+        const data = await getHistory(user.id)
         setHistory(data)
       }
       setIsLoadingHistory(false)

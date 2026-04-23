@@ -46,7 +46,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
 
       // FIX: Pass generationId if this is a one-time purchase
       const payload: any = {
-        userId: user.uid,
+        userId: user.id,
         userEmail: user.email,
         variantId: variantId,
         redirectUrl: window.location.href
@@ -88,7 +88,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.uid,
+          userId: user.id,
           planType,
           // FIX: Explicitly pass generationId for one-time unlock
           generationId: planType === 'one-time' ? generationId : undefined

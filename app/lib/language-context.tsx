@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { doc, getDoc, setDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { createClient } from "@/utils/supabase/client"
 import { Language, translations } from "@/lib/translations"
 
 interface LanguageContextType {
@@ -17,6 +16,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth()
     const [language, setLanguageState] = useState<Language>('en')
+    const supabase = createClient()
 
     // 1. Initial Load: Check Local Storage first for speed
     useEffect(() => {
@@ -31,12 +31,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // 2. Sync with Firestore when User Logs In
     useEffect(() => {
         const fetchUserLanguage = async () => {
-            if (user && db) {
+            if (user) {
                 try {
-                    const docRef = doc(db, "users", user.uid)
-                    const docSnap = await getDoc(docRef)
-                    if (docSnap.exists() && docSnap.data().preferredLanguage) {
-                        const lang = docSnap.data().preferredLanguage as Language
+                    const { data } = await supabase.from('users').select('preferredLanguage, preferred_language').eq('id', user.id).single()
+                    if (data && (data.preferredLanguage || data.preferred_language)) {
+                        const lang = (data.preferredLanguage || data.preferred_language) as Language
                         if (translations[lang]) {
                             setLanguageState(lang)
                             localStorage.setItem("preferredLanguage", lang) // Sync back to local
@@ -56,11 +55,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("preferredLanguage", lang) // Instant UI update
 
         // Debounced or direct Write if user is logged in
-        if (user && db) {
+        if (user) {
             // We don't need heavy debounce here as language switch is rare, 
             // but strictly separating UI from DB logic makes it snappy.
-            setDoc(doc(db, "users", user.uid), { preferredLanguage: lang }, { merge: true })
-                .catch(err => console.error("Failed to save language:", err))
+            supabase.from('users').update({ preferredLanguage: lang }).eq('id', user.id)
+                .then(({ error }: any) => { if (error) console.error("Failed to save language:", error) })
         }
     }
 

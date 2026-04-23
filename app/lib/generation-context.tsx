@@ -92,7 +92,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
+      const { url, path } = await uploadResumeFile(user.id, uploadedFile)
       setStoragePath(path)
 
       const formData = new FormData()
@@ -104,7 +104,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       const { data: parsedData } = await parseResponse.json()
       setParsedResume(parsedData)
 
-      const newResumeId = await saveParsedResume(user.uid, parsedData, url, path)
+      const newResumeId = await saveParsedResume(user.id, parsedData, url, path)
       setCurrentResumeId(newResumeId)
 
     } catch (err: any) {
@@ -130,10 +130,10 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       let resumeId = currentResumeId
       if (!resumeId) {
         if (uploadedFile) {
-          const { url, path } = await uploadResumeFile(user.uid, uploadedFile)
-          resumeId = await saveParsedResume(user.uid, parsedResume, url, path)
+          const { url, path } = await uploadResumeFile(user.id, uploadedFile)
+          resumeId = await saveParsedResume(user.id, parsedResume, url, path)
         } else {
-          resumeId = await saveParsedResume(user.uid, parsedResume)
+          resumeId = await saveParsedResume(user.id, parsedResume)
         }
       }
 
@@ -161,7 +161,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
           generatedAt: new Date().toISOString(),
           stats
         }
-        await saveGeneratedResume(user.uid, resumeId!, selectedLayout || "demo", jobDescription, resumeContent, isPremium)
+        await saveGeneratedResume(user.id, resumeId!, selectedLayout || "demo", jobDescription, resumeContent, isPremium)
 
         finalIdForPreview = resumeId!
       } else {
@@ -184,7 +184,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       }
 
       const historyId = await saveHistoryEntry(
-        user.uid,
+        user.id,
         selectedOption,
         jobDescription,
         JSON.stringify(finalHistoryContent),

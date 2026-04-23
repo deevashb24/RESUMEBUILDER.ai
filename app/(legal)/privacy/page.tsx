@@ -16,7 +16,7 @@ export default function PrivacyPage() {
             <h2>1. Information We Collect</h2>
             <p>We collect only the information necessary to provide our services:</p>
             <ul>
-                <li><strong>Personal Information:</strong> Name, email address, and profile picture provided during authentication (via Google/Firebase).</li>
+                <li><strong>Personal Information:</strong> Name, email address, and profile picture provided during authentication (via Google/Supabase).</li>
                 <li><strong>Resume Data:</strong> Content from uploaded resumes (PDF/DOCX) or text input manually, including work history, education, and skills.</li>
                 <li><strong>Usage Data:</strong> Anonymous analytics data to improve our service performance.</li>
             </ul>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
 
             <h2>3. Data Storage & Security</h2>
             <p>
-                We use <strong>Google Firebase</strong> for secure authentication and database storage.
+                We use <strong>Supabase</strong> for secure authentication and database storage.
                 Calculated measures are in place to protect your data from unauthorized access.
             </p>
 

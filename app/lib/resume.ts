@@ -1,14 +1,4 @@
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  Timestamp
-} from "firebase/firestore"
-import { db } from "./firebase"
+import { createClient as createBrowserClient } from "@/utils/supabase/client"
 
 // --- 1. DATA STRUCTURES ---
 
@@ -83,8 +73,8 @@ export interface SavedResume {
   filePath?: string
   layoutId?: string
   jobDescription?: string
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: string
+  updatedAt: string
   isUnlocked?: boolean
   unlockedAt?: string
   paymentId?: string
@@ -107,7 +97,7 @@ export const initialResumeData: ParsedResumeData = {
 // --- 3. DATABASE FUNCTIONS ---
 
 /**
- * Save a parsed resume to Firestore
+ * Save a parsed resume to Supabase
  */
 export async function saveParsedResume(
   userId: string,
@@ -115,20 +105,26 @@ export async function saveParsedResume(
   fileUrl?: string,
   filePath?: string
 ): Promise<string> {
-  if (!db) throw new Error("Firestore not initialized")
+  const supabase = createBrowserClient()
 
   try {
-    const docRef = await addDoc(collection(db, "resumes"), {
+    const payload = {
       userId,
       parsedData,
       fileUrl: fileUrl || null,
       filePath: filePath || null,
       layoutId: "demo",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
       name: parsedData.name || parsedData.personal.name || "Untitled Resume"
-    })
-    return docRef.id
+    }
+
+    const { data, error } = await supabase
+      .from('resumes')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (error) throw error
+    return data.id
   } catch (error) {
     console.error("Error saving parsed resume:", error)
     throw error
@@ -146,19 +142,25 @@ export async function saveGeneratedResume(
   content: any,
   isUnlocked: boolean = false
 ): Promise<void> {
-  if (!db) throw new Error("Firestore not initialized")
+  const supabase = createBrowserClient()
 
   try {
-    const docRef = doc(db, "resumes", resumeId)
-    await updateDoc(docRef, {
+    const payload = {
       layoutId,
       jobDescription,
       generatedContent: content,
-      updatedAt: serverTimestamp(),
       isGenerated: true,
       isUnlocked,
-      unlockedAt: isUnlocked ? new Date().toISOString() : null
-    })
+      unlockedAt: isUnlocked ? new Date().toISOString() : null,
+      updatedAt: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('resumes')
+      .update(payload)
+      .eq('id', resumeId)
+
+    if (error) throw error
   } catch (error) {
     console.error("Error saving generated resume:", error)
     throw error
@@ -169,21 +171,24 @@ export async function saveGeneratedResume(
  * Get a single resume by ID
  */
 export async function getResume(resumeId: string): Promise<SavedResume | null> {
-  if (!db) return null
+  const supabase = createBrowserClient()
 
   try {
-    const docRef = doc(db, "resumes", resumeId)
-    const docSnap = await getDoc(docRef)
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('id', resumeId)
+      .single()
 
-    if (docSnap.exists()) {
-      return {
-        id: docSnap.id,
-        ...docSnap.data(),
-        isUnlocked: docSnap.data().isUnlocked || false,
-      } as SavedResume
-    } else {
-      return null
+    if (error) {
+      if (error.code === 'PGRST116') return null // Not found
+      throw error
     }
+
+    return {
+      ...data,
+      isUnlocked: data.isUnlocked || false,
+    } as SavedResume
   } catch (error) {
     console.error("Error fetching resume:", error)
     throw error
@@ -191,12 +196,17 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
 }
 
 /**
- * Delete a resume document from Firestore
+ * Delete a resume document from Supabase
  */
 export async function deleteResume(resumeId: string): Promise<void> {
-  if (!db) return
+  const supabase = createBrowserClient()
   try {
-    await deleteDoc(doc(db, "resumes", resumeId))
+    const { error } = await supabase
+      .from('resumes')
+      .delete()
+      .eq('id', resumeId)
+
+    if (error) throw error
   } catch (error) {
     console.error("Error deleting resume doc:", error)
   }

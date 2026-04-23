@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
-import { FieldValue } from "firebase-admin/firestore";
+import { createClient } from "@supabase/supabase-js"
+
+const getAdminClient = () => {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        // Using Service Role Key to bypass RLS, fallback to anon if missing
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    )
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -17,13 +24,15 @@ export async function POST(req: NextRequest) {
 
         const payload = JSON.parse(rawBody);
         const event = payload.event;
+        const supabase = getAdminClient()
 
         // 1. Handle Recurring Subscription
         if (event === "subscription.charged" || event === "subscription.activated") {
             const sub = payload.payload.subscription.entity;
             const userId = sub.notes?.userId;
             if (userId) {
-                await adminDb.collection("users").doc(userId).set({
+                await supabase.from('users').upsert({
+                    id: userId,
                     isPremium: true,
                     updatedAt: new Date().toISOString(),
                     subscription: {
@@ -32,7 +41,7 @@ export async function POST(req: NextRequest) {
                         periodEnd: sub.current_end,
                         type: 'razorpay'
                     }
-                }, { merge: true });
+                })
                 console.log(`✅ Subscription Active: ${userId}`);
             }
         }
@@ -45,9 +54,13 @@ export async function POST(req: NextRequest) {
             if (notes.userId && notes.planType === 'one-time') {
                 const generationId = notes.generationId;
                 if (generationId) {
-                    await adminDb.collection("users").doc(notes.userId).update({
-                        unlockedGenerations: FieldValue.arrayUnion(generationId)
-                    });
+                    const { data: user } = await supabase.from('users').select('unlockedGenerations').eq('id', notes.userId).single()
+                    const currentUnlocks = user?.unlockedGenerations || []
+
+                    await supabase.from('users').update({
+                        unlockedGenerations: Array.from(new Set([...currentUnlocks, generationId]))
+                    }).eq('id', notes.userId)
+
                     console.log(`🔓 Unlocked Doc ${generationId} for ${notes.userId}`);
                 }
             }

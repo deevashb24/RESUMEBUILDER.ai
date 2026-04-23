@@ -1,15 +1,4 @@
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  orderBy,
-  serverTimestamp
-} from "firebase/firestore"
-import { db } from "./firebase"
+import { createClient as createBrowserClient } from "@/utils/supabase/client"
 
 export interface HistoryEntry {
   id: string
@@ -18,7 +7,7 @@ export interface HistoryEntry {
   title: string
   jobDescription: string
   output: string // This is the stringified JSON of the generated content
-  createdAt: string // We convert Timestamp to ISO string for the UI
+  createdAt: string // ISO string for the UI
   stats?: any
   isUnlocked?: boolean
   unlockedAt?: string
@@ -35,7 +24,7 @@ export async function saveHistoryEntry(
   output: string,
   isUnlocked: boolean = false
 ): Promise<string> {
-  if (!db) throw new Error("Firestore not initialized")
+  const supabase = createBrowserClient()
 
   // Try to extract a meaningful title from the JSON output
   let title = "Generated Document"
@@ -55,17 +44,24 @@ export async function saveHistoryEntry(
   }
 
   try {
-    const docRef = await addDoc(collection(db, "history"), {
+    const payload = {
       userId,
       type,
       title,
       jobDescription,
       output,
       isUnlocked,
-      unlockedAt: isUnlocked ? new Date().toISOString() : null,
-      createdAt: serverTimestamp(),
-    })
-    return docRef.id
+      unlockedAt: isUnlocked ? new Date().toISOString() : null
+    }
+
+    const { data, error } = await supabase
+      .from('history')
+      .insert(payload)
+      .select('id')
+      .single()
+
+    if (error) throw error
+    return data.id
   } catch (error) {
     console.error("Error saving history entry:", error)
     throw error
@@ -77,40 +73,24 @@ export async function saveHistoryEntry(
  * (Required for the History Page)
  */
 export async function getHistory(userId: string): Promise<HistoryEntry[]> {
-  if (!db) return []
+  const supabase = createBrowserClient()
 
   try {
-    const q = query(
-      collection(db, "history"),
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
-    )
+    const { data, error } = await supabase
+      .from('history')
+      .select('*')
+      .eq('userId', userId)
+      .order('createdAt', { ascending: false })
 
-    const querySnapshot = await getDocs(q)
+    if (error) throw error
 
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data()
-
-      // Safety check for converting Firestore Timestamp to ISO String
-      let createdAt = new Date().toISOString()
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        createdAt = data.createdAt.toDate().toISOString()
-      } else if (data.createdAt) {
-        // Fallback if it's already a date or string
-        createdAt = new Date(data.createdAt).toISOString()
-      }
-
-      return {
-        id: doc.id,
-        userId: data.userId,
-        type: data.type || "resume",
-        title: data.title || "Untitled",
-        jobDescription: data.jobDescription || "",
-        output: data.output || "{}",
-        createdAt,
-        stats: data.stats
-      } as HistoryEntry
-    })
+    return data.map(doc => ({
+      ...doc,
+      type: doc.type || "resume",
+      title: doc.title || "Untitled",
+      jobDescription: doc.jobDescription || "",
+      output: doc.output || "{}",
+    })) as HistoryEntry[]
   } catch (error) {
     console.error("Error fetching history:", error)
     return []
@@ -122,31 +102,27 @@ export async function getHistory(userId: string): Promise<HistoryEntry[]> {
  * (Required for the Preview Page)
  */
 export async function getHistoryEntry(id: string): Promise<HistoryEntry | null> {
-  if (!db) return null
+  const supabase = createBrowserClient()
+
   try {
-    const docRef = doc(db, "history", id)
-    const docSnap = await getDoc(docRef)
+    const { data, error } = await supabase
+      .from('history')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (docSnap.exists()) {
-      const data = docSnap.data()
-
-      let createdAt = new Date().toISOString()
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        createdAt = data.createdAt.toDate().toISOString()
-      }
-
-      return {
-        id: docSnap.id,
-        userId: data.userId,
-        type: data.type || "resume",
-        title: data.title || "Untitled",
-        jobDescription: data.jobDescription || "",
-        output: data.output || "{}",
-        createdAt,
-        stats: data.stats
-      } as HistoryEntry
+    if (error) {
+      if (error.code === 'PGRST116') return null // Not found
+      throw error
     }
-    return null
+
+    return {
+      ...data,
+      type: data.type || "resume",
+      title: data.title || "Untitled",
+      jobDescription: data.jobDescription || "",
+      output: data.output || "{}",
+    } as HistoryEntry
   } catch (error) {
     console.error("Error fetching history entry:", error)
     return null

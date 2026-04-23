@@ -21,7 +21,7 @@ export default function CookiesPage() {
             <h2>2. How We Use Cookies</h2>
             <p>We use cookies for the following purposes:</p>
             <ul>
-                <li><strong>Essential Cookies:</strong> These are strictly necessary for the website to function (e.g., maintaining your logged-in session via Firebase Authentication).</li>
+                <li><strong>Essential Cookies:</strong> These are strictly necessary for the website to function (e.g., maintaining your logged-in session via Supabase Authentication).</li>
                 <li><strong>Performance & Analytics:</strong> We use aggregated, anonymous data (via Vercel Analytics) to understand how users interact with our app and improve performance.</li>
             </ul>
 
