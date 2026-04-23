@@ -1,8 +1,12 @@
 "use server"
 
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { generateText } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const groq = createOpenAI({
+  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.GROQ_API_KEY || "",
+})
 
 export type GenerationType = "resume" | "cover-letter" | "sop"
 
@@ -12,8 +16,6 @@ export async function generateContent(
   type: GenerationType,
   language: string = 'en'
 ) {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
-
   let systemInstruction = ""
   let jsonStructure = ""
 
@@ -89,10 +91,20 @@ export async function generateContent(
   `
 
   try {
-    const result = await model.generateContent(prompt)
-    const text = result.response.text()
+    const { text } = await generateText({
+      model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+      prompt: prompt,
+    })
+
     // Clean potential markdown code blocks
-    return text.replace(/```json/g, "").replace(/```/g, "").trim()
+    let cleanJsonText = text.replace(/```json/g, "").replace(/```/g, "").trim()
+    const startIndex = cleanJsonText.indexOf("{")
+    const endIndex = cleanJsonText.lastIndexOf("}")
+    if (startIndex !== -1 && endIndex !== -1) {
+      cleanJsonText = cleanJsonText.substring(startIndex, endIndex + 1)
+    }
+
+    return cleanJsonText
   } catch (error) {
     console.error("AI Generation Error:", error)
     throw new Error("Failed to generate content")

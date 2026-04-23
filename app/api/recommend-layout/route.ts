@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { LAYOUTS } from "@/lib/layouts"
+import { generateText } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
+
+const groq = createOpenAI({
+  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.GROQ_API_KEY || "",
+})
 
 /**
  * API Route: Recommend Resume Layout
@@ -17,9 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY
-    const useOpenAI = !!process.env.OPENAI_API_KEY
-
+    const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) {
       // Fallback to default layout if no AI key
       return NextResponse.json({ success: true, layoutId: "demo" })
@@ -44,55 +49,16 @@ Respond with ONLY the layout ID (demo, modern, classic, or creative), nothing el
     let recommendation = "demo"
 
     try {
-      if (useOpenAI) {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "user",
-                content: prompt,
-              },
-            ],
-            temperature: 0.3,
-          }),
-        })
+      const { text: responseText } = await generateText({
+        model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+        prompt: prompt,
+        temperature: 0.3,
+      })
 
-        const data = await response.json()
-        const result = data.choices?.[0]?.message?.content?.trim().toLowerCase()
+      const result = responseText.trim().toLowerCase()
 
-        if (LAYOUTS.some((l) => l.id === result)) {
-          recommendation = result
-        }
-      } else {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [{ text: prompt }],
-                },
-              ],
-            }),
-          }
-        )
-
-        const data = await response.json()
-        const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase()
-
-        if (LAYOUTS.some((l) => l.id === result)) {
-          recommendation = result
-        }
+      if (LAYOUTS.some((l) => l.id === result)) {
+        recommendation = result
       }
     } catch (error) {
       console.error("Error getting layout recommendation:", error)

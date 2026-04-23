@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { generateText } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
 import { ParsedResumeData } from "@/lib/resume"
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
+const groq = createOpenAI({
+  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.GROQ_API_KEY || "",
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,13 +60,20 @@ export async function POST(request: NextRequest) {
       ${jobDescription.substring(0, 5000)}
     `
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
+    const { text: responseText } = await generateText({
+      model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+      prompt: prompt,
+      temperature: 0.2,
     })
 
-    const suggestions = JSON.parse(result.response.text())
+    let cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim()
+    const startIndex = cleanJsonText.indexOf("{")
+    const endIndex = cleanJsonText.lastIndexOf("}")
+    if (startIndex !== -1 && endIndex !== -1) {
+      cleanJsonText = cleanJsonText.substring(startIndex, endIndex + 1)
+    }
+
+    const suggestions = JSON.parse(cleanJsonText)
     const stats = suggestions.stats
 
     // --- SAFETY FLOOR LOGIC ---
@@ -71,8 +82,8 @@ export async function POST(request: NextRequest) {
     stats.grammarScore = Math.max(60, Math.min(100, stats.grammarScore));
 
     // Calculate Improvement Pct
-    const improvement = stats.originalMatchCount > 0 
-      ? Math.round((stats.addedSkillsCount / stats.originalMatchCount) * 100) 
+    const improvement = stats.originalMatchCount > 0
+      ? Math.round((stats.addedSkillsCount / stats.originalMatchCount) * 100)
       : 100
     stats.improvementPct = improvement
 
@@ -90,11 +101,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      data: tailoredResume, 
-      stats: stats, 
-      feedback: suggestions.feedback 
+    return NextResponse.json({
+      success: true,
+      data: tailoredResume,
+      stats: stats,
+      feedback: suggestions.feedback
     })
 
   } catch (error: any) {

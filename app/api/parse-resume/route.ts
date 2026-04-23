@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { generateText } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
 import { generateId } from "@/lib/resume"
 import pdf from "pdf-parse"
 import mammoth from "mammoth"
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
+const groq = createOpenAI({
+  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.GROQ_API_KEY || "",
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       .trim()
       .substring(0, 30000) // Limit token usage if file is huge
 
-    // 4. Gemini "Archivist" Prompt (Layer 2)
+    // 4. AI "Archivist" Prompt (Layer 2)
     // We use the strict schema to capture Field Work/Achievements
     const prompt = `
       You are an expert Resume Archivist. 
@@ -72,23 +76,43 @@ export async function POST(request: NextRequest) {
       ${cleanedText}
     `
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" })
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: 0 },
+    const { text: responseText } = await generateText({
+      model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+      prompt: prompt,
+      temperature: 0,
     })
 
-    const responseText = result.response.text()
-    const rawData = JSON.parse(responseText)
+    let cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim()
+    const startIndex = cleanJsonText.indexOf("{")
+    const endIndex = cleanJsonText.lastIndexOf("}")
+    if (startIndex !== -1 && endIndex !== -1) {
+      cleanJsonText = cleanJsonText.substring(startIndex, endIndex + 1)
+    }
+
+    let rawData;
+    try {
+      rawData = JSON.parse(cleanJsonText)
+    } catch (e) {
+      console.error("Failed to parse AI response as JSON:", cleanJsonText);
+      throw new Error("AI returned invalid JSON");
+    }
 
     // 5. Enrich Data (Add IDs and Visibility Flags)
     const enrichedData = {
       ...rawData,
+      personal: rawData.personal || { name: "", email: "", phone: "", linkedin: "", location: "", summary: "" },
+      skills: rawData.skills || { languages: [], frameworks: [], tools: [], concepts: [] },
       experience: rawData.experience?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
       education: rawData.education?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
       projects: rawData.projects?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
       customSections: rawData.customSections?.map((item: any) => ({ ...item, id: generateId(), isVisible: true })) || [],
     }
+
+    // Ensure arrays exist inside skills in case Gemini returned a partial skills object
+    enrichedData.skills.languages = enrichedData.skills.languages || []
+    enrichedData.skills.frameworks = enrichedData.skills.frameworks || []
+    enrichedData.skills.tools = enrichedData.skills.tools || []
+    enrichedData.skills.concepts = enrichedData.skills.concepts || []
 
     return NextResponse.json({ success: true, data: enrichedData })
 
