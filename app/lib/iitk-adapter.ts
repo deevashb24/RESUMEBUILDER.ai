@@ -2,27 +2,27 @@ import { ParsedResumeData } from "./resume";
 
 export type IITKExperienceEntry =
   | {
-      id: string;
-      variant: "simple";
-      role: string;
-      organization: string;
-      displayDate?: string;
-      bullets: string[];
-      isVisible?: boolean;
-    }
+    id: string;
+    variant: "simple";
+    role: string;
+    organization: string;
+    displayDate?: string;
+    bullets: string[];
+    isVisible?: boolean;
+  }
   | {
-      id: string;
-      variant: "structured";
-      role: string;
-      organization: string;
-      displayDate?: string;
-      highlight?: string;
-      blocks: Array<{
-        label: "Objective" | "Approach" | "Impact" | string;
-        items: string[];
-      }>;
-      isVisible?: boolean;
-    };
+    id: string;
+    variant: "structured";
+    role: string;
+    organization: string;
+    displayDate?: string;
+    highlight?: string;
+    blocks: Array<{
+      label: "Objective" | "Approach" | "Impact" | string;
+      items: string[];
+    }>;
+    isVisible?: boolean;
+  };
 
 export interface IITKAchievement {
   id: string;
@@ -65,7 +65,7 @@ export interface IITKResumeDocument {
 
 export function mapParsedResumeToIITKDocument(data: ParsedResumeData): IITKResumeDocument {
   const iitk = data.layoutOverrides?.iitk as Partial<IITKResumeDocument> | undefined;
-  
+
   const extractUsername = (url: string) => {
     if (!url) return url;
     try {
@@ -107,9 +107,10 @@ export function mapParsedResumeToIITKDocument(data: ParsedResumeData): IITKResum
     projectsAndWorkshops: iitk?.projectsAndWorkshops || data.projects.map(proj => ({
       id: proj.id,
       title: proj.title,
-      subtitle: proj.tech.join(" | "),
-      bullets: proj.bullets,
+      subtitle: (proj.tech || []).join(" | "),
+      bullets: proj.bullets || [],
       link: proj.link,
+      displayDate: proj.date,
       isVisible: proj.isVisible
     })),
     technicalSkillsTable: iitk?.technicalSkillsTable || [

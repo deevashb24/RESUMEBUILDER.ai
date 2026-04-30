@@ -87,7 +87,7 @@ export function GenerationProgress({
   // --- RENDER (Finished State) ---
   if (isFinished && finalStats) {
     return (
-      <Card className="border-green-200 bg-green-50/50 animate-in fade-in zoom-in duration-500 shadow-sm overflow-hidden relative">
+      <Card className="border-green-200 bg-green-50 animate-in fade-in zoom-in duration-500 shadow-sm overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-green-200" />
         <CardContent className="p-8 text-center space-y-6">
           <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-green-100 mb-4">

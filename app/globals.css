@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -40,9 +41,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 :root {
@@ -78,6 +76,20 @@
   --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
   --sidebar-border: oklch(0.928 0.006 264.531);
   --sidebar-ring: oklch(0.707 0.022 261.325);
+
+  /* Atelier Design Tokens */
+  --atelier-surface: #111415;
+  --atelier-surface-container: #1d2021;
+  --atelier-surface-lowest: #0c0f10;
+  --atelier-surface-highest: #323536;
+  --atelier-on-surface: #e1e3e4;
+  --atelier-on-surface-variant: #ddc1ae;
+  --atelier-primary: #ffb77f;
+  --atelier-primary-container: #ff8a00;
+  --atelier-secondary-container: #0566d9;
+  --atelier-tertiary-container: #b698ff;
+  --atelier-outline: #a58c7b;
+  --atelier-outline-variant: #564334;
 }
 
 .dark {
@@ -120,8 +132,7 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    /* Premium Mesh Gradient Background */
+    @apply antialiased;
     background-color: #f8fafc;
     background-image:
       radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 0.03) 0, transparent 50%),
@@ -129,31 +140,97 @@
       radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.03) 0, transparent 50%);
     background-attachment: fixed;
   }
+
+  /* The workspace body applies dark atelier theme */
+  body.atelier-workspace {
+    background-color: #0c0f10;
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(255,138,0, 0.06), transparent 40%),
+      radial-gradient(circle at 85% 30%, rgba(5, 102, 217, 0.04), transparent 50%);
+    background-attachment: fixed;
+    color: #e1e3e4;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 }
+
+/* --- Atelier Glass Components --- */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-sm {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.premium-border {
+  position: relative;
+}
+.premium-border::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px; bottom: -1px;
+  background: linear-gradient(135deg, rgba(255,138,0,0.8), rgba(255,138,0,0.2));
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.input-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  color: #e1e3e4;
+}
+.input-ghost::placeholder {
+  color: rgba(221, 193, 174, 0.5);
+}
+.input-ghost:focus {
+  border-color: #ff8a00;
+  outline: none;
+  box-shadow: 0 0 0 1px #ff8a00 inset;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 40px rgba(255,138,0, 0.1);
+}
+
+.nav-link-active {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ff8a00;
+  border-right: 2px solid #ff8a00;
+}
+
+/* Scrollbar for atelier workspace */
+.atelier-workspace ::-webkit-scrollbar { width: 4px; }
+.atelier-workspace ::-webkit-scrollbar-track { background: transparent; }
+.atelier-workspace ::-webkit-scrollbar-thumb { background: rgba(255,138,0,0.2); border-radius: 9999px; }
+.atelier-workspace ::-webkit-scrollbar-thumb:hover { background: rgba(255,138,0,0.4); }
 
 /* --- PRINT & PDF GENERATION FIXES --- */
 @media print {
   @page {
     size: A4;
     margin: 0mm;
-    /* Removes default browser margins on the sheet */
   }
 
   html,
   body {
     width: 210mm !important;
     height: 297mm !important;
-    /* Force exact A4 height */
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
-    /* HARD CROP: Prevents page 2 from ever appearing */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background-color: white;
+    background-image: none !important;
   }
 
-  /* Ensure the container matches strictly */
   .a4-page-container {
     margin: 0 !important;
     box-shadow: none !important;
@@ -174,4 +251,27 @@
   overflow: hidden;
   position: relative;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.a4-paper {
+  aspect-ratio: 1 / 1.414;
+  background-color: #ffffff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.pause-on-hover:hover {
+  animation-play-state: paused;
 }

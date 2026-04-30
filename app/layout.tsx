@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { GenerationProvider } from "@/lib/generation-context"
-import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs"
+import { ClerkProvider } from "@clerk/nextjs"
+import { LanguageProvider } from "@/lib/language-context"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,17 +17,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "ResumeBuilder.ai",
-  description: "AI-Powered Resume Builder",
+  title: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
+  description: "Create tailored resumes, cover letters, and SOPs in minutes using AI that understands job descriptions and professional formatting.",
 }
-
-import { Footer } from "@/components/footer"
-
-
-
-import { LanguageProvider } from "@/lib/language-context"
-
-// ... imports ...
 
 export default function RootLayout({
   children,
@@ -35,15 +28,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-800 selection:bg-indigo-100 selection:text-indigo-700 flex flex-col min-h-screen`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
           <AuthProvider>
             <LanguageProvider>
               <GenerationProvider>
-                <div className="flex-grow">
-                  {children}
-                </div>
-                <Footer />
+                {children}
               </GenerationProvider>
             </LanguageProvider>
           </AuthProvider>

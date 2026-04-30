@@ -1,47 +1,46 @@
 "use client"
 
 import { useEffect, useState, Suspense, useRef } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { ResumeRenderer } from "@/components/resume-renderer"
 import { LetterPreview } from "@/components/letter-preview"
 import { getHistoryEntry } from "@/lib/history"
 import { getResume } from "@/lib/resume"
-import { Button } from "@/components/ui/button"
-import {
-  ArrowLeft, Download, Lock, CheckCircle, LayoutTemplate, Camera, Loader2
-} from "lucide-react"
-import Link from "next/link"
 import { useReactToPrint } from "react-to-print"
 import { useAuth } from "@/lib/auth-context"
 import { PricingModal } from "@/components/pricing-modal"
 import { createClient } from "@/utils/supabase/client"
-import Image from "next/image"
+import Link from "next/link"
+import { motion } from "framer-motion"
 
-// --- LAYOUT OPTIONS ---
 const LAYOUT_OPTIONS = [
-  { id: "demo", name: "Professional", imageSrc: "/images/layouts/demo.png" },
-  { id: "iitk", name: "IIT Kanpur (Classic)", imageSrc: "/images/layouts/iitk.png" },
-  { id: "modern", name: "Modern Sidebar", imageSrc: "/images/layouts/modern.png" },
-  { id: "minimal", name: "Minimalist", imageSrc: "/images/layouts/minimal.png" },
+  { id: "demo", name: "Professional", desc: "Two-column" },
+  { id: "iitk", name: "IIT Kanpur", desc: "Academic" },
+  { id: "modern", name: "Modern", desc: "Sidebar" },
+  { id: "minimal", name: "Minimalist", desc: "Clean" },
 ]
+
+type TabId = "design" | "content"
 
 function PreviewContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const id = searchParams?.get("id")
   const { user, isPremium, unlockedGenerations } = useAuth()
-
-  const [data, setData] = useState<any>(null)
-  const [docType, setDocType] = useState<string>("resume")
-  const [selectedLayout, setSelectedLayout] = useState<string>("demo")
   const supabase = createClient()
 
-  // Track Data Source & Structure
-  const [dataSource, setDataSource] = useState<'history' | 'resume' | null>(null)
-  const [hasGeneratedContent, setHasGeneratedContent] = useState(false) // <--- NEW FLAG
-
+  const [data, setData] = useState<any>(null)
+  const [docType, setDocType] = useState("resume")
+  const [selectedLayout, setSelectedLayout] = useState("demo")
+  const [dataSource, setDataSource] = useState<"history" | "resume" | null>(null)
+  const [hasGeneratedContent, setHasGeneratedContent] = useState(false)
+  const [editHistory, setEditHistory] = useState<any[]>([])
+  const [editIndex, setEditIndex] = useState(-1)
   const [loading, setLoading] = useState(true)
   const [showPricing, setShowPricing] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>("design")
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "idle">("idle")
 
   const componentRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,302 +54,370 @@ function PreviewContent() {
   })
 
   const onDownloadClick = () => {
-    if (!isUnlocked) {
-      setShowPricing(true)
-      return
-    }
+    if (!isUnlocked) { setShowPricing(true); return }
     handlePrint()
   }
 
-  // --- IMAGE UPLOAD LOGIC (FIXED PERSISTENCE) ---
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user || !id) return
-
-    setUploadingPhoto(true)
+  // Save to DB
+  const saveToDatabase = async (dataToSave: any) => {
+    if (!id || !user) return
+    setAutoSaveStatus("saving")
     try {
-      // 1. Upload to Storage
-      const fileExt = file.name.split('.').pop()
-      const storagePath = `resumes/${id}/profile_pic_${Date.now()}.${fileExt}`
-      const { error: uploadError } = await supabase.storage.from("resumes").upload(storagePath, file)
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(storagePath)
-      const url = urlData.publicUrl
-
-      // 2. Update Local State (Immediate Feedback)
-      const updatedData = {
-        ...data,
-        personal: {
-          ...data.personal,
-          picture: url
-        }
-      }
-      setData(updatedData)
-
-      // 3. Persist to Firestore based on Source
-      if (dataSource === 'resume') {
-        // CASE A: Resume Document
-        const updatePayload: any = {
-          "parsedData": {
-            ...data,
-            personal: { ...data.personal, picture: url }
-          }
-        }
-
+      if (dataSource === "resume") {
+        const updatePayload: any = { parsedData: dataToSave }
         if (hasGeneratedContent) {
-          // It's a bit tricky to dot-update JSONB in Supabase efficiently from the client hook
-          // usually we fetch, modify and save back whole json.
-          const { data: resumeData } = await supabase.from('resumes').select('generatedContent').eq('id', id).single()
+          const { data: resumeData } = await supabase.from("resumes").select("generatedContent").eq("id", id).single()
           if (resumeData?.generatedContent) {
-            updatePayload.generatedContent = {
-              ...resumeData.generatedContent,
-              parsedData: {
-                ...resumeData.generatedContent.parsedData,
-                personal: {
-                  ...resumeData.generatedContent.parsedData?.personal,
-                  picture: url
-                }
-              }
-            }
+            updatePayload.generatedContent = { ...resumeData.generatedContent, parsedData: dataToSave }
           }
         }
-
-        await supabase.from('resumes').update(updatePayload).eq('id', id)
-
-      } else if (dataSource === 'history') {
-        // CASE B: History Snapshot
-        const { data: historySnap } = await supabase.from('history').select('output').eq('id', id).single()
-
-        if (historySnap) {
-          const historyData = historySnap
-          if (historyData.output) {
-            try {
-              const jsonOutput = JSON.parse(historyData.output)
-              let updated = false
-
-              // Path 1: parsedData.personal.picture (The generated result)
-              if (jsonOutput.parsedData?.personal) {
-                jsonOutput.parsedData.personal.picture = url
-                updated = true
-              }
-              // Path 2: personal.picture (Direct structure)
-              else if (jsonOutput.personal) {
-                jsonOutput.personal.picture = url
-                updated = true
-              }
-
-              if (updated) {
-                await supabase.from('history').update({
-                  output: JSON.stringify(jsonOutput)
-                }).eq('id', id)
-              }
-            } catch (err) {
-              console.error("Failed to parse/update history JSON", err)
-            }
-          }
+        await supabase.from("resumes").update(updatePayload).eq("id", id)
+      } else if (dataSource === "history") {
+        const { data: historySnap } = await supabase.from("history").select("output").eq("id", id).single()
+        if (historySnap?.output) {
+          const jsonOutput = JSON.parse(historySnap.output)
+          if (jsonOutput.parsedData) jsonOutput.parsedData = dataToSave
+          else Object.assign(jsonOutput, dataToSave)
+          await supabase.from("history").update({ output: JSON.stringify(jsonOutput) }).eq("id", id)
         }
       }
+      setAutoSaveStatus("saved")
+      setTimeout(() => setAutoSaveStatus("idle"), 3000)
+    } catch { setAutoSaveStatus("idle") }
+  }
 
-    } catch (error) {
-      console.error("Photo upload failed:", error)
-      alert("Failed to upload photo. Please try again.")
-    } finally {
-      setUploadingPhoto(false)
+  const handleUpdateContent = async (pathStr: string, newValue: any) => {
+    if (!data) return
+    const newData = JSON.parse(JSON.stringify(data))
+    const parts = pathStr.split(".")
+    let current = newData
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (current[parts[i]] === undefined) current[parts[i]] = isNaN(Number(parts[i + 1])) ? {} : []
+      current = current[parts[i]]
+    }
+    let finalValue = newValue
+    if (typeof newValue === "string" && (newValue.trim().startsWith("[") || newValue.trim().startsWith("{"))) {
+      try { finalValue = JSON.parse(newValue) } catch {}
+    }
+    current[parts[parts.length - 1]] = finalValue
+    setData(newData)
+    const hist = editHistory.slice(0, editIndex + 1)
+    hist.push(newData)
+    setEditHistory(hist)
+    setEditIndex(hist.length - 1)
+    await saveToDatabase(newData)
+  }
+
+  const handleUndo = async () => {
+    if (editIndex > 0) {
+      const prev = editHistory[editIndex - 1]
+      setEditIndex(editIndex - 1)
+      setData(prev)
+      await saveToDatabase(prev)
     }
   }
 
-  // --- LOAD DATA ---
+  const handleRedo = async () => {
+    if (editIndex < editHistory.length - 1) {
+      const next = editHistory[editIndex + 1]
+      setEditIndex(editIndex + 1)
+      setData(next)
+      await saveToDatabase(next)
+    }
+  }
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); handleUndo() }
+      if (((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "z") || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y")) { e.preventDefault(); handleRedo() }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [editIndex, editHistory])
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user || !id) return
+    setUploadingPhoto(true)
+    try {
+      const fileExt = file.name.split(".").pop()
+      const storagePath = `resumes/${id}/profile_pic_${Date.now()}.${fileExt}`
+      const { error: uploadError } = await supabase.storage.from("resumes").upload(storagePath, file)
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(storagePath)
+      const url = urlData.publicUrl
+      const updatedData = { ...data, personal: { ...data.personal, picture: url } }
+      setData(updatedData)
+      const hist = editHistory.slice(0, editIndex + 1)
+      hist.push(updatedData)
+      setEditHistory(hist)
+      setEditIndex(hist.length - 1)
+      await saveToDatabase(updatedData)
+    } catch { alert("Photo upload failed.") }
+    finally { setUploadingPhoto(false) }
+  }
+
+  const userId = user?.id || null
   useEffect(() => {
     async function loadData() {
-      if (!id) {
-        setLoading(false)
-        return
-      }
-      setLoading(true)
+      if (!id) { setLoading(false); return }
+      if (!data) setLoading(true)
       try {
         let foundData: any = null
-        let type = "resume"
-        let initialLayout = "demo"
-        let source: 'history' | 'resume' | null = null
-        let hasGen = false
+        let type = "resume"; let initialLayout = "demo"
+        let source: "history" | "resume" | null = null; let hasGen = false
 
-        // 1. Try History
-        const historyEntry = await getHistoryEntry(id!)
-        if (historyEntry && historyEntry.output) {
+        const historyEntry = await getHistoryEntry(id)
+        if (historyEntry?.output) {
           try {
             const parsed = JSON.parse(historyEntry.output)
             if (parsed.type) type = parsed.type
             if (parsed.layoutId) initialLayout = parsed.layoutId
             foundData = parsed.parsedData || parsed
-            source = 'history'
-          } catch (e) { console.error(e) }
+            source = "history"
+          } catch {}
         }
-
-        // 2. Fallback to Resume DB
         if (!foundData) {
-          const resumeEntry = await getResume(id!)
+          const resumeEntry = await getResume(id)
           if (resumeEntry) {
             const content = (resumeEntry as any).generatedContent
-            if (content) {
-              // We are viewing Generated Content
-              if (content.type) type = content.type
-              foundData = content.parsedData || resumeEntry.parsedData
-              hasGen = true // <--- Mark as having Generated Content
-            } else {
-              // We are viewing Raw Parsed Content
-              foundData = resumeEntry.parsedData
-            }
+            if (content) { if (content.type) type = content.type; foundData = content.parsedData || resumeEntry.parsedData; hasGen = true }
+            else { foundData = resumeEntry.parsedData }
             if (resumeEntry.layoutId) initialLayout = resumeEntry.layoutId
-            source = 'resume'
+            source = "resume"
           }
         }
-
-        // --- SMART DEFAULT ---
-        // Only use Profile Pic if Resume has NO picture at all
-        if (foundData && foundData.personal && !foundData.personal.picture && (user?.user_metadata?.avatar_url || user?.user_metadata?.picture)) {
-          foundData.personal.picture = user.user_metadata.avatar_url || user.user_metadata.picture
+        if (foundData?.personal && !foundData.personal.picture && (user?.user_metadata?.avatar_url || user?.user_metadata?.picture)) {
+          foundData.personal.picture = user.user_metadata?.avatar_url || user.user_metadata?.picture
         }
-
         setData(foundData)
+        if (!data) { setEditHistory([foundData]); setEditIndex(0) }
         setDocType(type)
-        setSelectedLayout(initialLayout)
+        setSelectedLayout(prev => (!data ? initialLayout : prev))
         setDataSource(source)
-        setHasGeneratedContent(hasGen) // <--- Save flag
-
+        setHasGeneratedContent(hasGen)
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
     }
     loadData()
-  }, [id, user])
+  }, [id, userId])
 
-  if (loading) return <div className="p-12 text-center text-gray-500">Preparing preview...</div>
-  if (!data) return <div className="p-12 text-center text-gray-500">Document not found.</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen" style={{ background: "#0c0f10" }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(255,138,0,0.2)", borderTopColor: "#ff8a00" }} />
+          <p className="text-sm" style={{ color: "rgba(225,227,228,0.5)" }}>Preparing preview…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-screen" style={{ background: "#0c0f10" }}>
+        <div className="text-center">
+          <p className="text-lg font-bold mb-4" style={{ color: "#e1e3e4" }}>Document not found.</p>
+          <Link href="/history">
+            <button className="px-6 py-2 rounded-xl text-sm font-bold" style={{ background: "#ff8a00", color: "#000" }}>← Back to Library</button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const isLetter = docType === "cover-letter" || docType === "sop"
+  const glassPanel = { background: "rgba(255,255,255,0.03)", backdropFilter: "blur(32px)", WebkitBackdropFilter: "blur(32px)", border: "1px solid rgba(255,255,255,0.1)" }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
-
-      {/* --- HEADER --- */}
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/history" className="text-gray-500 hover:text-gray-900 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h2 className="font-semibold text-gray-900 capitalize flex items-center gap-2">
-                {docType.replace("-", " ")} Preview
-                {isUnlocked && <CheckCircle className="w-4 h-4 text-green-500" />}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* --- PHOTO UPLOAD (Only for Resumes) --- */}
-            {!isLetter && (
-              <>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/jpg"
-                  onChange={handlePhotoUpload}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={uploadingPhoto}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                  {data?.personal?.picture ? "Change Photo" : "Add Photo"}
-                </Button>
-              </>
-            )}
-
-            {/* --- DOWNLOAD BUTTON --- */}
-            <Button
-              onClick={onDownloadClick}
-              className={`gap-2 transition-all ${isUnlocked
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                : "bg-amber-500 hover:bg-amber-600 text-white"}`}
-            >
-              {isUnlocked ? <Download className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              {isUnlocked ? "Download PDF" : "Unlock to Download"}
-            </Button>
-          </div>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "#0c0f10", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Top AppBar */}
+      <header className="flex justify-between items-center h-16 px-8 flex-shrink-0 sticky top-0 z-50" style={{ ...glassPanel, borderLeft: "none", borderRight: "none", borderTop: "none" }}>
+        <div className="flex items-center gap-4">
+          <Link href="/history" className="flex items-center gap-2 text-sm font-medium transition-colors" style={{ color: "rgba(225,227,228,0.5)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Library
+          </Link>
+          <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+          <span className="text-sm font-semibold capitalize" style={{ color: "#e1e3e4" }}>
+            {docType.replace("-", " ")} Studio
+          </span>
         </div>
-      </div>
 
-      {/* --- LAYOUT SELECTOR --- */}
-      {!isLetter && (
-        <div className="max-w-5xl mx-auto mt-8 px-4">
-          <div className="flex items-center gap-2 mb-4 text-gray-700 font-semibold">
-            <LayoutTemplate className="w-5 h-5" />
-            <h3>Choose Layout</h3>
-          </div>
+        <Link href="/" className="text-lg font-black tracking-tight transition-transform hover:scale-105" style={{ background: "linear-gradient(to right, #ff8a00, #ffb77f)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          ResumeBuilder.ai
+        </Link>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {LAYOUT_OPTIONS.map((option) => (
-              <div
-                key={option.id}
-                onClick={() => setSelectedLayout(option.id)}
-                className={`relative group cursor-pointer rounded-xl border-2 transition-all overflow-hidden bg-white
-                  ${selectedLayout === option.id
-                    ? "border-blue-600 ring-2 ring-blue-100 shadow-lg scale-[1.02]"
-                    : "border-gray-200 hover:border-blue-300 hover:shadow-md"
-                  }`}
+        <div className="flex items-center gap-3">
+          {/* Undo/Redo */}
+          <button onClick={handleUndo} disabled={editIndex <= 0} title="Undo (⌘Z)" className="p-2 rounded-lg transition-all" style={{ color: editIndex <= 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.04)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+          </button>
+          <button onClick={handleRedo} disabled={editIndex >= editHistory.length - 1} title="Redo (⌘⇧Z)" className="p-2 rounded-lg transition-all" style={{ color: editIndex >= editHistory.length - 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.04)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+          </button>
+
+          {/* Photo upload (resume only) */}
+          {!isLetter && (
+            <>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/png,image/jpeg,image/jpg" onChange={handlePhotoUpload} />
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(225,227,228,0.8)" }}>
+                {uploadingPhoto
+                  ? <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                }
+                {data?.personal?.picture ? "Change Photo" : "Add Photo"}
+              </button>
+            </>
+          )}
+
+          <button onClick={onDownloadClick} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all" style={{ background: isUnlocked ? "#ff8a00" : "rgba(255,138,0,0.3)", color: isUnlocked ? "#000" : "rgba(0,0,0,0.5)", boxShadow: isUnlocked ? "0 0 20px rgba(255,138,0,0.3)" : "none" }}>
+            {isUnlocked
+              ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              : <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 11V7A5 5 0 0 0 7 7v4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"/></svg>
+            }
+            {isUnlocked ? "Export to PDF" : "Unlock to Download"}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Studio */}
+      <main className="flex flex-1 overflow-hidden">
+        {/* Left Panel */}
+        <aside className="w-80 flex-shrink-0 flex flex-col h-full z-10 overflow-hidden" style={glassPanel}>
+          {/* Tabs */}
+          <div className="flex border-b px-5 pt-5 gap-1 flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+            {(["design", "content"] as TabId[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="px-4 py-2 text-sm font-semibold capitalize transition-all rounded-t-lg"
+                style={{
+                  color: activeTab === tab ? "#ff8a00" : "rgba(225,227,228,0.45)",
+                  borderBottom: activeTab === tab ? "2px solid #ff8a00" : "2px solid transparent",
+                  background: "transparent",
+                }}
               >
-                <div className="relative aspect-[210/297] bg-gray-100 w-full">
-                  <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
-                    <span>{option.name}</span>
-                  </div>
-                  {/* UNCOMMENT FOR IMAGES */}
-                  {/* <Image src={option.imageSrc} alt={option.name} fill className="object-cover object-top" /> */}
-                </div>
-                <div className={`p-2 text-center text-xs font-medium border-t transition-colors
-                  ${selectedLayout === option.id ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-white text-gray-600 border-gray-100"}`}>
-                  {option.name}
-                </div>
-                {selectedLayout === option.id && (
-                  <div className="absolute top-2 right-2 bg-blue-600 text-white rounded-full p-1 shadow-md">
-                    <CheckCircle className="w-3 h-3" />
-                  </div>
-                )}
-              </div>
+                {tab}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* --- CONTENT PREVIEW --- */}
-      <div className="max-w-5xl mx-auto py-8 px-4 flex justify-center">
-        <div className={`bg-white shadow-xl rounded-lg overflow-hidden transition-all duration-300 relative ${isLetter ? 'max-w-[210mm]' : 'w-full'}`}>
-          <div ref={componentRef} className={!isUnlocked ? "opacity-95" : ""}>
-            {isLetter ? (
-              <LetterPreview data={data} />
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-7">
+            {activeTab === "design" ? (
+              <>
+                {/* Layout (resume only) */}
+                {!isLetter && (
+                  <section className="space-y-3">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "rgba(221,193,174,0.6)" }}>Layout Structure</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {LAYOUT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setSelectedLayout(opt.id)}
+                          className="aspect-video rounded-lg flex flex-col items-center justify-center gap-1 transition-all text-xs font-medium"
+                          style={{
+                            background: selectedLayout === opt.id ? "rgba(255,138,0,0.12)" : "rgba(255,255,255,0.04)",
+                            border: selectedLayout === opt.id ? "1px solid #ff8a00" : "1px solid rgba(255,255,255,0.08)",
+                            color: selectedLayout === opt.id ? "#ff8a00" : "rgba(225,227,228,0.5)",
+                          }}
+                        >
+                          {opt.name}
+                          <span className="text-[9px]" style={{ color: "rgba(225,227,228,0.3)" }}>{opt.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              </>
             ) : (
-              <ResumeRenderer layoutId={selectedLayout} data={data} showWatermark={!isUnlocked} />
+              <section className="space-y-3">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "rgba(221,193,174,0.6)" }}>Content Fields</h3>
+                {data?.personal && (
+                  <div className="space-y-2">
+                    {Object.entries(data.personal as Record<string, string>).filter(([k]) => k !== "picture").map(([key, val]) => (
+                      <div key={key}>
+                        <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: "rgba(221,193,174,0.5)" }}>{key}</label>
+                        <input
+                          defaultValue={val as string}
+                          onBlur={(e) => handleUpdateContent(`personal.${key}`, e.target.value)}
+                          className="w-full text-sm rounded-lg px-3 py-2 input-ghost"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs pt-2" style={{ color: "rgba(225,227,228,0.3)" }}>Click any field on the preview to edit inline.</p>
+              </section>
             )}
           </div>
-        </div>
-      </div>
+        </aside>
 
-      <PricingModal
-        open={showPricing}
-        onClose={() => setShowPricing(false)}
-        generationId={id || undefined}
-      />
+        {/* Right: Preview Canvas */}
+        <section className="flex-1 overflow-y-auto flex flex-col items-center py-10 px-6" style={{ background: "rgba(12,15,16,0.5)" }}>
+          {/* Auto-save indicator */}
+          <div className="w-full max-w-[794px] flex justify-end mb-3">
+            <span className="text-xs flex items-center gap-1.5" style={{ color: autoSaveStatus === "saved" ? "#4ade80" : "rgba(225,227,228,0.35)" }}>
+              {autoSaveStatus === "saving"
+                ? <><svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…</>
+                : autoSaveStatus === "saved"
+                ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> Saved</>
+                : null
+              }
+            </span>
+          </div>
+
+          {/* A4 Paper */}
+          <div
+            ref={componentRef}
+            className="w-full max-w-[794px] bg-white rounded-sm relative group transition-all duration-500"
+            style={{
+              aspectRatio: "1 / 1.414",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+            }}
+          >
+            <div className="absolute inset-0 pointer-events-none rounded-sm border-2 border-transparent group-hover:border-orange-500/20 transition-colors duration-300 z-10" />
+            {isLetter
+              ? <LetterPreview data={data} />
+              : <ResumeRenderer layoutId={selectedLayout} data={data} showWatermark={!isUnlocked} onUpdate={handleUpdateContent} />
+            }
+          </div>
+
+          {/* Locked overlay */}
+          {!isUnlocked && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 flex flex-col items-center gap-3 p-6 rounded-2xl text-center max-w-sm"
+              style={{ background: "rgba(255,138,0,0.06)", border: "1px solid rgba(255,138,0,0.2)" }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="#ff8a00">
+                <path d="M17 11V7A5 5 0 0 0 7 7v4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"/>
+              </svg>
+              <p className="text-sm font-semibold" style={{ color: "#e1e3e4" }}>Upgrade to download this document</p>
+              <button onClick={() => setShowPricing(true)} className="px-6 py-2.5 rounded-xl font-bold text-sm" style={{ background: "#ff8a00", color: "#000" }}>
+                Unlock Document
+              </button>
+            </motion.div>
+          )}
+          <div className="h-20 w-full flex-shrink-0" />
+        </section>
+      </main>
+
+      <PricingModal open={showPricing} onClose={() => setShowPricing(false)} generationId={id || undefined} />
     </div>
   )
 }
 
 export default function PreviewPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen" style={{ background: "#0c0f10" }}>
+        <div className="w-10 h-10 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(255,138,0,0.2)", borderTopColor: "#ff8a00" }} />
+      </div>
+    }>
       <PreviewContent />
     </Suspense>
   )

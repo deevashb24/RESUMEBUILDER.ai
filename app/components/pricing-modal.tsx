@@ -219,7 +219,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-white text-orange-900 border border-orange-200 hover:bg-orange-100 hover:border-orange-300 shadow-sm">
+                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-white text-orange-900 border border-orange-200 hover:bg-orange-100 hover:border-purple-300 shadow-sm">
                     Card ($2.99)
                   </Button>
                   <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-orange-100 text-orange-800 border border-orange-200 hover:bg-orange-200 hover:text-orange-900 shadow-sm">

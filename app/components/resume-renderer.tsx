@@ -10,6 +10,7 @@ interface ResumeRendererProps {
   layoutId: string
   data: ParsedResumeData | null
   showWatermark?: boolean
+  onUpdate?: (path: string, value: string) => void
 }
 
 /**
@@ -17,7 +18,7 @@ interface ResumeRendererProps {
  * * Renders the appropriate layout component based on layoutId
  * * Injects specific language labels (Experience -> Anubhav) into the layout
  */
-export function ResumeRenderer({ layoutId, data, showWatermark = false }: ResumeRendererProps) {
+export function ResumeRenderer({ layoutId, data, showWatermark = false, onUpdate }: ResumeRendererProps) {
   const { t } = useLanguage() // 1. Get current language translations
 
   // REGISTRY PATTERN: Look up the component directly
@@ -29,7 +30,7 @@ export function ResumeRenderer({ layoutId, data, showWatermark = false }: Resume
       {/* Wrapper forces A4 size and Single Page Scaling */}
       <AutoScaleWrapper>
         {/* 2. PASS LABELS PROP: This sends the translated headers to the layout */}
-        <LayoutComponent data={data} labels={t.resume} />
+        <LayoutComponent data={data} labels={t.resume} onUpdate={onUpdate} />
       </AutoScaleWrapper>
 
       {showWatermark && (

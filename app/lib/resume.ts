@@ -28,6 +28,7 @@ export interface ProjectItem extends ResumeItem {
   tech: string[]
   bullets: string[]
   link?: string
+  date?: string
 }
 
 export interface EducationItem extends ResumeItem {
@@ -97,7 +98,7 @@ export const initialResumeData: ParsedResumeData = {
 // --- 3. DATABASE FUNCTIONS ---
 
 /**
- * Save a parsed resume to Supabase
+ * Save a parsed resume to Supabase via API
  */
 export async function saveParsedResume(
   userId: string,
@@ -105,26 +106,23 @@ export async function saveParsedResume(
   fileUrl?: string,
   filePath?: string
 ): Promise<string> {
-  const supabase = createBrowserClient()
-
   try {
-    const payload = {
-      userId,
-      parsedData,
-      fileUrl: fileUrl || null,
-      filePath: filePath || null,
-      layoutId: "demo",
-      name: parsedData.name || parsedData.personal.name || "Untitled Resume"
-    }
+    const response = await fetch("/api/resumes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        parsedData,
+        fileUrl,
+        filePath,
+        layoutId: "demo",
+        name: parsedData.name || parsedData.personal.name || "Untitled Resume"
+      }),
+    })
 
-    const { data, error } = await supabase
-      .from('resumes')
-      .insert(payload)
-      .select('id')
-      .single()
-
-    if (error) throw error
-    return data.id
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || "Failed to save parsed resume")
+    return result.id
   } catch (error) {
     console.error("Error saving parsed resume:", error)
     throw error
@@ -132,7 +130,7 @@ export async function saveParsedResume(
 }
 
 /**
- * Save a generated/tailored resume
+ * Save a generated/tailored resume via API
  */
 export async function saveGeneratedResume(
   userId: string,
@@ -142,25 +140,25 @@ export async function saveGeneratedResume(
   content: any,
   isUnlocked: boolean = false
 ): Promise<void> {
-  const supabase = createBrowserClient()
-
   try {
-    const payload = {
-      layoutId,
-      jobDescription,
-      generatedContent: content,
-      isGenerated: true,
-      isUnlocked,
-      unlockedAt: isUnlocked ? new Date().toISOString() : null,
-      updatedAt: new Date().toISOString()
+    const response = await fetch("/api/resumes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: resumeId,
+        layoutId,
+        jobDescription,
+        generatedContent: content,
+        isGenerated: true,
+        isUnlocked,
+        unlockedAt: isUnlocked ? new Date().toISOString() : null,
+      }),
+    })
+
+    if (!response.ok) {
+      const result = await response.json()
+      throw new Error(result.error || "Failed to save generated resume")
     }
-
-    const { error } = await supabase
-      .from('resumes')
-      .update(payload)
-      .eq('id', resumeId)
-
-    if (error) throw error
   } catch (error) {
     console.error("Error saving generated resume:", error)
     throw error
@@ -168,23 +166,19 @@ export async function saveGeneratedResume(
 }
 
 /**
- * Get a single resume by ID
+ * Get a single resume by ID via API
  */
 export async function getResume(resumeId: string): Promise<SavedResume | null> {
-  const supabase = createBrowserClient()
-
   try {
-    const { data, error } = await supabase
-      .from('resumes')
-      .select('*')
-      .eq('id', resumeId)
-      .single()
+    const response = await fetch(`/api/resumes?id=${resumeId}`)
+    const result = await response.json()
 
-    if (error) {
-      if (error.code === 'PGRST116') return null // Not found
-      throw error
+    if (!response.ok) {
+      if (response.status === 404) return null
+      throw new Error(result.error || "Failed to fetch resume")
     }
 
+    const data = result.data
     return {
       ...data,
       isUnlocked: data.isUnlocked || false,
@@ -196,17 +190,18 @@ export async function getResume(resumeId: string): Promise<SavedResume | null> {
 }
 
 /**
- * Delete a resume document from Supabase
+ * Delete a resume document from Supabase via API
  */
 export async function deleteResume(resumeId: string): Promise<void> {
-  const supabase = createBrowserClient()
   try {
-    const { error } = await supabase
-      .from('resumes')
-      .delete()
-      .eq('id', resumeId)
+    const response = await fetch(`/api/resumes?id=${resumeId}`, {
+      method: "DELETE",
+    })
 
-    if (error) throw error
+    if (!response.ok) {
+      const result = await response.json()
+      throw new Error(result.error || "Failed to delete resume doc")
+    }
   } catch (error) {
     console.error("Error deleting resume doc:", error)
   }

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResumeBuilder.ai - Editor Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed": "#ffdcc4",
+                    "surface": "#111415",
+                    "surface-tint": "#ffb77f",
+                    "inverse-on-surface": "#2e3132",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-secondary-fixed": "#001a42",
+                    "error": "#ffb4ab",
+                    "inverse-surface": "#e1e3e4",
+                    "tertiary": "#d0bcff",
+                    "on-tertiary-container": "#4b00b3",
+                    "on-error-container": "#ffdad6",
+                    "background": "#111415",
+                    "surface-bright": "#373a3b",
+                    "surface-container": "#1d2021",
+                    "on-secondary": "#002e6a",
+                    "tertiary-fixed": "#e9ddff",
+                    "surface-container-lowest": "#0c0f10",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "on-primary-fixed": "#2f1500",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-tertiary": "#3c0091",
+                    "surface-container-high": "#272a2b",
+                    "surface-variant": "#323536",
+                    "on-primary-container": "#613100",
+                    "on-primary": "#4e2600",
+                    "on-surface": "#e1e3e4",
+                    "surface-container-highest": "#323536",
+                    "on-error": "#690005",
+                    "primary-fixed-dim": "#ffb77f",
+                    "secondary": "#adc6ff",
+                    "on-tertiary-fixed": "#23005c",
+                    "primary": "#ffb77f",
+                    "error-container": "#93000a",
+                    "inverse-primary": "#914c00",
+                    "on-secondary-container": "#e6ecff",
+                    "secondary-container": "#0566d9",
+                    "surface-dim": "#111415",
+                    "primary-container": "#ff8a00",
+                    "on-surface-variant": "#ddc1ae",
+                    "on-primary-fixed-variant": "#6f3900",
+                    "outline": "#a58c7b",
+                    "surface-container-low": "#191c1d",
+                    "tertiary-container": "#b698ff",
+                    "tertiary-fixed-dim": "#d0bcff",
+                    "outline-variant": "#564334",
+                    "on-background": "#e1e3e4",
+                    "on-tertiary-fixed-variant": "#5516be"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "gutter": "24px",
+                    "margin-page": "40px",
+                    "container-max": "1280px",
+                    "stack-lg": "32px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "label-caps": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mesh-bg {
+            background: radial-gradient(circle at 15% 50%, rgba(255, 138, 0, 0.08), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(5, 102, 217, 0.05), transparent 25%);
+        }
+        .a4-paper {
+            aspect-ratio: 1 / 1.414;
+            background-color: #ffffff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .hover-scale {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-scale:hover {
+            transform: scale(1.01);
+        }
+        .input-ghost {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .input-ghost:focus {
+            border-color: #ff8a00;
+            outline: none;
+            box-shadow: 0 0 0 1px #ff8a00 inset;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen mesh-bg overflow-hidden flex flex-col">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center h-16 px-8 w-full sticky top-0 z-50 bg-white/5 backdrop-blur-3xl font-plus-jakarta tracking-tight font-medium docked full-width top-0 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-filter hover:blur-none transition-all duration-500">
+<div class="flex items-center gap-4">
+<!-- Back to Dashboard (implied, suppresses SideNav) -->
+<a class="text-white/60 hover:text-white transition-colors flex items-center" href="#">
+<span class="material-symbols-outlined mr-2">arrow_back</span>
+                Dashboard
+             </a>
+</div>
+<div class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-400">
+            ResumeBuilder.ai
+        </div>
+<div class="flex items-center gap-4 text-orange-500">
+<button class="hover:text-white hover:bg-white/5 transition-all duration-300 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-white hover:bg-white/5 transition-all duration-300 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-white/20" data-alt="A close-up studio portrait of a professional woman with natural lighting, soft shadows, and a neutral background. The aesthetic is clean, modern, and suitable for a high-end digital platform profile picture. Warm undertones subtle cinematic color grading." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChGqWi63Dnj1kzbn-ER0DJwbARxdhlSLvUzUsne6rxwy5QhTlfXjMqnqdBN76Ldd-VlCrccjD-sMyFleXKxOPaCCsKB1-pJ9FS6B95TufY4m2eCtzt6hTbwjtCTNMSeUF6oRACzmNsEUlHYALF9D7eHaxvBoLMzmOAnTy_haVsMfjEurdudYayc61mIPKqSQC1097M_yrtj59XikzUpGQRJ-doKJINwPg0NbDDsxEQS7pDZUILsptUUHn22jge4fwXK2swGaMakCPR"/>
+</div>
+</header>
+<!-- Main Studio Area -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Controls -->
+<aside class="w-96 flex-shrink-0 glass-panel border-t-0 border-b-0 border-l-0 flex flex-col h-full z-10 relative">
+<!-- Tabs -->
+<div class="flex border-b border-white/10 px-6 pt-6">
+<button class="px-4 py-2 text-primary-container border-b-2 border-primary-container font-medium">Design</button>
+<button class="px-4 py-2 text-white/50 hover:text-white transition-colors">Content</button>
+<button class="px-4 py-2 text-white/50 hover:text-white transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+                    AI Assistant
+                </button>
+</div>
+<!-- Tab Content: Design -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+<!-- Typography Section -->
+<section class="space-y-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Typography</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-sm mb-2 text-white/70">
+<span>Heading Size</span>
+<span>24px</span>
+</div>
+<input class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary-container" max="36" min="16" type="range" value="24"/>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-2 text-white/70">
+<span>Body Size</span>
+<span>11px</span>
+</div>
+<input class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary-container" max="14" min="9" type="range" value="11"/>
+</div>
+<div class="pt-2">
+<label class="text-sm text-white/70 block mb-2">Font Family</label>
+<select class="w-full input-ghost text-white rounded-lg p-3 text-sm focus:ring-primary-container focus:border-primary-container">
+<option class="bg-surface">Inter</option>
+<option class="bg-surface" selected="">Plus Jakarta Sans</option>
+<option class="bg-surface">Merriweather</option>
+</select>
+</div>
+</div>
+</section>
+<hr class="border-white/10"/>
+<!-- Layout Presets Section -->
+<section class="space-y-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Layout Structure</h3>
+<div class="grid grid-cols-2 gap-3">
+<button class="aspect-video glass-panel rounded-lg flex items-center justify-center border-primary-container bg-primary-container/10 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+<span class="text-sm font-medium relative z-10 text-primary-container">Modern Two-Col</span>
+</button>
+<button class="aspect-video glass-panel rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors relative overflow-hidden group">
+<span class="text-sm font-medium relative z-10 text-white/60 group-hover:text-white">Classic Single</span>
+</button>
+<button class="aspect-video glass-panel rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors relative overflow-hidden group">
+<span class="text-sm font-medium relative z-10 text-white/60 group-hover:text-white">Minimal Timeline</span>
+</button>
+<button class="aspect-video glass-panel rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors relative overflow-hidden group">
+<span class="text-sm font-medium relative z-10 text-white/60 group-hover:text-white">Creative Grid</span>
+</button>
+</div>
+</section>
+<hr class="border-white/10"/>
+<!-- Spacing Section -->
+<section class="space-y-4 pb-20">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Spacing</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-sm mb-2 text-white/70">
+<span>Section Margin</span>
+<span>Medium</span>
+</div>
+<input class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary-container" max="3" min="1" type="range" value="2"/>
+</div>
+</div>
+</section>
+</div>
+</aside>
+<!-- Right Panel: Live Preview Area -->
+<section class="flex-1 relative bg-surface-container-lowest/50 flex flex-col items-center justify-start overflow-y-auto p-12">
+<!-- Canvas Container -->
+<div class="a4-paper w-full max-w-[794px] rounded-sm p-12 text-slate-900 font-sans relative group transition-all duration-500 ease-out hover:shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+<!-- Editable Overlay Indicators -->
+<div class="absolute inset-0 pointer-events-none border-2 border-transparent group-hover:border-primary-container/20 rounded-sm transition-colors duration-300"></div>
+<!-- Resume Content (Simulated) -->
+<header class="border-b-2 border-slate-200 pb-6 mb-6 relative hover:bg-slate-50 cursor-pointer rounded -mx-4 px-4 py-2 transition-colors">
+<div class="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-primary-container">
+<span class="material-symbols-outlined text-sm">edit</span>
+</div>
+<h1 class="text-4xl font-bold text-slate-900 tracking-tight mb-2">Sarah Jenkins</h1>
+<p class="text-lg text-slate-600 mb-3">Senior Product Designer</p>
+<div class="flex gap-4 text-sm text-slate-500">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> San Francisco, CA</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">mail</span> sarah.j@example.com</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">link</span> portfolio.design</span>
+</div>
+</header>
+<div class="grid grid-cols-3 gap-8">
+<div class="col-span-2 space-y-6">
+<section class="relative hover:bg-slate-50 cursor-pointer rounded -mx-4 px-4 py-2 transition-colors">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Experience</h2>
+<div class="mb-5 relative">
+<div class="absolute -left-8 top-1 opacity-0 hover:opacity-100 text-primary-container transition-opacity">
+<span class="material-symbols-outlined text-sm">edit</span>
+</div>
+<h3 class="font-semibold text-slate-800">Lead UX Designer</h3>
+<div class="flex justify-between text-sm text-slate-500 mb-2">
+<span>TechCorp Innovations</span>
+<span>2020 - Present</span>
+</div>
+<ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+<li>Directed the redesign of the core enterprise platform, increasing user retention by 24%.</li>
+<li>Managed a team of 4 product designers, implementing a cohesive design system.</li>
+<li>Collaborated directly with VP of Product to align design strategy with business goals.</li>
+</ul>
+</div>
+<div class="relative">
+<h3 class="font-semibold text-slate-800">Senior UI Designer</h3>
+<div class="flex justify-between text-sm text-slate-500 mb-2">
+<span>Creative Solutions Agency</span>
+<span>2017 - 2020</span>
+</div>
+<ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+<li>Delivered end-to-end design solutions for Fortune 500 clients in fintech.</li>
+<li>Reduced development hand-off friction by establishing strict component libraries.</li>
+</ul>
+</div>
+</section>
+</div>
+<div class="space-y-6">
+<section class="relative hover:bg-slate-50 cursor-pointer rounded -mx-4 px-4 py-2 transition-colors">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Skills</h2>
+<div class="flex flex-wrap gap-2 text-sm text-slate-600">
+<span class="bg-slate-100 px-2 py-1 rounded">Figma</span>
+<span class="bg-slate-100 px-2 py-1 rounded">Prototyping</span>
+<span class="bg-slate-100 px-2 py-1 rounded">User Research</span>
+<span class="bg-slate-100 px-2 py-1 rounded">Design Systems</span>
+<span class="bg-slate-100 px-2 py-1 rounded">HTML/CSS</span>
+</div>
+</section>
+<section class="relative hover:bg-slate-50 cursor-pointer rounded -mx-4 px-4 py-2 transition-colors">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Education</h2>
+<div>
+<h3 class="font-semibold text-slate-800 text-sm">BFA Interaction Design</h3>
+<p class="text-sm text-slate-500">California College of the Arts</p>
+<p class="text-sm text-slate-400">2013 - 2017</p>
+</div>
+</section>
+</div>
+</div>
+</div>
+<!-- Bottom Spacing for fixed footer -->
+<div class="h-32 w-full flex-shrink-0"></div>
+</section>
+</main>
+<!-- Fixed Bottom Actions Footer -->
+<footer class="fixed bottom-0 right-0 left-96 glass-panel border-b-0 border-l-0 border-r-0 z-40 px-8 py-4 flex justify-between items-center">
+<div class="text-sm text-white/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-green-400">cloud_done</span>
+            Autosaved just now
+        </div>
+<div class="flex gap-4">
+<button class="px-6 py-2 rounded-lg bg-transparent border border-white/10 text-white hover:bg-white/5 transition-all duration-300 font-medium text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                Export to PDF
+            </button>
+<button class="px-6 py-2 rounded-lg bg-primary-container text-black font-medium text-sm hover:shadow-[0_0_15px_rgba(255,138,0,0.4)] transition-all duration-300 flex items-center gap-2 relative overflow-hidden group">
+<div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+<span class="relative z-10">Save Changes</span>
+</button>
+</div>
+</footer>
+</body></html>

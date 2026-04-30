@@ -66,16 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUnlockedGenerations(unlocked)
       } else {
         if (emailStr) {
-          const newUser = {
-            id: userId,
-            email: emailStr,
-            isPremium: false,
-            unlockedGenerations: [],
-            provider: 'clerk'
-          }
           try {
-            await supabase.from('users').insert(newUser)
-          } catch (e) { }
+            await fetch("/api/auth/sync", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId, email: emailStr }),
+            })
+          } catch (e) {
+            console.error("Failed to sync user:", e)
+          }
         }
         setIsPremium(false)
         setUnlockedGenerations([])

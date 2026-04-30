@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ResumeBuilder.ai - Ethereal Workspace Navigation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#ffdcc4",
+                        "surface": "#111415",
+                        "surface-tint": "#ffb77f",
+                        "inverse-on-surface": "#2e3132",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-secondary-fixed": "#001a42",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#e1e3e4",
+                        "tertiary": "#d0bcff",
+                        "on-tertiary-container": "#4b00b3",
+                        "on-error-container": "#ffdad6",
+                        "background": "#111415",
+                        "surface-bright": "#373a3b",
+                        "surface-container": "#1d2021",
+                        "on-secondary": "#002e6a",
+                        "tertiary-fixed": "#e9ddff",
+                        "surface-container-lowest": "#0c0f10",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-primary-fixed": "#2f1500",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-tertiary": "#3c0091",
+                        "surface-container-high": "#272a2b",
+                        "surface-variant": "#323536",
+                        "on-primary-container": "#613100",
+                        "on-primary": "#4e2600",
+                        "on-surface": "#e1e3e4",
+                        "surface-container-highest": "#323536",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#ffb77f",
+                        "secondary": "#adc6ff",
+                        "on-tertiary-fixed": "#23005c",
+                        "primary": "#ffb77f",
+                        "error-container": "#93000a",
+                        "inverse-primary": "#914c00",
+                        "on-secondary-container": "#e6ecff",
+                        "secondary-container": "#0566d9",
+                        "surface-dim": "#111415",
+                        "primary-container": "#ff8a00",
+                        "on-surface-variant": "#ddc1ae",
+                        "on-primary-fixed-variant": "#6f3900",
+                        "outline": "#a58c7b",
+                        "surface-container-low": "#191c1d",
+                        "tertiary-container": "#b698ff",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "outline-variant": "#564334",
+                        "on-background": "#e1e3e4",
+                        "on-tertiary-fixed-variant": "#5516be"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "8px",
+                        "gutter": "24px",
+                        "margin-page": "40px",
+                        "container-max": "1280px",
+                        "stack-lg": "32px",
+                        "stack-md": "16px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-xl": ["Plus Jakarta Sans"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c0f10; /* surface-container-lowest equivalent */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 138, 0, 0.05), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(255, 138, 0, 0.03), transparent 50%);
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .premium-border {
+            position: relative;
+        }
+        .premium-border::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px; right: -1px; bottom: -1px;
+            background: linear-gradient(135deg, rgba(255,138,0,0.8), rgba(255,138,0,0.2));
+            border-radius: inherit;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-72 fixed left-0 top-0 flex flex-col justify-between py-8 px-6 border-r border-white/10 bg-black/20 backdrop-blur-2xl z-40">
+<!-- Header -->
+<div class="flex flex-col gap-8">
+<div class="flex items-center gap-3 group px-2 cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-container to-surface-variant flex items-center justify-center shadow-[0_0_15px_rgba(255,138,0,0.2)] group-hover:scale-105 transition-transform duration-300">
+<span class="material-symbols-outlined text-surface-container-lowest" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h1 class="text-2xl font-black tracking-tighter text-white">ResumeBuilder.ai</h1>
+<p class="font-label-caps text-label-caps text-primary-fixed-dim opacity-80">AI Atelier</p>
+</div>
+</div>
+<!-- Nav Links -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-4 px-4 py-3 bg-white/5 text-orange-500 border-r-2 border-orange-500 rounded-r-none transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-white/40 hover:text-white/80 hover:bg-white/5 group-hover:translate-x-1 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">history</span>
+<span class="font-body-md text-body-md">History</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-white/40 hover:text-white/80 hover:bg-white/5 group-hover:translate-x-1 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+</div>
+<!-- Footer / Profile Section -->
+<div class="flex flex-col gap-6">
+<a class="flex items-center gap-4 px-4 py-3 text-white/40 hover:text-white/80 hover:bg-white/5 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">person</span>
+<span class="font-body-md text-body-md">Account</span>
+</a>
+<div class="glass-panel p-4 rounded-xl flex flex-col gap-4 relative overflow-hidden">
+<!-- Inner glow effect -->
+<div class="absolute -top-10 -right-10 w-20 h-20 bg-primary-container rounded-full blur-[40px] opacity-20 pointer-events-none"></div>
+<div class="flex items-center gap-3">
+<img alt="User avatar" class="w-10 h-10 rounded-full border border-white/20 object-cover" data-alt="A cinematic, high-contrast close-up portrait of a professional individual against a dark, moody background. The lighting is sophisticated and directional, creating a premium, editorial feel that aligns with a sophisticated dark-mode digital atelier aesthetic. Deep blacks contrast with subtle, warm highlights on the face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBqEt6HwHVW4tELYncPj5lsCkZi89eKs-57finvFP5IsvkOsfemwAVupqeShYwUp7N_ZMf3c03kmhsOBkeJlwKlONkV2zIpjZWYVK3YrjKpglBCskVDRp4nHFF-YfekDSxsUYRHOczYe9R9Qadlm6mdEILBE7rYszL1G5-1zqnJSSAuDxIMB2tvffB4qqJzwcwASeos4LqUahTEEFvQsWlPH5Ow6frNDQnooJk7sSjLsnnUkUbltLqHaAEBT6ku4wpkmAMdF_C2eLF"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-tight">Alex Reed</span>
+<span class="font-label-caps text-label-caps text-primary-fixed-dim mt-1">Premium User</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">12 Credits Left</span>
+<span class="text-sm font-medium text-primary-container">60%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full w-[60%] relative">
+<div class="absolute right-0 top-0 bottom-0 w-4 bg-white/30 blur-[2px]"></div>
+</div>
+</div>
+</div>
+<button class="w-full py-2.5 rounded-lg premium-border bg-surface-container-lowest text-on-surface font-body-md text-body-md font-medium hover:bg-surface-container hover:shadow-[0_0_20px_rgba(255,138,0,0.15)] transition-all duration-300">
+                    Upgrade to Pro
+                </button>
+</div>
+</div>
+</aside>
+<!-- Main View Area (Command Center Placeholder) -->
+<main class="ml-72 flex-1 p-10 overflow-y-auto relative">
+<!-- Ambient Background Glows in Main Area -->
+<div class="fixed top-0 right-0 w-[800px] h-[800px] bg-primary-container rounded-full blur-[150px] opacity-[0.02] pointer-events-none"></div>
+<div class="fixed bottom-0 left-72 w-[600px] h-[600px] bg-secondary-container rounded-full blur-[150px] opacity-[0.02] pointer-events-none"></div>
+<div class="max-w-[container-max] mx-auto h-full flex flex-col gap-gutter">
+<header class="flex justify-between items-end pb-6 border-b border-white/5">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-2">Command Center</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Welcome back to your atelier. You have 3 drafts pending.</p>
+</div>
+<button class="flex items-center gap-2 px-6 py-3 bg-primary-container text-surface-container-lowest font-body-md text-body-md font-semibold rounded-lg hover:shadow-[0_0_20px_rgba(255,138,0,0.3)] hover:scale-[1.02] transition-all duration-300">
+<span class="material-symbols-outlined">add</span>
+                    New Resume
+                </button>
+</header>
+<!-- Bento Grid Placeholder -->
+<div class="grid grid-cols-12 gap-gutter mt-4">
+<!-- Main Focus Card -->
+<div class="col-span-8 glass-panel rounded-xl p-8 min-h-[400px] flex flex-col justify-between group hover:scale-[1.01] transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container text-2xl">insights</span>
+</div>
+<span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-sm text-on-surface-variant font-medium">Activity</span>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">Optimization Score</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Your primary resume is performing in the top 5% of your industry. Consider updating the skills section based on recent trends.</p>
+</div>
+</div>
+<!-- Secondary Cards -->
+<div class="col-span-4 flex flex-col gap-gutter">
+<div class="glass-panel rounded-xl p-6 flex-1 flex flex-col justify-between group hover:scale-[1.01] transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium">Recent Drafts</h4>
+<div class="flex items-center gap-4 mt-4">
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[80%]"></div>
+</div>
+<span class="text-sm font-medium text-primary-container">80%</span>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-6 flex-1 flex flex-col justify-between group hover:scale-[1.01] transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-on-surface-variant">auto_awesome</span>
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium">AI Suggestions</h4>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">2 new keyword recommendations found for 'Senior Product Designer' roles.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
