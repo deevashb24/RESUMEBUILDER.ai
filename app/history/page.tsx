@@ -62,13 +62,15 @@ function ResumeThumbnail({ type, isUnlocked }: { type?: string; isUnlocked: bool
 }
 
 function DocCard({ item, isUnlocked, onUnlock }: { item: HistoryEntry; isUnlocked: boolean; onUnlock: () => void }) {
+  const router = useRouter()
   const label = item.type === "cover-letter" ? "Cover Letter" : item.type === "sop" ? "SOP" : "Resume"
   const date = new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   const atsScore = (item as any).atsScore || null
 
   return (
     <article
-      className="group relative flex flex-col rounded-xl overflow-hidden transition-transform duration-300 ease-out hover:scale-[1.01]"
+      onClick={() => router.push(`/dashboard/preview?id=${item.id}`)}
+      className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-transform duration-300 ease-out hover:scale-[1.01]"
       style={{
         background: "rgba(255,255,255,0.05)",
         backdropFilter: "blur(24px)",
@@ -162,26 +164,24 @@ function DocCard({ item, isUnlocked, onUnlock }: { item: HistoryEntry; isUnlocke
             border: "1px solid rgba(255,138,0,0.2)",
           }}
         >
-          <Link href={`/dashboard/preview?id=${item.id}`} className="w-full">
-            <button
-              className="w-full py-3.5 px-6 rounded-lg font-semibold text-base translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out"
-              style={{ background: "#ff8a00", color: "#000" }}
-            >
-              View / Edit
-            </button>
-          </Link>
-          <Link href={`/dashboard/preview?id=${item.id}`} className="w-full">
-            <button
-              className="w-full py-3.5 px-6 rounded-lg font-semibold text-base flex justify-center items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75"
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#e1e3e4" }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download PDF
-            </button>
-          </Link>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/preview?id=${item.id}`) }}
+            className="w-full py-3.5 px-6 rounded-lg font-semibold text-base translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out"
+            style={{ background: "#ff8a00", color: "#000" }}
+          >
+            View / Edit
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/preview?id=${item.id}`) }}
+            className="w-full py-3.5 px-6 rounded-lg font-semibold text-base flex justify-center items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75"
+            style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#e1e3e4" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download PDF
+          </button>
         </div>
       ) : (
         <div
@@ -199,7 +199,7 @@ function DocCard({ item, isUnlocked, onUnlock }: { item: HistoryEntry; isUnlocke
             Upgrade to Pro to unlock this generated document.
           </p>
           <button
-            onClick={onUnlock}
+            onClick={(e) => { e.stopPropagation(); onUnlock(); }}
             className="w-full py-3.5 px-6 rounded-lg font-bold text-base translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out"
             style={{ background: "#ffffff", color: "#000" }}
           >
@@ -218,7 +218,7 @@ export default function HistoryPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
-  const [showPricing, setShowPricing] = useState(false)
+  const [unlockId, setUnlockId] = useState<string | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
   useEffect(() => {
@@ -368,7 +368,7 @@ export default function HistoryPage() {
               {filteredHistory.map((item) => {
                 const isItemUnlocked = isPremium || !!unlockedGenerations?.includes(item.id)
                 return (
-                  <DocCard key={item.id} item={item} isUnlocked={isItemUnlocked} onUnlock={() => setShowPricing(true)} />
+                  <DocCard key={item.id} item={item} isUnlocked={isItemUnlocked} onUnlock={() => setUnlockId(item.id)} />
                 )
               })}
 
@@ -401,7 +401,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <PricingModal open={showPricing} onClose={() => setShowPricing(false)} />
+      <PricingModal open={!!unlockId} onClose={() => setUnlockId(null)} generationId={unlockId || undefined} />
     </>
   )
 }
