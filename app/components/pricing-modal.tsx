@@ -213,7 +213,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     <p className="text-xs text-[#ff8a00]/80">One-time payment. No subscription.</p>
                   </div>
                   <div className="text-right">
-                    <span className="block font-bold text-[#ff8a00] text-lg">₹1.99</span>
+                    <span className="block font-bold text-[#ff8a00] text-lg">₹50.00</span>
                     <span className="text-[10px] text-[#ff8a00]/60 uppercase">/ $2.99</span>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     Card ($2.99)
                   </Button>
                   <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm">
-                    UPI (₹1.99)
+                    UPI (₹50.00)
                   </Button>
                 </div>
               </div>

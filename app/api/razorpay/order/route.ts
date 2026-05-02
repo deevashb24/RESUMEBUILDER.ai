@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
         // --- BRANCH 1: ONE-TIME PAYMENT (Unlock) ---
         if (planType === 'one-time') {
-            const amount = 199; // ₹1.99 (in paise)
+            const amount = 5000; // ₹50.00 (in paise)
 
             const options = {
                 amount: amount,
