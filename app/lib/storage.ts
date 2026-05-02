@@ -1,41 +1,44 @@
-import { createClient as createBrowserClient } from "@/utils/supabase/client"
-
 /**
- * Upload file to Supabase Storage
+ * Upload file to Supabase Storage via Server API
  */
 export async function uploadResumeFile(
   userId: string,
   file: File
 ): Promise<{ url: string; path: string }> {
-  const supabase = createBrowserClient()
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("userId", userId)
 
-  const timestamp = Date.now()
-  const fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-  const storagePath = `resumes/${userId}/${timestamp}-${fileName}`
+  const response = await fetch("/api/storage", {
+    method: "POST",
+    body: formData
+  })
 
-  const { error } = await supabase.storage
-    .from('resumes')
-    .upload(storagePath, file, { contentType: file.type })
-
-  if (error) {
-    throw error
+  const data = await response.json()
+  
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to upload file")
   }
 
-  const { data } = supabase.storage.from('resumes').getPublicUrl(storagePath)
-
   return {
-    url: data.publicUrl,
-    path: storagePath,
+    url: data.url,
+    path: data.path,
   }
 }
 
 /**
- * Delete file from Supabase Storage
+ * Delete file from Supabase Storage via Server API
  */
 export async function deleteResumeFile(path: string): Promise<void> {
-  const supabase = createBrowserClient()
   try {
-    await supabase.storage.from('resumes').remove([path])
+    const response = await fetch(`/api/storage?path=${encodeURIComponent(path)}`, {
+      method: "DELETE"
+    })
+    
+    if (!response.ok) {
+      const data = await response.json()
+      throw new Error(data.error || "Failed to delete file")
+    }
   } catch (error) {
     console.error("Error deleting file from storage:", error)
   }
