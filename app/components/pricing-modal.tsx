@@ -200,7 +200,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
 
               <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} variant="outline" className="w-full h-10 text-sm border-[#323536] text-gray-300 bg-transparent hover:bg-[#323536] hover:text-white">
                 {loading === 'razorpay' && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                Pay via Razorpay UPI - {selectedPlan === 'monthly' ? '₹499' : '₹999'}
+                Pay via Razorpay UPI - {selectedPlan === 'monthly' ? '₹499.99' : '₹999.99'}
               </Button>
             </div>
 
@@ -213,7 +213,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     <p className="text-xs text-[#ff8a00]/80">One-time payment. No subscription.</p>
                   </div>
                   <div className="text-right">
-                    <span className="block font-bold text-[#ff8a00] text-lg">₹199</span>
+                    <span className="block font-bold text-[#ff8a00] text-lg">₹199.99</span>
                     <span className="text-[10px] text-[#ff8a00]/60 uppercase">/ $2.99</span>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                     Card ($2.99)
                   </Button>
                   <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm">
-                    UPI (₹199)
+                    UPI (₹199.99)
                   </Button>
                 </div>
               </div>
