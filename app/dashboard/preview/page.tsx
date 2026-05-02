@@ -2,16 +2,18 @@
 
 import { useEffect, useState, Suspense, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { ResumeRenderer } from "@/components/resume-renderer"
-import { LetterPreview } from "@/components/letter-preview"
 import { getHistoryEntry } from "@/lib/history"
 import { getResume } from "@/lib/resume"
 import { useReactToPrint } from "react-to-print"
 import { useAuth } from "@/lib/auth-context"
-import { PricingModal } from "@/components/pricing-modal"
 import { createClient } from "@/utils/supabase/client"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import dynamic from "next/dynamic"
+
+const ResumeRenderer = dynamic(() => import("@/components/resume-renderer").then(mod => mod.ResumeRenderer), { ssr: false })
+const LetterPreview = dynamic(() => import("@/components/letter-preview").then(mod => mod.LetterPreview), { ssr: false })
+const PricingModal = dynamic(() => import("@/components/pricing-modal").then(mod => mod.PricingModal), { ssr: false })
 
 const LAYOUT_OPTIONS = [
   { id: "demo", name: "Professional", desc: "Two-column" },

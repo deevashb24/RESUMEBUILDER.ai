@@ -7,9 +7,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { userId, userEmail, variantId, redirectUrl, generationId } = body // <--- Read generationId
+    const { userId, userEmail, variantId, redirectUrl, generationId } = body 
 
-    if (!process.env.LEMONSQUEEZY_STORE_ID || !variantId) {
+    const finalVariantId = variantId || process.env.LEMONSQUEEZY_VARIANT_ID;
+
+    if (!process.env.LEMONSQUEEZY_STORE_ID || !finalVariantId) {
       return NextResponse.json({ error: "Missing Store/Variant ID" }, { status: 500 })
     }
 
@@ -27,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const checkout = await createCheckout(
       parseInt(process.env.LEMONSQUEEZY_STORE_ID),
-      parseInt(variantId),
+      parseInt(finalVariantId as string),
       {
         checkoutData,
         productOptions: {
@@ -37,7 +39,13 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    if (checkout.error) {
+      console.error("Lemon Squeezy API Error:", checkout.error)
+      return NextResponse.json({ error: checkout.error.message || "Failed to create checkout" }, { status: 500 })
+    }
+
     if (!checkout.data?.data?.attributes?.url) {
+      console.error("Lemon Squeezy did not return a URL:", checkout)
       return NextResponse.json({ error: "Lemon Squeezy did not return a URL" }, { status: 500 })
     }
 

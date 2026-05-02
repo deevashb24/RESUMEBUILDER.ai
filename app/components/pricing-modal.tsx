@@ -134,21 +134,21 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     <div className="grid grid-cols-2 gap-3 mb-4">
       <div
         onClick={() => setSelectedPlan('monthly')}
-        className={`p-3 border rounded-xl cursor-pointer transition-all text-center flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'monthly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/50'}`}
+        className={`p-3 border rounded-xl cursor-pointer transition-all text-center flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'monthly' ? 'border-[#ff8a00] bg-[#ff8a00]/10 ring-1 ring-[#ff8a00]' : 'border-[#323536] bg-[#1d2021] hover:border-[#ff8a00]/50'}`}
       >
-        <div className="text-xs font-semibold text-foreground/80">Monthly</div>
-        <div className="text-lg font-bold text-foreground mt-1">$9.99<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
-        <div className="text-[10px] text-muted-foreground mt-1 px-2 py-0.5 bg-secondary rounded-full">Global</div>
+        <div className="text-xs font-semibold text-gray-400">Monthly</div>
+        <div className="text-lg font-bold text-white mt-1">$9.99<span className="text-xs font-normal text-gray-500">/mo</span></div>
+        <div className="text-[10px] text-gray-400 mt-1 px-2 py-0.5 bg-[#323536] rounded-full">Global</div>
       </div>
 
       <div
         onClick={() => setSelectedPlan('quarterly')}
-        className={`p-3 border rounded-xl cursor-pointer transition-all text-center relative flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'quarterly' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:border-primary/50'}`}
+        className={`p-3 border rounded-xl cursor-pointer transition-all text-center relative flex flex-col justify-center items-center shadow-sm hover:shadow-md ${selectedPlan === 'quarterly' ? 'border-[#ff8a00] bg-[#ff8a00]/10 ring-1 ring-[#ff8a00]' : 'border-[#323536] bg-[#1d2021] hover:border-[#ff8a00]/50'}`}
       >
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">BEST VALUE</div>
-        <div className="text-xs font-semibold text-foreground/80 mt-1">Quarterly</div>
-        <div className="text-lg font-bold text-foreground mt-1">$19.99<span className="text-xs font-normal text-muted-foreground">/3mo</span></div>
-        <div className="text-[10px] text-muted-foreground mt-1 px-2 py-0.5 bg-secondary rounded-full">Global</div>
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#ff8a00] text-black text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">BEST VALUE</div>
+        <div className="text-xs font-semibold text-gray-400 mt-1">Quarterly</div>
+        <div className="text-lg font-bold text-white mt-1">$19.99<span className="text-xs font-normal text-gray-500">/3mo</span></div>
+        <div className="text-[10px] text-gray-400 mt-1 px-2 py-0.5 bg-[#323536] rounded-full">Global</div>
       </div>
     </div>
   )
@@ -157,48 +157,48 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     <>
       <Script id="razorpay-checkout-js" src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md bg-white border border-border shadow-2xl p-0 overflow-hidden rounded-2xl">
+        <DialogContent className="sm:max-w-md bg-[#111415] border border-[#323536] shadow-2xl p-0 overflow-hidden rounded-2xl">
           <div className="p-6 pb-2 text-center">
-            <DialogTitle className="text-2xl font-bold text-foreground flex justify-center items-center gap-2">
-              <CreditCard className="w-6 h-6 text-primary" />
+            <DialogTitle className="text-2xl font-bold text-white flex justify-center items-center gap-2">
+              <CreditCard className="w-6 h-6 text-[#ff8a00]" />
               Upgrade Plan
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground mt-2">Unlock the full power of AI Document Builder</DialogDescription>
+            <DialogDescription className="text-sm text-gray-400 mt-2">Unlock the full power of AI Document Builder</DialogDescription>
           </div>
 
           <div className="p-6 pt-2 space-y-5">
             {/* Subscription Section */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="bg-[#1d2021] p-4 rounded-xl border border-[#323536]">
               <div className="flex items-center gap-2 mb-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Pro Subscription</h4>
-                <span className="h-px flex-1 bg-slate-200"></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#ff8a00]">Pro Subscription</h4>
+                <span className="h-px flex-1 bg-[#323536]"></span>
               </div>
 
               <PlanSelection />
 
               <ul className="space-y-2 mb-4">
-                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-green-500 mr-2 shrink-0" /><span className="text-slate-700"><strong>Unlimited</strong> Resumes & Downloads</span></li>
-                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-green-500 mr-2 shrink-0" /><span className="text-slate-700"><strong>120 Generations</strong> / month</span></li>
+                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-[#ff8a00] mr-2 shrink-0" /><span className="text-gray-300"><strong>Unlimited</strong> Resumes & Downloads</span></li>
+                <li className="flex items-center text-sm"><Check className="h-4 w-4 text-[#ff8a00] mr-2 shrink-0" /><span className="text-gray-300"><strong>120 Generations</strong> / month</span></li>
               </ul>
 
               <div className="space-y-2">
-                <Button onClick={() => handleCheckout(selectedPlan)} disabled={!!loading} className="w-full h-11 text-sm font-medium bg-gradient-to-tr from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white shadow-lg shadow-gray-200/50 transition-all hover:scale-[1.01]">
-                  {loading === selectedPlan && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button onClick={() => handleCheckout(selectedPlan)} disabled={!!loading} className="w-full h-11 text-sm font-bold bg-[#ff8a00] hover:bg-[#e07a00] text-black shadow-lg shadow-[#ff8a00]/20 transition-all hover:scale-[1.01]">
+                  {loading === selectedPlan && <Loader2 className="mr-2 h-4 w-4 animate-spin text-black" />}
                   Subscribe via Lemon Squeezy
                 </Button>
                 <div className="flex justify-center gap-3 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
                   {/* Simple CSS Icons for Visa/Mastercard/Amex */}
-                  <div className="h-5 w-8 bg-slate-200 rounded flex items-center justify-center text-[8px] font-bold text-slate-500">VISA</div>
-                  <div className="h-5 w-8 bg-slate-200 rounded flex items-center justify-center text-[8px] font-bold text-slate-500">MC</div>
+                  <div className="h-5 w-8 bg-[#323536] rounded flex items-center justify-center text-[8px] font-bold text-gray-400">VISA</div>
+                  <div className="h-5 w-8 bg-[#323536] rounded flex items-center justify-center text-[8px] font-bold text-gray-400">MC</div>
                 </div>
               </div>
 
               <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200"></span></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-50 px-2 text-muted-foreground">Or pay via UPI</span></div>
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-[#323536]"></span></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-[#1d2021] px-2 text-gray-500">Or pay via UPI</span></div>
               </div>
 
-              <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} variant="outline" className="w-full h-10 text-sm border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-300">
+              <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} variant="outline" className="w-full h-10 text-sm border-[#323536] text-gray-300 bg-transparent hover:bg-[#323536] hover:text-white">
                 {loading === 'razorpay' && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                 Pay via Razorpay UPI - {selectedPlan === 'monthly' ? '₹499' : '₹999'}
               </Button>
@@ -206,23 +206,23 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
 
             {/* One-Time Unlock Section */}
             {generationId && (
-              <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+              <div className="bg-[#ff8a00]/10 p-4 rounded-xl border border-[#ff8a00]/30">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h4 className="font-bold text-orange-900 text-sm">Single Document Unlock</h4>
-                    <p className="text-xs text-orange-700/80">One-time payment. No subscription.</p>
+                    <h4 className="font-bold text-[#ff8a00] text-sm">Single Document Unlock</h4>
+                    <p className="text-xs text-[#ff8a00]/80">One-time payment. No subscription.</p>
                   </div>
                   <div className="text-right">
-                    <span className="block font-bold text-orange-900 text-lg">₹199</span>
-                    <span className="text-[10px] text-orange-700/60 uppercase">/ $2.99</span>
+                    <span className="block font-bold text-[#ff8a00] text-lg">₹199</span>
+                    <span className="text-[10px] text-[#ff8a00]/60 uppercase">/ $2.99</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-white text-orange-900 border border-orange-200 hover:bg-orange-100 hover:border-purple-300 shadow-sm">
+                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-black text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/20 shadow-sm">
                     Card ($2.99)
                   </Button>
-                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-orange-100 text-orange-800 border border-orange-200 hover:bg-orange-200 hover:text-orange-900 shadow-sm">
+                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm">
                     UPI (₹199)
                   </Button>
                 </div>
@@ -230,7 +230,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
             )}
 
             <div className="text-center">
-              <button onClick={onClose} className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline transition-colors p-2">
+              <button onClick={onClose} className="text-xs font-medium text-gray-500 hover:text-white hover:underline transition-colors p-2">
                 No thanks, I'll continue on the free plan
               </button>
             </div>
