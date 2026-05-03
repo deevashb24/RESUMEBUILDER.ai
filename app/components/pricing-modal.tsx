@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,22 @@ interface PricingModalProps {
   open: boolean
   onClose: () => void
   generationId?: string // If defined, we are buying just this one
+}
+
+function RazorpayPaymentButton() {
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (formRef.current && formRef.current.children.length === 0) {
+      const script = document.createElement("script")
+      script.src = "https://checkout.razorpay.com/v1/payment-button.js"
+      script.setAttribute("data-payment_button_id", "pl_Skh1g3hEo7MFNh")
+      script.async = true
+      formRef.current.appendChild(script)
+    }
+  }, [])
+
+  return <form ref={formRef} className="w-full flex justify-center"></form>
 }
 
 export function PricingModal({ open, onClose, generationId }: PricingModalProps) {
@@ -218,13 +234,8 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-black text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/20 shadow-sm">
-                    Card ($2.99)
-                  </Button>
-                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm">
-                    UPI (₹50.00)
-                  </Button>
+                <div className="mt-4 flex justify-center">
+                  <RazorpayPaymentButton />
                 </div>
               </div>
             )}
