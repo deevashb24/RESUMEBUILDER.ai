@@ -17,10 +17,12 @@ interface RazorpayOptions {
     theme?: {
         color?: string;
     };
+    subscription_id?: string;
 }
 
 interface RazorpayInstance {
     open: () => void;
+    on: (event: string, handler: (response: any) => void) => void;
 }
 
 interface Window {
