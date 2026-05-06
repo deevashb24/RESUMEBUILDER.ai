@@ -96,7 +96,9 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
       })
       const data = await res.json()
 
-      if (!res.ok) throw new Error(data.error || "Failed to create order")
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create order. Please check Razorpay keys.")
+      }
 
       const options: any = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -120,11 +122,15 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
       }
 
       const rzp1 = new window.Razorpay(options)
+      rzp1.on('payment.failed', function (response: any) {
+        console.error("Razorpay Payment Failed:", response.error);
+        alert(`Payment failed: ${response.error.description || 'Unknown error'}`);
+      });
       rzp1.open()
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Razorpay Error:", error)
-      alert("Payment failed. Please try again.")
+      alert(error.message || "Payment setup failed. Please try again.")
     } finally {
       setLoading(null)
     }
