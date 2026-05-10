@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://resumebuilderai.in"),
   title: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
   description: "Create tailored resumes, cover letters, and SOPs in minutes using AI that understands job descriptions and professional formatting.",
 }

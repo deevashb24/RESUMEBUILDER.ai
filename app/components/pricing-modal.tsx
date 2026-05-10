@@ -104,10 +104,8 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         name: "ResumeBuilder.ai",
         description: data.description || "Pro Subscription",
-        handler: function (response: any) {
-          alert("Payment Successful! Access granted.")
-          window.location.reload()
-        },
+        callback_url: "https://resumebuilderai.in/api/razorpay/webhook",
+        redirect: true,
         prefill: { email: user.email || undefined },
         theme: { color: "#000000" },
         modal: { ondismiss: function () { setLoading(null) } }

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       {
         checkoutData,
         productOptions: {
-          redirectUrl: redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+          redirectUrl: redirectUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://resumebuilderai.in'}/dashboard`,
           receiptButtonText: "Go to Dashboard",
         }
       }
