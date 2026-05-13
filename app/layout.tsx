@@ -5,7 +5,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { GenerationProvider } from "@/lib/generation-context"
 import { ClerkProvider } from "@clerk/nextjs"
 import { LanguageProvider } from "@/lib/language-context"
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({
