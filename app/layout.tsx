@@ -6,6 +6,7 @@ import { GenerationProvider } from "@/lib/generation-context"
 import { ClerkProvider } from "@clerk/nextjs"
 import { LanguageProvider } from "@/lib/language-context"
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
           </AuthProvider>
         </ClerkProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
