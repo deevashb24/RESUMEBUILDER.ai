@@ -48,7 +48,7 @@ function PreviewContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isSpecificallyUnlocked = id ? unlockedGenerations?.includes(id) : false
-  const isUnlocked = isPremium || isSpecificallyUnlocked
+  const isUnlocked = true // isPremium || isSpecificallyUnlocked
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
