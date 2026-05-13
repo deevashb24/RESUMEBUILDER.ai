@@ -535,6 +535,8 @@ export default function ResumeBuilderLanding({ isLoggedIn = false }: { isLoggedI
                 <li><Link href="/privacy" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Terms of Service</Link></li>
                 <li><Link href="/cookies" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Cookie Policy</Link></li>
+                <li><Link href="/refund-policy" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Refund Policy</Link></li>
+                <li><Link href="/cancellation-policy" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Cancellation Policy</Link></li>
                 <li><Link href="/contact" className="text-sm text-slate-500 hover:text-orange-600 transition-colors">Contact</Link></li>
               </ul>
             </div>
