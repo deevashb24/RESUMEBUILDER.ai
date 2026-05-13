@@ -116,24 +116,24 @@ function PreviewContent() {
     hist.push(newData)
     setEditHistory(hist)
     setEditIndex(hist.length - 1)
-    await saveToDatabase(newData)
+    saveToDatabase(newData)
   }
 
-  const handleUndo = async () => {
+  const handleUndo = () => {
     if (editIndex > 0) {
       const prev = editHistory[editIndex - 1]
       setEditIndex(editIndex - 1)
       setData(prev)
-      await saveToDatabase(prev)
+      saveToDatabase(prev)
     }
   }
 
-  const handleRedo = async () => {
+  const handleRedo = () => {
     if (editIndex < editHistory.length - 1) {
       const next = editHistory[editIndex + 1]
       setEditIndex(editIndex + 1)
       setData(next)
-      await saveToDatabase(next)
+      saveToDatabase(next)
     }
   }
 
