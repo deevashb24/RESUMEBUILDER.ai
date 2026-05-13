@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
+import { flushSync } from "react-dom"
 
 interface EditableFieldProps {
     value: string
@@ -38,8 +39,8 @@ export function EditableField({
     }, [value])
 
     const handleBlur = () => {
-        setIsEditing(false)
         const newValue = elementRef.current?.textContent || ""
+        setIsEditing(false)
         if (newValue !== value) {
             setCurrentValue(newValue)
             onUpdate(newValue)
@@ -55,17 +56,32 @@ export function EditableField({
 
     const handleFocus = () => {
         if (disabled) return
-        setIsEditing(true)
+        if (!isEditing) setIsEditing(true)
     }
 
     const handleClick = (e: React.MouseEvent) => {
         if (disabled) return
-        e.preventDefault()
         e.stopPropagation()
-        setIsEditing(true)
-        setTimeout(() => {
-            elementRef.current?.focus()
-        }, 0)
+        if (!isEditing) {
+            e.preventDefault()
+            // Force React to render the edit mode immediately to avoid slow response feel
+            flushSync(() => {
+                setIsEditing(true)
+            })
+            const el = elementRef.current
+            if (el) {
+                el.focus()
+                // Place cursor at the end of the text instead of the beginning
+                try {
+                    const range = document.createRange()
+                    const sel = window.getSelection()
+                    range.selectNodeContents(el)
+                    range.collapse(false) // false means end of content
+                    sel?.removeAllRanges()
+                    sel?.addRange(range)
+                } catch (err) {}
+            }
+        }
     }
 
     const isEmpty = !currentValue || currentValue.trim() === ""
@@ -79,6 +95,7 @@ export function EditableField({
 
     return (
         <Component
+            key={isEditing ? "edit" : "view"}
             ref={elementRef as any}
             contentEditable={!disabled && isEditing}
             suppressContentEditableWarning={true}
