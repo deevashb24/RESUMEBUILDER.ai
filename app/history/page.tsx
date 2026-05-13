@@ -70,6 +70,7 @@ function DocCard({ item, isUnlocked, onUnlock }: { item: HistoryEntry; isUnlocke
   return (
     <article
       onClick={() => router.push(`/dashboard/preview?id=${item.id}`)}
+      onMouseEnter={() => router.prefetch(`/dashboard/preview?id=${item.id}`)}
       className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-transform duration-300 ease-out hover:scale-[1.01]"
       style={{
         background: "rgba(255,255,255,0.05)",
@@ -225,16 +226,20 @@ export default function HistoryPage() {
     if (!loading && !user) router.replace("/")
   }, [user, loading, router])
 
+  // Start fetching as soon as we have a user id — don't wait for auth loading flag
   useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
     async function fetchHistory() {
-      if (user) {
-        const data = await getHistory(user.id)
+      const data = await getHistory(user.id)
+      if (!cancelled) {
         setHistory(data)
+        setIsLoadingHistory(false)
       }
-      setIsLoadingHistory(false)
     }
-    if (!loading && user) fetchHistory()
-  }, [user, loading])
+    fetchHistory()
+    return () => { cancelled = true }
+  }, [user?.id])
 
   const filteredHistory = history.filter((item) => {
     const titleMatch = (item.title || "").toLowerCase().includes(searchQuery.toLowerCase())

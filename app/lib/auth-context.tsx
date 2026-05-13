@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react"
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react"
 import { useUser, useAuth as useClerkAuth } from "@clerk/nextjs"
 import { createClient } from "@/utils/supabase/client"
 
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [unlockedGenerations, setUnlockedGenerations] = useState<string[]>([])
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const refreshUserData = useCallback(async (userId: string, emailStr?: string) => {
     try {

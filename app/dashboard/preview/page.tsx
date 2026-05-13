@@ -97,9 +97,9 @@ function PreviewContent() {
     }, 1000)
   }
 
-  const handleUpdateContent = async (pathStr: string, newValue: any) => {
+  const handleUpdateContent = (pathStr: string, newValue: any) => {
     if (!data) return
-    const newData = JSON.parse(JSON.stringify(data))
+    const newData = structuredClone(data)
     const parts = pathStr.split(".")
     let current = newData
     for (let i = 0; i < parts.length - 1; i++) {

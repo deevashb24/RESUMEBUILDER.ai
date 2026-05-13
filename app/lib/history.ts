@@ -65,16 +65,20 @@ export async function saveHistoryEntry(
 }
 
 /**
- * Fetch all history entries for a specific user via API
+ * Fetch all history entries for a specific user — direct Supabase call (no API hop)
  */
 export async function getHistory(userId: string): Promise<HistoryEntry[]> {
   try {
-    const response = await fetch(`/api/history?userId=${userId}`)
-    const result = await response.json()
+    const supabase = createBrowserClient()
+    const { data, error } = await supabase
+      .from("history")
+      .select("id, userId, type, title, jobDescription, createdAt, stats, isUnlocked, unlockedAt, paymentId")
+      .eq("userId", userId)
+      .order("createdAt", { ascending: false })
 
-    if (!response.ok) throw new Error(result.error || "Failed to fetch history")
+    if (error) throw error
 
-    return result.data.map((doc: any) => ({
+    return (data || []).map((doc: any) => ({
       ...doc,
       type: doc.type || "resume",
       title: doc.title || "Untitled",
@@ -88,19 +92,22 @@ export async function getHistory(userId: string): Promise<HistoryEntry[]> {
 }
 
 /**
- * Fetch a single history entry by ID via API
+ * Fetch a single history entry by ID — direct Supabase call (no API hop)
  */
 export async function getHistoryEntry(id: string): Promise<HistoryEntry | null> {
   try {
-    const response = await fetch(`/api/history?id=${id}`)
-    const result = await response.json()
+    const supabase = createBrowserClient()
+    const { data, error } = await supabase
+      .from("history")
+      .select("*")
+      .eq("id", id)
+      .single()
 
-    if (!response.ok) {
-      if (response.status === 404) return null
-      throw new Error(result.error || "Failed to fetch history entry")
+    if (error) {
+      if (error.code === "PGRST116") return null
+      throw error
     }
 
-    const data = result.data
     return {
       ...data,
       type: data.type || "resume",
