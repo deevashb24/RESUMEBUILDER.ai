@@ -31,18 +31,12 @@ export function EditableField({
     ...props
 }: EditableFieldProps & React.HTMLAttributes<HTMLElement> & { href?: string, target?: string }) {
     const [isEditing, setIsEditing] = useState(false)
-    const [currentValue, setCurrentValue] = useState(value)
     const elementRef = useRef<HTMLElement>(null)
-
-    useEffect(() => {
-        setCurrentValue(value)
-    }, [value])
 
     const handleBlur = () => {
         const newValue = elementRef.current?.textContent || ""
         setIsEditing(false)
         if (newValue !== value) {
-            setCurrentValue(newValue)
             onUpdate(newValue)
         }
     }
@@ -84,11 +78,11 @@ export function EditableField({
         }
     }
 
-    const isEmpty = !currentValue || currentValue.trim() === ""
+    const isEmpty = !value || value.trim() === ""
 
     const displayContent = isEditing
-        ? currentValue
-        : (isEmpty ? <span className="print:hidden opacity-70">{placeholder}</span> : (renderCustom || currentValue))
+        ? value
+        : (isEmpty ? <span className="print:hidden opacity-70">{placeholder}</span> : (renderCustom || value))
 
     const href = (Component === "a" && (props as any).href) ? (props as any).href : undefined;
     const target = (Component === "a" && (props as any).target) ? (props as any).target : undefined;

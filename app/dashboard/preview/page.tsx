@@ -60,32 +60,41 @@ function PreviewContent() {
     handlePrint()
   }
 
-  // Save to DB
-  const saveToDatabase = async (dataToSave: any) => {
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Save to DB (Debounced)
+  const saveToDatabase = (dataToSave: any) => {
     if (!id || !user) return
     setAutoSaveStatus("saving")
-    try {
-      if (dataSource === "resume") {
-        const updatePayload: any = { parsedData: dataToSave }
-        if (hasGeneratedContent) {
-          const { data: resumeData } = await supabase.from("resumes").select("generatedContent").eq("id", id).single()
-          if (resumeData?.generatedContent) {
-            updatePayload.generatedContent = { ...resumeData.generatedContent, parsedData: dataToSave }
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        if (dataSource === "resume") {
+          const updatePayload: any = { parsedData: dataToSave }
+          if (hasGeneratedContent) {
+            const { data: resumeData } = await supabase.from("resumes").select("generatedContent").eq("id", id).single()
+            if (resumeData?.generatedContent) {
+              updatePayload.generatedContent = { ...resumeData.generatedContent, parsedData: dataToSave }
+            }
+          }
+          await supabase.from("resumes").update(updatePayload).eq("id", id)
+        } else if (dataSource === "history") {
+          const { data: historySnap } = await supabase.from("history").select("output").eq("id", id).single()
+          if (historySnap?.output) {
+            const jsonOutput = JSON.parse(historySnap.output)
+            if (jsonOutput.parsedData) jsonOutput.parsedData = dataToSave
+            else Object.assign(jsonOutput, dataToSave)
+            await supabase.from("history").update({ output: JSON.stringify(jsonOutput) }).eq("id", id)
           }
         }
-        await supabase.from("resumes").update(updatePayload).eq("id", id)
-      } else if (dataSource === "history") {
-        const { data: historySnap } = await supabase.from("history").select("output").eq("id", id).single()
-        if (historySnap?.output) {
-          const jsonOutput = JSON.parse(historySnap.output)
-          if (jsonOutput.parsedData) jsonOutput.parsedData = dataToSave
-          else Object.assign(jsonOutput, dataToSave)
-          await supabase.from("history").update({ output: JSON.stringify(jsonOutput) }).eq("id", id)
-        }
+        setAutoSaveStatus("saved")
+        setTimeout(() => setAutoSaveStatus("idle"), 3000)
+      } catch {
+        setAutoSaveStatus("idle")
       }
-      setAutoSaveStatus("saved")
-      setTimeout(() => setAutoSaveStatus("idle"), 3000)
-    } catch { setAutoSaveStatus("idle") }
+    }, 1000)
   }
 
   const handleUpdateContent = async (pathStr: string, newValue: any) => {
