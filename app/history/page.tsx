@@ -366,7 +366,7 @@ export default function HistoryPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredHistory.map((item) => {
-                const isItemUnlocked = true // isPremium || !!unlockedGenerations?.includes(item.id)
+                const isItemUnlocked = isPremium || !!unlockedGenerations?.includes(item.id)
                 return (
                   <DocCard key={item.id} item={item} isUnlocked={isItemUnlocked} onUnlock={() => setUnlockId(item.id)} />
                 )
