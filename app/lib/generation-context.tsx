@@ -26,10 +26,16 @@ interface GenerationContextType {
   selectedLayout: string
   setSelectedLayout: (layoutId: string) => void
 
+  // Persistence State
+  isSaved: boolean
+  isSaving: boolean
+  savedHistoryId: string | null
+
   // Actions
   handleFileSelect: (file: File | null) => Promise<void>
   processUpload: () => Promise<void>
   handleGenerate: () => Promise<void>
+  saveToHistory: () => Promise<void>
   resetGeneration: () => void
 }
 
@@ -58,6 +64,13 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
   const [generationStats, setGenerationStats] = useState<any>(null)
   const [resumeIdToView, setResumeIdToView] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Persistence state — tracks whether the finished generation has been committed to History
+  const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedHistoryId, setSavedHistoryId] = useState<string | null>(null)
+  // Store the finished generation payload so saveToHistory can use it without re-generating
+  const [pendingHistoryPayload, setPendingHistoryPayload] = useState<{ type: string; layoutId: string; parsedData: any; jobDescription: string; stats: any } | null>(null)
 
   // --- ACTIONS ---
 
@@ -173,27 +186,16 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         stats = result.stats
       }
 
-      // --- HISTORY SAVING ---
-      const finalHistoryContent = {
+      // Store pending payload — history save is now explicit (user-initiated)
+      setPendingHistoryPayload({
         type: selectedOption,
-        layoutId: selectedLayout, // <--- SAVES SELECTED LAYOUT
+        layoutId: selectedLayout,
         parsedData: generatedData,
         jobDescription,
-        generatedAt: new Date().toISOString(),
-        stats
-      }
-
-      const historyId = await saveHistoryEntry(
-        user.id,
-        selectedOption,
-        jobDescription,
-        JSON.stringify(finalHistoryContent),
-        isPremium
-      )
-
-      if (selectedOption !== 'resume') {
-        finalIdForPreview = historyId
-      }
+        stats,
+      })
+      setIsSaved(false)
+      setSavedHistoryId(null)
 
       setGenerationStats(stats)
       setGenerationFinished(true)
@@ -206,10 +208,42 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /**
+   * Explicitly commit the current finished generation to History (cloud storage).
+   * Called only when the user clicks "Save to History".
+   */
+  const saveToHistory = async () => {
+    if (!user || !pendingHistoryPayload || isSaved || isSaving) return
+    setIsSaving(true)
+    try {
+      const finalHistoryContent = {
+        ...pendingHistoryPayload,
+        generatedAt: new Date().toISOString(),
+      }
+      const historyId = await saveHistoryEntry(
+        user.id,
+        pendingHistoryPayload.type,
+        pendingHistoryPayload.jobDescription,
+        JSON.stringify(finalHistoryContent),
+        isPremium
+      )
+      setSavedHistoryId(historyId)
+      setIsSaved(true)
+    } catch (err: any) {
+      console.error("Failed to save to history:", err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const resetGeneration = () => {
     setGenerationFinished(false)
     setResumeIdToView(null)
     setGenerationStats(null)
+    setIsSaved(false)
+    setIsSaving(false)
+    setSavedHistoryId(null)
+    setPendingHistoryPayload(null)
   }
 
   return (
@@ -224,10 +258,12 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       generationStats,
       resumeIdToView,
       error,
-      selectedLayout, setSelectedLayout, // <--- EXPOSED HERE
+      selectedLayout, setSelectedLayout,
+      isSaved, isSaving, savedHistoryId,
       handleFileSelect,
       processUpload,
       handleGenerate,
+      saveToHistory,
       resetGeneration
     }}>
       {children}

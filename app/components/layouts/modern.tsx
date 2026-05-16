@@ -39,7 +39,7 @@ export function ModernLayout({ data, labels, onUpdate }: LayoutProps) {
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
-        <div className="w-full h-full bg-white flex text-sm font-sans" id="resume-preview">
+        <div className="w-full min-h-full bg-white flex text-sm font-sans" id="resume-preview">
 
             <aside className="w-[30%] bg-slate-900 text-white p-6 flex flex-col gap-6 print:!bg-slate-900 print:!text-white [print-color-adjust:exact]">
                 <div className="flex justify-center mb-2">

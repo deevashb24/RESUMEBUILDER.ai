@@ -16,7 +16,7 @@ export const IITKLayout = ({ data, onUpdate }: { data: ParsedResumeData, onUpdat
     return (
         <>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css" />
-            <div className="iitk-root relative w-full h-full bg-white text-black text-[10pt] leading-[1.15]">
+            <div className="iitk-root relative w-full min-h-full bg-white text-black text-[10pt] leading-[1.15]">
                 <style dangerouslySetInnerHTML={{
                     __html: `
           .iitk-root {

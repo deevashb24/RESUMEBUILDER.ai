@@ -43,6 +43,7 @@ function PreviewContent() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>("design")
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "idle">("idle")
+  const [pageCount, setPageCount] = useState(1)
 
   const componentRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -380,19 +381,43 @@ function PreviewContent() {
             </span>
           </div>
 
-          {/* A4 Paper */}
+          {/* Multi-Page Canvas — grows to accommodate N pages */}
           <div
             ref={componentRef}
-            className="w-full max-w-[794px] bg-white rounded-sm relative group transition-all duration-500"
-            style={{
-              aspectRatio: "1 / 1.414",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
-            }}
+            className="relative"
+            style={{ width: 794 }}
           >
-            <div className="absolute inset-0 pointer-events-none rounded-sm border-2 border-transparent group-hover:border-orange-500/20 transition-colors duration-300 z-10" />
+            {/* Page count badge */}
+            {!isLetter && pageCount > 1 && (
+              <div
+                className="absolute -top-8 right-0 flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-full z-20"
+                style={{ background: "rgba(255,138,0,0.12)", border: "1px solid rgba(255,138,0,0.3)", color: "#ff8a00" }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                {pageCount} pages
+              </div>
+            )}
+
             {isLetter
-              ? <LetterPreview data={data} />
-              : <ResumeRenderer layoutId={selectedLayout} data={data} showWatermark={!isUnlocked} onUpdate={handleUpdateContent} />
+              ? (
+                <div
+                  style={{
+                    width: 794,
+                    minHeight: 1123,
+                    background: "white",
+                    boxShadow: "0 8px 40px rgba(0,0,0,0.55)",
+                  }}
+                >
+                  <LetterPreview data={data} />
+                </div>
+              )
+              : <ResumeRenderer
+                  layoutId={selectedLayout}
+                  data={data}
+                  showWatermark={!isUnlocked}
+                  onUpdate={handleUpdateContent}
+                  onPageCountChange={setPageCount}
+                />
             }
           </div>
 

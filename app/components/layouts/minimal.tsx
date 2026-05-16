@@ -36,7 +36,7 @@ export function MinimalLayout({ data, labels, onUpdate }: LayoutProps) {
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
-        <div className="w-full h-full bg-white p-12 text-gray-800" id="resume-preview">
+        <div className="w-full min-h-full bg-white p-12 text-gray-800" id="resume-preview">
 
             {/* HEADER */}
             <header className="text-center mb-10">

@@ -176,7 +176,20 @@ export default function DashboardPage() {
     generationFinished, processUpload, generationStats,
     resumeIdToView, error, handleFileSelect, handleGenerate,
     selectedLayout, setSelectedLayout,
+    isSaved, isSaving, saveToHistory,
   } = useGeneration()
+
+  // ─── Defensive browser lifecycle guard ────────────────────────────────────
+  // If the user has an unsaved generation, warn them before leaving the page.
+  useEffect(() => {
+    if (!generationFinished || isSaved) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [generationFinished, isSaved])
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/")
@@ -388,7 +401,6 @@ export default function DashboardPage() {
             className="rounded-xl overflow-hidden"
             style={panelStyle}
           >
-            {/* Dark wrapper for the GenerationProgress component */}
             <div className="p-6">
               <div>
                 <GenerationProgress
@@ -399,23 +411,160 @@ export default function DashboardPage() {
               </div>
 
               {generationFinished && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  onClick={handleViewResult}
-                  className="w-full mt-6 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all duration-300 group"
-                  style={{
-                    background: "linear-gradient(135deg, #ff8a00, #ffb77f)",
-                    color: "#000",
-                    boxShadow: "0 0 30px rgba(255,138,0,0.3)",
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  View Your {selectedOption === "sop" ? "SOP" : selectedOption === "cover-letter" ? "Cover Letter" : "Resume"}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-1 transition-transform">
-                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                  </svg>
-                </motion.button>
+                <div className="mt-6 space-y-4">
+
+                  {/* ── Unsaved Warning Banner ─────────────────────── */}
+                  <AnimatePresence>
+                    {!isSaved && (
+                      <motion.div
+                        key="unsaved-banner"
+                        initial={{ opacity: 0, y: -8, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: "auto" }}
+                        exit={{ opacity: 0, y: -8, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-5 py-4 rounded-xl"
+                          style={{
+                            background: "rgba(255,138,0,0.06)",
+                            border: "1px solid rgba(255,138,0,0.25)",
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Pulsing warning dot */}
+                            <div className="relative mt-0.5 flex-shrink-0">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#ff8a00" }} />
+                              <div
+                                className="absolute inset-0 w-2.5 h-2.5 rounded-full animate-ping"
+                                style={{ background: "rgba(255,138,0,0.4)" }}
+                              />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold mb-0.5" style={{ color: "#e1e3e4" }}>
+                                Unsaved Generation Detected
+                              </p>
+                              <p className="text-xs leading-relaxed" style={{ color: "rgba(221,193,174,0.7)" }}>
+                                This document exists only in your temporary session. Save to History to commit it to your cloud dashboard, or it will be permanently lost on the next refresh.
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            id="save-now-inline-btn"
+                            onClick={saveToHistory}
+                            disabled={isSaving}
+                            className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                            style={{
+                              background: isSaving ? "rgba(255,138,0,0.3)" : "rgba(255,138,0,0.15)",
+                              border: "1px solid rgba(255,138,0,0.4)",
+                              color: isSaving ? "rgba(255,183,127,0.5)" : "#ffb77f",
+                              cursor: isSaving ? "not-allowed" : "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {isSaving ? (
+                              <>
+                                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                                Saving…
+                              </>
+                            ) : (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Save Now
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* ── Saved Success Banner ───────────────────────── */}
+                  <AnimatePresence>
+                    {isSaved && (
+                      <motion.div
+                        key="saved-banner"
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="flex items-start gap-3 px-5 py-4 rounded-xl"
+                        style={{
+                          background: "rgba(22,163,74,0.07)",
+                          border: "1px solid rgba(22,163,74,0.25)",
+                        }}
+                      >
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ background: "rgba(22,163,74,0.2)" }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold mb-0.5" style={{ color: "#4ade80" }}>
+                            Committed to Cloud Storage
+                          </p>
+                          <p className="text-xs leading-relaxed" style={{ color: "rgba(74,222,128,0.6)" }}>
+                            Document successfully archived. You can now safely refresh, exit, or access this generation from your History tab at any time.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* ── Action Row ────────────────────────────────── */}
+                  <div className="flex gap-3">
+
+                    {/* Save to History — primary action */}
+                    {!isSaved && (
+                      <button
+                        id="save-to-history-btn"
+                        onClick={saveToHistory}
+                        disabled={isSaving}
+                        className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300"
+                        style={{
+                          background: isSaving ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.07)",
+                          border: isSaving ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.15)",
+                          color: isSaving ? "rgba(225,227,228,0.4)" : "rgba(225,227,228,0.85)",
+                          cursor: isSaving ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {isSaving ? (
+                          <>
+                            <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            Committing to Cloud…
+                          </>
+                        ) : (
+                          <>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save to History
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* View Result — always visible after finish */}
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={handleViewResult}
+                      className={`py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-all duration-300 group ${
+                        isSaved ? "flex-1" : "flex-1"
+                      }`}
+                      style={{
+                        background: "linear-gradient(135deg, #ff8a00, #ffb77f)",
+                        color: "#000",
+                        boxShadow: "0 0 30px rgba(255,138,0,0.3)",
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      View {selectedOption === "sop" ? "SOP" : selectedOption === "cover-letter" ? "Cover Letter" : "Resume"}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-1 transition-transform">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                      </svg>
+                    </motion.button>
+                  </div>
+
+                </div>
               )}
             </div>
           </motion.div>

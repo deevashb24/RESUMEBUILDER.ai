@@ -47,7 +47,7 @@ export function SimpleResumeLayout({ data, labels, onUpdate }: SimpleResumeLayou
   const filterVisible = (items: any[]) => items?.filter(item => item.isVisible !== false) || []
 
   return (
-    <div className="w-full h-full bg-white p-8 text-sm leading-relaxed text-gray-800" id="resume-preview">
+    <div className="w-full min-h-full bg-white p-8 text-sm leading-relaxed text-gray-800" id="resume-preview">
 
       <header className="border-b-2 border-gray-900 pb-6 mb-6 flex items-start justify-between gap-6">
         <div className="flex-1">

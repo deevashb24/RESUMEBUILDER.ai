@@ -38,7 +38,7 @@ export function CreativeLayout({ data, labels, onUpdate }: LayoutProps) {
     const visible = (items: any[]) => items?.filter(i => i.isVisible !== false) || []
 
     return (
-        <div className="w-full h-full bg-slate-50 font-sans text-slate-800 relative" id="resume-preview">
+        <div className="w-full min-h-full bg-slate-50 font-sans text-slate-800 relative" id="resume-preview">
 
             {/* --- BOLD HEADER BANNER --- */}
             <div className="bg-indigo-600 h-48 print:!bg-indigo-600 [print-color-adjust:exact]"></div>
