@@ -211,7 +211,7 @@ export const IITKLayout = ({ data, onUpdate }: { data: ParsedResumeData, onUpdat
                             const dPath = realIndex >= 0 ? `experience.${realIndex}.start` : `layoutOverrides.iitk.professionalExperience.${i}.displayDate`
 
                             return (
-                                <div key={exp.id || i} className="mb-1 iitk-keep-together group/item relative">
+                                <div key={exp.id || i} className="mb-1 iitk-keep-together group/item relative" data-avoid-break="true">
                                     <RemoveItemButton onClick={() => {
                                         if (realIndex >= 0) {
                                             const copy = [...(data.experience || [])];
@@ -328,7 +328,7 @@ export const IITKLayout = ({ data, onUpdate }: { data: ParsedResumeData, onUpdat
                             const sPath = realIndex >= 0 ? `projects.${realIndex}.tech` : `layoutOverrides.iitk.projectsAndWorkshops.${i}.subtitle`
 
                             return (
-                                <div key={proj.id || i} className="mb-1 iitk-keep-together group/item relative">
+                                <div key={proj.id || i} className="mb-1 iitk-keep-together group/item relative" data-avoid-break="true">
                                     <RemoveItemButton onClick={() => {
                                         if (realIndex >= 0) {
                                             const copy = [...(data.projects || [])];
@@ -458,7 +458,7 @@ export const IITKLayout = ({ data, onUpdate }: { data: ParsedResumeData, onUpdat
                     <div className="mb-[2mm]">
                         <SectionHeader title={<EditableField value={data.layoutOverrides?.global?.labels?.responsibility || "Positions of Responsibility"} onUpdate={v => onUpdate?.('layoutOverrides.global.labels.responsibility', v)} as="span" />} />
                         {doc.positionsOfResponsibility.filter(p => p.isVisible !== false).map((pos, i) => (
-                            <div key={pos.id || i} className="mb-[2pt] iitk-keep-together group/item relative">
+                            <div key={pos.id || i} className="mb-[2pt] iitk-keep-together group/item relative" data-avoid-break="true">
                                 <RemoveItemButton onClick={() => {
                                     onUpdate?.(`layoutOverrides.iitk.positionsOfResponsibility.${i}.isVisible`, false);
                                 }} className="top-0 -left-6 right-auto z-10" />

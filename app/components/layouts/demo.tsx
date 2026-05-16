@@ -149,7 +149,7 @@ export function SimpleResumeLayout({ data, labels, onUpdate }: SimpleResumeLayou
               {filterVisible(data.experience).map((exp: any) => {
                 const realIndex = data.experience.indexOf(exp)
                 return (
-                  <div key={exp.id || Math.random()} className="group/item relative">
+                  <div key={exp.id || Math.random()} className="group/item relative" data-avoid-break="true">
                     <RemoveItemButton onClick={() => {
                       const copy = [...data.experience];
                       copy.splice(realIndex, 1);
@@ -229,7 +229,7 @@ export function SimpleResumeLayout({ data, labels, onUpdate }: SimpleResumeLayou
               {filterVisible(data.projects).map((proj: any) => {
                 const realIndex = data.projects.indexOf(proj)
                 return (
-                  <div key={proj.id || Math.random()} className="group/item relative">
+                  <div key={proj.id || Math.random()} className="group/item relative" data-avoid-break="true">
                     <RemoveItemButton onClick={() => {
                       const copy = [...data.projects];
                       copy.splice(realIndex, 1);
@@ -307,7 +307,7 @@ export function SimpleResumeLayout({ data, labels, onUpdate }: SimpleResumeLayou
               {filterVisible(data.education).map((edu: any) => {
                 const realIndex = data.education.indexOf(edu)
                 return (
-                  <div key={edu.id || Math.random()} className="flex justify-between gap-4 group/item relative pr-8">
+                  <div key={edu.id || Math.random()} className="flex justify-between gap-4 group/item relative pr-8" data-avoid-break="true">
                     <RemoveItemButton onClick={() => {
                       const copy = [...data.education];
                       copy.splice(realIndex, 1);

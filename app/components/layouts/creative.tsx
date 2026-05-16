@@ -107,7 +107,7 @@ export function CreativeLayout({ data, labels, onUpdate }: LayoutProps) {
                                     {visible(data.experience).map((exp: any) => {
                                         const realIndex = data.experience.indexOf(exp)
                                         return (
-                                            <div key={exp.id || Math.random()} className="relative pl-12 group/item pr-8">
+                                            <div key={exp.id || Math.random()} className="relative pl-12 group/item pr-8" data-avoid-break="true">
                                                 <RemoveItemButton onClick={() => {
                                                     const copy = [...data.experience];
                                                     copy.splice(realIndex, 1);
@@ -275,7 +275,7 @@ export function CreativeLayout({ data, labels, onUpdate }: LayoutProps) {
                                     {visible(data.projects).map((proj: any) => {
                                         const realIndex = data.projects.indexOf(proj)
                                         return (
-                                            <div key={proj.id || Math.random()} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative group/item">
+                                            <div key={proj.id || Math.random()} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative group/item" data-avoid-break="true">
                                                 <RemoveItemButton onClick={() => {
                                                     const copy = [...data.projects];
                                                     copy.splice(realIndex, 1);

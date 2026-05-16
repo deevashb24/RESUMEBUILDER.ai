@@ -261,7 +261,45 @@
     overflow: hidden !important;
     page-break-after: avoid !important;
   }
+  /* ── Page-break isolation ────────────────────────────────────────────────
+     Applied to ALL atomic resume blocks (experience, project, education, etc.)
+     via the data-avoid-break attribute set on each entry in the layout components.
+     Prevents the browser's print engine from slicing a block across a page gap.
+  ──────────────────────────────────────────────────────────────────────────── */
+  [data-avoid-break="true"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* ── Typography safeguards ────────────────────────────────────────────────
+     Widow/orphan protection: never leave fewer than 2 lines of text alone
+     at the top or bottom of a page when a paragraph is split.
+  ──────────────────────────────────────────────────────────────────────────── */
+  p,
+  li,
+  .text-gray-700,
+  .text-slate-600,
+  .text-gray-800 {
+    widows: 2;
+    orphans: 2;
+  }
+
+  /* Section headings should always stay with the first item below them */
+  h2, h3 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
 }
+
+/* ── Screen: avoid-break elements also avoid visual clipping ──────────────
+   The JS pagination engine handles smart offsets for the screen preview,
+   but these rules are a safety net for any element that escapes detection.
+──────────────────────────────────────────────────────────────────────────── */
+[data-avoid-break="true"] {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 
 /* Screen Preview Helpers */
 .a4-page-container {

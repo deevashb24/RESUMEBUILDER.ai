@@ -184,7 +184,7 @@ export function ModernLayout({ data, labels, onUpdate }: LayoutProps) {
                                     {visible(data.experience).map((exp: any) => {
                                         const realIndex = data.experience.indexOf(exp)
                                         return (
-                                            <div key={exp.id || Math.random()} className="relative group/item pr-8">
+                                            <div key={exp.id || Math.random()} className="relative group/item pr-8" data-avoid-break="true">
                                                 <RemoveItemButton onClick={() => {
                                                     const copy = [...data.experience];
                                                     copy.splice(realIndex, 1);
