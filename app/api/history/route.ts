@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/utils/supabase/admin"
 
+export const dynamic = "force-dynamic"
+
+
 /**
  * POST /api/history
  * Saves a history entry using the service_role admin client,
