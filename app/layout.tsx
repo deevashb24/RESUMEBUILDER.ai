@@ -108,16 +108,11 @@ export default function RootLayout({
           appearance={{
             baseTheme: dark,
             variables: {
-              colorPrimary: "#ff8a00", // The vibrant orange brand color
-              colorBackground: "#0f172a", // Slate 900 for dark panels
-              colorInputBackground: "#1e293b", // Slate 800 for inputs
-              colorTextOnPrimaryBackground: "#ffffff",
-              colorText: "#f8fafc",
-            },
-            elements: {
-              card: "border border-slate-800 shadow-2xl shadow-orange-900/20",
-              formButtonPrimary: "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md",
-              userPreviewSecondaryIdentifier: "text-slate-400",
+              colorPrimary: "#ff8a00",
+              colorBackground: "#0f172a",
+              colorInput: "#1e293b",
+              colorPrimaryForeground: "#ffffff",
+              colorForeground: "#f8fafc",
             }
           }}
         >
