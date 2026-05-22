@@ -108,10 +108,12 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         theme: { color: "#000000" },
         modal: { ondismiss: function () { setLoading(null) } },
         handler: function (response: any) {
-          alert("Payment successful! Your document will be unlocked momentarily.");
+          alert("Payment successful! Your document is being securely unlocked. The page will refresh in a few seconds.");
           setLoading(null);
           onClose();
-          window.location.reload();
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
         }
       }
 
