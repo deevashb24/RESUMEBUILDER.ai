@@ -18,7 +18,7 @@ export default function ContactPage() {
       <h2>Email Support</h2>
       <p>
         For general inquiries, billing questions, or technical issues, reach us at{" "}
-        <a href="mailto:support@resumebuilder.ai">support@resumebuilder.ai</a>.
+        <a href="mailto:help.resumebuilder.ai@gmail.com">help.resumebuilder.ai@gmail.com</a>.
       </p>
 
       <h2>What to Include</h2>

@@ -66,8 +66,8 @@ export function Footer() {
                     <div>
                         <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">{t.footer.contact}</h3>
                         <p className="text-sm text-muted-foreground mb-4">Questions? We're here to help.</p>
-                        <a href="mailto:support@resumebuilder.ai" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
-                            support@resumebuilder.ai
+                        <a href="mailto:help.resumebuilder.ai@gmail.com" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+                            help.resumebuilder.ai@gmail.com
                         </a>
                     </div>
                 </div>

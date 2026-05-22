@@ -46,7 +46,7 @@ export default function RefundPolicyPage() {
 
             <h2>5. Contact Us for Refunds</h2>
             <p>
-                To request a refund or if you have any questions regarding this policy, please contact us at <a href="mailto:support@resumebuilder.ai">support@resumebuilder.ai</a>.
+                To request a refund or if you have any questions regarding this policy, please contact us at <a href="mailto:help.resumebuilder.ai@gmail.com">help.resumebuilder.ai@gmail.com</a>.
             </p>
         </>
     )

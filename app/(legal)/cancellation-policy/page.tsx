@@ -50,7 +50,7 @@ export default function CancellationPolicyPage() {
 
             <h2>6. Contact Us</h2>
             <p>
-                If you experience any issues canceling your subscription or have further questions, please contact our support team at <a href="mailto:support@resumebuilder.ai">support@resumebuilder.ai</a>.
+                If you experience any issues canceling your subscription or have further questions, please contact our support team at <a href="mailto:help.resumebuilder.ai@gmail.com">help.resumebuilder.ai@gmail.com</a>.
             </p>
         </>
     )

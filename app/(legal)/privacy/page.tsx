@@ -55,7 +55,7 @@ export default function PrivacyPage() {
 
             <h2>6. Contact Us</h2>
             <p>
-                If you have questions about this policy, please contact us at <a href="mailto:support@resumebuilder.ai">support@resumebuilder.ai</a>.
+                If you have questions about this policy, please contact us at <a href="mailto:help.resumebuilder.ai@gmail.com">help.resumebuilder.ai@gmail.com</a>.
             </p>
         </>
     )
