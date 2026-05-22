@@ -4,9 +4,10 @@ import React, { useEffect, useRef, useState } from "react"
 
 interface AutoScaleWrapperProps {
     children: React.ReactNode
+    onScaleChange?: (scale: number) => void
 }
 
-export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
+export function AutoScaleWrapper({ children, onScaleChange }: AutoScaleWrapperProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const [scale, setScale] = useState(1)
@@ -24,9 +25,12 @@ export function AutoScaleWrapper({ children }: AutoScaleWrapperProps) {
                 const newScale = containerHeight / contentHeight
                 // INCREASED BUFFER: 0.96 (4% margin) ensures it fits comfortably without 
                 // touching the exact pixel edge, preventing "Double Page" glitch.
-                setScale(newScale * 0.96)
+                const finalScale = newScale * 0.96
+                setScale(finalScale)
+                onScaleChange?.(finalScale)
             } else {
                 setScale(1)
+                onScaleChange?.(1)
             }
         }
 

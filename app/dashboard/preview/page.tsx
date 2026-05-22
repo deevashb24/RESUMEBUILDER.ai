@@ -45,6 +45,31 @@ function PreviewContent() {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "idle">("idle")
   const [pageCount, setPageCount] = useState(1)
 
+  const [pageMode, setPageMode] = useState<"single" | "multi">("single")
+  const [scale, setScale] = useState(1)
+  const [dismissedPageModeSuggestion, setDismissedPageModeSuggestion] = useState(false)
+
+  // Load pageMode from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && id) {
+      const saved = localStorage.getItem(`pageMode_${id}`)
+      if (saved === "single" || saved === "multi") {
+        setPageMode(saved)
+      }
+    }
+  }, [id])
+
+  const handlePageModeToggle = (mode: "single" | "multi") => {
+    setPageMode(mode)
+    if (typeof window !== "undefined" && id) {
+      localStorage.setItem(`pageMode_${id}`, mode)
+    }
+    // Reset dismiss state so they see recommendations if they overflow again
+    if (mode === "single") {
+      setDismissedPageModeSuggestion(false)
+    }
+  }
+
   const componentRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -328,7 +353,7 @@ function PreviewContent() {
                         <button
                           key={opt.id}
                           onClick={() => setSelectedLayout(opt.id)}
-                          className="aspect-video rounded-lg flex flex-col items-center justify-center gap-1 transition-all text-xs font-medium"
+                          className="aspect-video rounded-lg flex flex-col items-center justify-center gap-1 transition-all text-xs font-medium cursor-pointer"
                           style={{
                             background: selectedLayout === opt.id ? "rgba(255,138,0,0.12)" : "rgba(255,255,255,0.04)",
                             border: selectedLayout === opt.id ? "1px solid #ff8a00" : "1px solid rgba(255,255,255,0.08)",
@@ -339,6 +364,52 @@ function PreviewContent() {
                           <span className="text-[9px]" style={{ color: "rgba(225,227,228,0.3)" }}>{opt.desc}</span>
                         </button>
                       ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Pagination Mode (resume only) */}
+                {!isLetter && (
+                  <section className="space-y-3">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "rgba(221,193,174,0.6)" }}>Pagination Mode</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      <button
+                        onClick={() => handlePageModeToggle("single")}
+                        className="p-3 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer"
+                        style={{
+                          background: pageMode === "single" ? "rgba(255,138,0,0.08)" : "rgba(255,255,255,0.02)",
+                          border: pageMode === "single" ? "1px solid rgba(255,138,0,0.4)" : "1px solid rgba(255,255,255,0.05)",
+                          boxShadow: pageMode === "single" ? "0 0 15px rgba(255,138,0,0.05)" : "none"
+                        }}
+                      >
+                        <div className="p-2 rounded-lg" style={{ background: pageMode === "single" ? "rgba(255,138,0,0.15)" : "rgba(255,255,255,0.04)", color: pageMode === "single" ? "#ff8a00" : "rgba(225,227,228,0.4)" }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/></svg>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold" style={{ color: pageMode === "single" ? "#ff8a00" : "#e1e3e4" }}>Single Page</div>
+                          <div className="text-[9px]" style={{ color: "rgba(225,227,228,0.4)" }}>Scales and shrinks contents to fit on a single A4</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handlePageModeToggle("multi")}
+                        className="p-3 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer"
+                        style={{
+                          background: pageMode === "multi" ? "rgba(255,138,0,0.08)" : "rgba(255,255,255,0.02)",
+                          border: pageMode === "multi" ? "1px solid rgba(255,138,0,0.4)" : "1px solid rgba(255,255,255,0.05)",
+                          boxShadow: pageMode === "multi" ? "0 0 15px rgba(255,138,0,0.05)" : "none"
+                        }}
+                      >
+                        <div className="p-2 rounded-lg" style={{ background: pageMode === "multi" ? "rgba(255,138,0,0.15)" : "rgba(255,255,255,0.04)", color: pageMode === "multi" ? "#ff8a00" : "rgba(225,227,228,0.4)" }}>
+                          <div className="flex gap-0.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="12" height="16" rx="1"/></svg>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold" style={{ color: pageMode === "multi" ? "#ff8a00" : "#e1e3e4" }}>Multi-page (Smart Pagination)</div>
+                          <div className="text-[9px]" style={{ color: "rgba(225,227,228,0.4)" }}>Flows naturally across multiple sheets without scaling</div>
+                        </div>
+                      </button>
                     </div>
                   </section>
                 )}
@@ -381,6 +452,53 @@ function PreviewContent() {
             </span>
           </div>
 
+          {/* Page Mode Overflow Suggestion Notification */}
+          {!isLetter && pageMode === "single" && scale < 0.99 && !dismissedPageModeSuggestion && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-[794px] mb-6 p-4 rounded-2xl flex items-center justify-between gap-4 text-sm relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(255, 138, 0, 0.08) 0%, rgba(255, 183, 127, 0.03) 100%)",
+                border: "1px solid rgba(255, 138, 0, 0.25)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(8px)"
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl flex-shrink-0 mt-0.5">💡</span>
+                <div>
+                  <h4 className="font-bold text-[#ff8a00] mb-0.5">Multi-page layout suggested</h4>
+                  <p className="text-[12px] leading-relaxed text-[#e1e3e4]/80">
+                    Your content has exceeded a single page. We've automatically scaled text sizes down to fit, but it may look compressed when printed. Switch to Multi-page Mode for a full-size, elegant multi-page layout.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => handlePageModeToggle("multi")}
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-[#ff8a00] text-[#000] hover:scale-105"
+                  style={{
+                    boxShadow: "0 0 12px rgba(255, 138, 0, 0.3)"
+                  }}
+                >
+                  Switch to Multi-page
+                </button>
+                <button
+                  onClick={() => setDismissedPageModeSuggestion(true)}
+                  className="p-1.5 rounded-md hover:bg-white/5 transition-all text-gray-400 hover:text-white cursor-pointer"
+                  title="Dismiss suggestion"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {/* Multi-Page Canvas — grows to accommodate N pages */}
           <div
             ref={componentRef}
@@ -417,6 +535,8 @@ function PreviewContent() {
                   showWatermark={!isUnlocked}
                   onUpdate={handleUpdateContent}
                   onPageCountChange={setPageCount}
+                  pageMode={pageMode}
+                  onScaleChange={setScale}
                 />
             }
           </div>
