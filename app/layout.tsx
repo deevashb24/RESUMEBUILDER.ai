@@ -35,14 +35,8 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" }, 
-      { url: "/favicon.png", type: "image/png", sizes: "96x96" },
-    ],
-    apple: [
-      { url: "/favicon.png", sizes: "180x180", type: "image/png" },
-    ],
+  appleWebApp: {
+    title: "RESUME",
   },
   
   openGraph: {
