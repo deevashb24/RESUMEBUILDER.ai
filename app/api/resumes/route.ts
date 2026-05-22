@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/utils/supabase/admin"
+import { auth } from "@clerk/nextjs/server"
 
 /**
  * POST /api/resumes
@@ -7,10 +8,15 @@ import { createAdminClient } from "@/utils/supabase/admin"
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { userId, parsedData, fileUrl, filePath, layoutId, name } = body
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    if (!userId || !parsedData) {
+    const body = await request.json()
+    const { parsedData, fileUrl, filePath, layoutId, name } = body
+
+    if (!parsedData) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -50,8 +56,13 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
-    const { id, ...updates } = body
+    const { id, userId: _ignoredUserId, ...updates } = body
 
     if (!id) {
       return NextResponse.json({ error: "Resume ID is required" }, { status: 400 })
@@ -66,6 +77,7 @@ export async function PATCH(request: NextRequest) {
         updatedAt: new Date().toISOString()
       })
       .eq('id', id)
+      .eq('userId', userId) // SECURITY FIX: Ensure the user owns this resume
 
     if (error) {
       console.error("Resumes update error:", error)
@@ -85,6 +97,11 @@ export async function PATCH(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -98,6 +115,7 @@ export async function GET(request: NextRequest) {
       .from('resumes')
       .select('*')
       .eq('id', id)
+      .eq('userId', userId) // SECURITY FIX: Enforce ownership
       .single()
 
     if (error) {
@@ -119,6 +137,11 @@ export async function GET(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -132,6 +155,7 @@ export async function DELETE(request: NextRequest) {
       .from('resumes')
       .delete()
       .eq('id', id)
+      .eq('userId', userId) // SECURITY FIX: Enforce ownership
 
     if (error) {
       console.error("Resumes delete error:", error)

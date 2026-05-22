@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createCheckout } from "@lemonsqueezy/lemonsqueezy.js"
 import { configureLemonSqueezy } from "@/lib/lemonsqueezy"
+import { auth } from "@clerk/nextjs/server"
 
 export async function POST(request: NextRequest) {
   configureLemonSqueezy()
 
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
-    const { userId, userEmail, variantId, redirectUrl, generationId } = body 
+    const { userEmail, variantId, redirectUrl, generationId } = body 
 
     const finalVariantId = variantId || process.env.LEMONSQUEEZY_VARIANT_ID;
 

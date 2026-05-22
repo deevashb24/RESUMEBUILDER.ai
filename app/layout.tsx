@@ -20,8 +20,55 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://resumebuilderai.in"),
-  title: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
-  description: "Create tailored resumes, cover letters, and SOPs in minutes using AI that understands job descriptions and professional formatting.",
+  title: {
+    default: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
+    template: "%s | ResumeBuilder.ai"
+  },
+  description: "Create tailored, ATS-friendly resumes, cover letters, and SOPs in minutes. Our AI understands job descriptions and formats your experience to land you interviews.",
+  applicationName: "ResumeBuilder.ai",
+  keywords: ["AI resume builder", "ATS resume", "job winning resume", "cover letter generator", "resume maker", "resume optimization"],
+  authors: [{ name: "ResumeBuilder.ai Team" }],
+  creator: "ResumeBuilder.ai",
+  publisher: "ResumeBuilder.ai",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
+    description: "Create tailored, ATS-friendly resumes, cover letters, and SOPs in minutes. Leverage AI to optimize your profile and land interviews.",
+    url: "https://resumebuilderai.in",
+    siteName: "ResumeBuilder.ai",
+    images: [
+      {
+        url: "/og-image.jpg", // The user will need to add this image
+        width: 1200,
+        height: 630,
+        alt: "ResumeBuilder.ai Platform Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ResumeBuilder.ai - Build Job-Winning Resumes",
+    description: "Create tailored, ATS-friendly resumes, cover letters, and SOPs in minutes using AI.",
+    images: ["/og-image.jpg"],
+    creator: "@resumebuilderai",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 }
 
 export default function RootLayout({
@@ -29,11 +76,30 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ResumeBuilder.ai",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Create tailored, ATS-friendly resumes, cover letters, and SOPs in minutes using AI.",
+    "url": "https://resumebuilderai.in"
+  };
+
   return (
     <html lang="en">
       <head>
         <link rel="prefetch" href="/dashboard" />
         <link rel="prefetch" href="/history" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>

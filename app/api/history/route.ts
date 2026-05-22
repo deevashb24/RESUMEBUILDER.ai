@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/utils/supabase/admin"
+import { auth } from "@clerk/nextjs/server"
 
 export const dynamic = "force-dynamic"
 
@@ -7,16 +8,19 @@ export const dynamic = "force-dynamic"
 /**
  * POST /api/history
  * Saves a history entry using the service_role admin client,
- * which bypasses RLS entirely — no auth session required on the DB side.
- * The userId is passed in the body and must come from a verified Clerk session
- * on the client side.
+ * now properly authenticated with Clerk server-side.
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { userId, type, title, jobDescription, output, isUnlocked } = body
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    if (!userId || !output) {
+    const body = await request.json()
+    const { type, title, jobDescription, output, isUnlocked } = body
+
+    if (!output) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -51,13 +55,18 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/history?userId=xxx
- * Fetches all history for a user using the admin client (bypasses RLS).
+ * GET /api/history?id=xxx
+ * Fetches all history for a user using the admin client (bypasses RLS),
+ * now properly authenticated with Clerk server-side to prevent unauthorized access.
  */
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
     const id = searchParams.get("id")
 
     const supabase = createAdminClient()
@@ -67,6 +76,7 @@ export async function GET(request: NextRequest) {
         .from("history")
         .select("*")
         .eq("id", id)
+        .eq("userId", userId) // SECURITY FIX: Enforce ownership
         .single()
 
       if (error) {
@@ -77,14 +87,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data })
     }
 
-    if (!userId) {
-      return NextResponse.json({ error: "userId is required" }, { status: 400 })
-    }
-
     const { data, error } = await supabase
       .from("history")
       .select("*")
-      .eq("userId", userId)
+      .eq("userId", userId) // Ensure it only gets the logged-in user's history
       .order("createdAt", { ascending: false })
 
     if (error) {

@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/utils/supabase/admin"
+import { auth } from "@clerk/nextjs/server"
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const formData = await request.formData()
     const file = formData.get("file") as File
-    const userId = formData.get("userId") as string
+    // Ignore userId from client, use the verified one
 
-    if (!file || !userId) {
-      return NextResponse.json({ error: "Missing file or userId" }, { status: 400 })
+    if (!file) {
+      return NextResponse.json({ error: "Missing file" }, { status: 400 })
     }
 
     const supabase = createAdminClient()
@@ -49,11 +55,21 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const path = searchParams.get("path")
 
     if (!path) {
       return NextResponse.json({ error: "Path is required" }, { status: 400 })
+    }
+
+    // SECURITY FIX: Ensure the user is only deleting their own files
+    if (!path.startsWith(`resumes/${userId}/`)) {
+      return NextResponse.json({ error: "Forbidden: You do not have permission to delete this file" }, { status: 403 })
     }
 
     const supabase = createAdminClient()

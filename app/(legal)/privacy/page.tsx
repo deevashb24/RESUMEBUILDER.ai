@@ -1,4 +1,10 @@
 import Link from "next/link"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Learn how ResumeBuilder.ai collects, uses, and protects your personal data and resume information.",
+}
 
 export default function PrivacyPage() {
     const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })

@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/dashboard/', '/login/'],
+      disallow: ['/api/', '/dashboard/', '/history/', '/auth-js-test/'],
     },
     sitemap: 'https://resumebuilderai.in/sitemap.xml',
   }

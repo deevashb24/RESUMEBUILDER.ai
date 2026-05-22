@@ -4,6 +4,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateId } from "@/lib/resume"
 import pdf from "pdf-parse"
 import mammoth from "mammoth"
+import { auth } from "@clerk/nextjs/server"
 
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
@@ -12,6 +13,11 @@ const groq = createOpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     // 1. Handle FormData (File Upload) - FIX: Read FormData, not JSON
     const formData = await request.formData()
     const file = formData.get("file") as File

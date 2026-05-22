@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import ReactDOM from "react-dom"
 import { SignInButton } from "@clerk/nextjs"
 import Link from "next/link"
 import {
@@ -10,6 +11,8 @@ import {
 } from "lucide-react"
 
 export default function ResumeBuilderLanding({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+  ReactDOM.preload('/bg-hero.jpg', { as: 'image' })
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [typedText, setTypedText] = useState("")
   const [showStickyCTA, setShowStickyCTA] = useState(false)

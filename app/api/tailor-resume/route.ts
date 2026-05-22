@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { ParsedResumeData } from "@/lib/resume"
+import { auth } from "@clerk/nextjs/server"
 
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
@@ -10,6 +11,11 @@ const groq = createOpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { resumeData, jobDescription } = await request.json()
 
     if (!resumeData || !jobDescription) {

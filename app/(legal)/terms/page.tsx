@@ -1,4 +1,10 @@
 import Link from "next/link"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Read the terms and conditions for using ResumeBuilder.ai's platform, subscriptions, and AI document generation services.",
+}
 
 export default function TermsPage() {
     const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })

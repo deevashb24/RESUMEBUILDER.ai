@@ -1,3 +1,10 @@
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Cancellation Policy",
+  description: "Learn how to manage or cancel your ResumeBuilder.ai subscription and understand the billing cycle implications.",
+}
+
 export default function CancellationPolicyPage() {
     const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 

@@ -1,3 +1,10 @@
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  description: "Review ResumeBuilder.ai's refund policy for one-time purchases and premium subscriptions.",
+}
+
 export default function RefundPolicyPage() {
     const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
