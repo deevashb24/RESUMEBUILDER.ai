@@ -3,29 +3,29 @@ import { ArrowLeft } from "lucide-react"
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-[#020617] text-white min-h-screen font-sans">
+    <div className="bg-[#0c0f10] text-[#e1e3e4] min-h-screen font-sans">
       {/* Subtle gradient top bar */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-[#ff8a00]/40 to-transparent" />
 
-      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <div className="max-w-3xl mx-auto px-6 py-12 md:py-20">
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-400 transition-colors mb-10 group px-4 py-2 -ml-4 rounded-lg hover:bg-white/5"
+          className="inline-flex items-center gap-2 text-[rgba(221,193,174,0.5)] hover:text-[#ff8a00] transition-colors mb-10 group px-4 py-2 -ml-4 rounded-lg hover:bg-white/5"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium">Back to Home</span>
         </Link>
 
         <article className="
-          prose prose-invert prose-lg max-w-none
-          prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-white
-          prose-h1:text-4xl prose-h1:mb-8
-          prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-blue-400
-          prose-p:text-slate-400 prose-p:leading-relaxed prose-p:mb-5
-          prose-li:text-slate-400 prose-li:marker:text-blue-500/50
-          prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
-          prose-strong:text-slate-200
+          [&>h1]:text-4xl [&>h1]:md:text-5xl [&>h1]:font-black [&>h1]:text-[#e1e3e4] [&>h1]:mb-6 [&>h1]:tracking-tight
+          [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-[#ff8a00] [&>h2]:mt-14 [&>h2]:mb-5 [&>h2]:border-b [&>h2]:border-white/10 [&>h2]:pb-2
+          [&>h3]:text-xl [&>h3]:font-bold [&>h3]:text-[#ffb77f] [&>h3]:mt-8 [&>h3]:mb-3
+          [&>p]:text-[16px] [&>p]:md:text-[17px] [&>p]:text-[rgba(221,193,174,0.7)] [&>p]:leading-relaxed [&>p]:mb-6
+          [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-8 [&>ul]:space-y-3 [&>ul>li]:text-[16px] [&>ul>li]:md:text-[17px] [&>ul>li]:text-[rgba(221,193,174,0.7)] [&>ul>li]:leading-relaxed
+          [&>ul>li::marker]:text-[#ff8a00]
+          [&>a]:text-[#ffb77f] [&>a]:underline [&>a]:underline-offset-4 [&>a]:hover:text-[#ff8a00] [&>a]:transition-colors
+          [&>strong]:text-[#e1e3e4] [&>strong]:font-semibold
         ">
           {children}
         </article>
@@ -33,8 +33,10 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Mini footer */}
-      <div className="border-t border-white/5 py-6 text-center">
-        <span className="text-xs text-slate-600">© {new Date().getFullYear()} ResumeBuilder.ai</span>
+      <div className="border-t border-[rgba(255,255,255,0.05)] py-8 mt-12 text-center bg-black/20">
+        <span className="text-xs font-medium tracking-widest uppercase text-[rgba(221,193,174,0.4)]">
+          © {new Date().getFullYear()} ResumeBuilder.ai
+        </span>
       </div>
     </div>
   )
