@@ -109,10 +109,10 @@ export default function RootLayout({
             baseTheme: dark,
             variables: {
               colorPrimary: "#ff8a00",
-              colorBackground: "#0f172a",
-              colorInput: "#1e293b",
-              colorPrimaryForeground: "#ffffff",
-              colorForeground: "#f8fafc",
+              colorBackground: "#0c0f10",
+              colorInput: "#161a1d",
+              colorPrimaryForeground: "#000000",
+              colorForeground: "#e1e3e4",
             }
           }}
         >
