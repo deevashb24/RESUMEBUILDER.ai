@@ -5,8 +5,10 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/privacy",
   "/terms",
-  "/refund",
-  "/cancellation",
+  "/cookies",
+  "/contact",
+  "/refund-policy",
+  "/cancellation-policy",
   "/api/webhook",
   "/api/razorpay/webhook"
 ]);
