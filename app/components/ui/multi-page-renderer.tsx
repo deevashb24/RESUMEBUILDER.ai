@@ -16,6 +16,8 @@ const ORPHAN_SAFE_ZONE_PX = 72 // ≈ 6 lines
 interface PageSlice {
   /** Y coordinate (inside the full content column) where this page's viewport starts */
   startY: number
+  /** Y coordinate where this page was cut off by an avoid-break element */
+  endY?: number
 }
 
 interface MultiPageRendererProps {
@@ -93,10 +95,13 @@ export function MultiPageRenderer({ children, onPageCountChange }: MultiPageRend
     let currentStart = 0
 
     while (currentStart < h) {
-      slices.push({ startY: currentStart })
+      const sliceStart = currentStart
 
       const naturalBreak = currentStart + A4_HEIGHT_PX
-      if (naturalBreak >= h) break // last (possibly partial) page — we're done
+      if (naturalBreak >= h) {
+        slices.push({ startY: sliceStart, endY: h })
+        break
+      }
 
       // Find the earliest position an avoid-break element forces us to break
       let adjustedBreak = naturalBreak
@@ -126,6 +131,7 @@ export function MultiPageRenderer({ children, onPageCountChange }: MultiPageRend
         adjustedBreak = naturalBreak
       }
 
+      slices.push({ startY: sliceStart, endY: adjustedBreak })
       currentStart = adjustedBreak
     }
 
@@ -213,6 +219,22 @@ export function MultiPageRenderer({ children, onPageCountChange }: MultiPageRend
             >
               {children}
             </div>
+
+            {/* White overlay mask to hide overlapping content pushed to the next page */}
+            {slice.endY !== undefined && slice.endY - slice.startY < A4_HEIGHT_PX && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: A4_HEIGHT_PX - (slice.endY - slice.startY),
+                  backgroundColor: "white",
+                  zIndex: 50,
+                  pointerEvents: "none"
+                }}
+              />
+            )}
           </div>
         ))}
 
