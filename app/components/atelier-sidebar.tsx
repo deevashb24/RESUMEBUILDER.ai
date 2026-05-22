@@ -34,7 +34,7 @@ export function AtelierSidebar() {
   const { user, isPremium, subscription } = useAuth()
   const { t } = useLanguage()
   const pathname = usePathname()
-  const { openUserProfile } = useClerk()
+  const { openUserProfile, signOut } = useClerk()
   const [showPricing, setShowPricing] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -139,81 +139,95 @@ export function AtelierSidebar() {
             </div>
           )}
 
-          {/* User Card — click anywhere to open profile */}
-          <button
-            onClick={() => openUserProfile()}
-            className="glass-panel p-4 rounded-xl flex items-center gap-3 relative overflow-hidden w-full text-left group transition-all duration-200 hover:border-orange-500/30"
-            style={{ cursor: "pointer" }}
-          >
-            {/* Ambient glow */}
-            <div
-              className="absolute -top-8 -right-8 w-20 h-20 rounded-full blur-[40px] pointer-events-none"
-              style={{ background: "#ff8a00", opacity: 0.12 }}
-            />
-            {/* Hover overlay */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: "rgba(255,138,0,0.04)" }} />
+          {/* User Profile and Actions */}
+          <div className="flex flex-col gap-2">
+            {/* User Card — click anywhere to open profile */}
+            <button
+              onClick={() => openUserProfile()}
+              className="glass-panel p-4 rounded-xl flex items-center gap-3 relative overflow-hidden w-full text-left group transition-all duration-200 hover:border-orange-500/30"
+              style={{ cursor: "pointer" }}
+            >
+              {/* Ambient glow */}
+              <div
+                className="absolute -top-8 -right-8 w-20 h-20 rounded-full blur-[40px] pointer-events-none"
+                style={{ background: "#ff8a00", opacity: 0.12 }}
+              />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: "rgba(255,138,0,0.04)" }} />
 
-            {/* Single Avatar */}
-            <div className="relative flex-shrink-0">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={userName}
-                  className="w-10 h-10 rounded-full object-cover border"
-                  style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                />
-              ) : (
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border"
-                  style={{
-                    background: "linear-gradient(135deg, #ff8a00, #ffb77f)",
-                    color: "#000",
-                    borderColor: "rgba(255,255,255,0.2)",
-                  }}
-                >
-                  {userName[0]?.toUpperCase()}
-                </div>
-              )}
-              {isPremium && (
-                <div
-                  className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ background: "#ff8a00" }}
-                >
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="#000">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                  </svg>
-                </div>
-              )}
-            </div>
+              {/* Single Avatar */}
+              <div className="relative flex-shrink-0">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={userName}
+                    className="w-10 h-10 rounded-full object-cover border"
+                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
+                  />
+                ) : (
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border"
+                    style={{
+                      background: "linear-gradient(135deg, #ff8a00, #ffb77f)",
+                      color: "#000",
+                      borderColor: "rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    {userName[0]?.toUpperCase()}
+                  </div>
+                )}
+                {isPremium && (
+                  <div
+                    className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: "#ff8a00" }}
+                  >
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="#000">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
 
-            {/* Name + Plan + Date */}
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-semibold text-sm leading-tight truncate" style={{ color: "#e1e3e4" }}>
-                {userName}
-              </span>
-              <span
-                className="text-[11px] font-bold tracking-[0.1em] uppercase mt-0.5"
-                style={{ color: isPremium ? "#ff8a00" : "rgba(221,193,174,0.6)" }}
-              >
-                {isPremium ? "Premium" : "Free Plan"}
-              </span>
-              {isPremium && subscription?.periodEnd && (
-                <span className="text-[10px] mt-0.5" style={{ color: "rgba(221,193,174,0.45)" }}>
-                  Renews {new Date(subscription.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              {/* Name + Plan + Date */}
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="font-semibold text-sm leading-tight truncate" style={{ color: "#e1e3e4" }}>
+                  {userName}
                 </span>
-              )}
-              {!isPremium && (
-                <span className="text-[10px] mt-0.5" style={{ color: "rgba(221,193,174,0.35)" }}>
-                  Click to manage account
+                <span
+                  className="text-[11px] font-bold tracking-[0.1em] uppercase mt-0.5"
+                  style={{ color: isPremium ? "#ff8a00" : "rgba(221,193,174,0.6)" }}
+                >
+                  {isPremium ? "Premium" : "Free Plan"}
                 </span>
-              )}
-            </div>
+                {isPremium && subscription?.periodEnd && (
+                  <span className="text-[10px] mt-0.5" style={{ color: "rgba(221,193,174,0.45)" }}>
+                    Renews {new Date(subscription.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                )}
+                {!isPremium && (
+                  <span className="text-[10px] mt-0.5" style={{ color: "rgba(221,193,174,0.35)" }}>
+                    Click to manage account
+                  </span>
+                )}
+              </div>
 
-            {/* Chevron hint */}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 opacity-30 group-hover:opacity-70 transition-opacity" style={{ color: "#e1e3e4" }}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
+              {/* Chevron hint */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 opacity-30 group-hover:opacity-70 transition-opacity" style={{ color: "#e1e3e4" }}>
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+
+            {/* Log Out Button */}
+            <button
+              onClick={() => signOut({ redirectUrl: '/' })}
+              className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors w-fit ml-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Sign Out
+            </button>
+          </div>
         </div>
       </aside>
 
