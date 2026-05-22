@@ -471,7 +471,7 @@ function PreviewContent() {
                 <div>
                   <h4 className="font-bold text-[#ff8a00] mb-0.5">Multi-page layout suggested</h4>
                   <p className="text-[12px] leading-relaxed text-[#e1e3e4]/80">
-                    Your content has exceeded a single page. We've automatically scaled text sizes down to fit, but it may look compressed when printed. Switch to Multi-page Mode for a full-size, elegant multi-page layout.
+                    Text scaled down to fit one page. Switch to Multi-page Mode for better readability.
                   </p>
                 </div>
               </div>
