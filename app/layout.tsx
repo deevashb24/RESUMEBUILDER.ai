@@ -116,9 +116,9 @@ export default function RootLayout({
             },
             elements: {
               card: "border border-orange-500/20 shadow-2xl shadow-orange-900/20 bg-[#0c0f10]",
-              socialButtonsBlockButton: "bg-orange-500 hover:bg-orange-600 border-none transition-all",
-              socialButtonsBlockButtonText: "text-white font-bold",
-              dividerLine: "bg-slate-800",
+              socialButtonsBlockButton: "!bg-[#ff8a00] hover:!bg-[#e67a00] !border-none transition-all",
+              socialButtonsBlockButtonText: "!text-white !font-bold",
+              dividerLine: "!bg-slate-800",
               dividerText: "text-slate-500",
               formFieldInput: "bg-[#161a1d] border-slate-800 focus:border-orange-500 text-white",
               formFieldLabel: "text-slate-300",
