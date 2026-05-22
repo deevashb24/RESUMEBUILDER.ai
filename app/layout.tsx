@@ -113,6 +113,18 @@ export default function RootLayout({
               colorInput: "#161a1d",
               colorPrimaryForeground: "#000000",
               colorForeground: "#e1e3e4",
+            },
+            elements: {
+              card: "border border-orange-500/20 shadow-2xl shadow-orange-900/20 bg-[#0c0f10]",
+              socialButtonsBlockButton: "border border-orange-500/30 bg-[#0c0f10] hover:bg-orange-500/10 hover:border-orange-500 transition-all text-white",
+              socialButtonsBlockButtonText: "text-white font-medium",
+              dividerLine: "bg-slate-800",
+              dividerText: "text-slate-500",
+              formFieldInput: "bg-[#161a1d] border-slate-800 focus:border-orange-500 text-white",
+              formFieldLabel: "text-slate-300",
+              footerActionLink: "text-orange-500 hover:text-orange-400 font-semibold",
+              identityPreviewText: "text-white",
+              identityPreviewEditButtonIcon: "text-orange-500"
             }
           }}
         >
