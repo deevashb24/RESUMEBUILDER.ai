@@ -104,11 +104,15 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         name: "ResumeBuilder.ai",
         description: data.description || "Pro Subscription",
-        callback_url: "https://resumebuilderai.in/api/razorpay/webhook",
-        redirect: true,
         prefill: { email: user.email || undefined },
         theme: { color: "#000000" },
-        modal: { ondismiss: function () { setLoading(null) } }
+        modal: { ondismiss: function () { setLoading(null) } },
+        handler: function (response: any) {
+          alert("Payment successful! Your document will be unlocked momentarily.");
+          setLoading(null);
+          onClose();
+          window.location.reload();
+        }
       }
 
       if (data.subscriptionId) {
