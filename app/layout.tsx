@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  icons: {
+    icon: "/favicon.png?v=2",
+  },
   openGraph: {
     title: "ResumeBuilder.ai - Build Job-Winning Resumes with AI",
     description: "Create tailored, ATS-friendly resumes, cover letters, and SOPs in minutes. Leverage AI to optimize your profile and land interviews.",
