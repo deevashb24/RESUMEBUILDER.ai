@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { createClient } from "@/utils/supabase/client"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2, CreditCard } from "lucide-react"
@@ -16,6 +16,7 @@ interface PricingModalProps {
 
 export function PricingModal({ open, onClose, generationId }: PricingModalProps) {
   const { user, refreshUser } = useAuth()
+  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('monthly')
 
@@ -84,8 +85,6 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     if (!user) return
     setLoading('razorpay')
 
-    const supabase = createClient()
-
     try {
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
@@ -143,32 +142,11 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
               // ── Step 2: Refresh auth context (picks up new DB state) ──────────
               await refreshUser()
 
-              // ── Step 3: Polling fallback — if realtime didn't fire yet ────────
-              // Poll Supabase directly up to 10 times (30s) to confirm the unlock
-              if (planType === 'one-time' && generationId) {
-                let confirmed = false
-                for (let i = 0; i < 10; i++) {
-                  const { data: userData } = await supabase
-                    .from('users')
-                    .select('unlockedGenerations')
-                    .eq('id', user.id)
-                    .single()
-                  if (userData?.unlockedGenerations?.includes(generationId)) {
-                    confirmed = true
-                    break
-                  }
-                  await new Promise(r => setTimeout(r, 3000))
-                  await refreshUser()
-                }
-                if (!confirmed) {
-                  console.warn('Unlock not reflected in DB after polling — reloading as fallback')
-                }
-              }
-
               setLoading(null)
               onClose()
-              // Soft reload to sync any remaining state (layout, etc.)
-              window.location.reload()
+              // Use Next.js soft refresh — re-runs server loaders & re-renders
+              // without destroying React state or triggering a full page reload
+              router.refresh()
               resolve()
             } catch (err: any) {
               setLoading(null)

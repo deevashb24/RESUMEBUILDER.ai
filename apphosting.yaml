@@ -131,3 +131,24 @@ env:
     availability:
       - BUILD
       - RUNTIME
+
+  # ── Supabase ──────────────────────────────────────────────────────────────
+  # ACTION REQUIRED: Set these secrets in Firebase App Hosting console or via
+  # `firebase apphosting:secrets:set SUPABASE_SERVICE_ROLE_KEY` etc.
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    secret: NEXT_PUBLIC_SUPABASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    secret: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # CRITICAL: Without this key the server-side unlock write cannot bypass RLS
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: SUPABASE_SERVICE_ROLE_KEY
+    availability:
+      - RUNTIME

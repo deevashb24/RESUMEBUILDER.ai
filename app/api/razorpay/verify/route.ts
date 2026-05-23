@@ -66,17 +66,35 @@ export async function POST(req: NextRequest) {
       const currentUnlocks: string[] = user?.unlockedGenerations || [];
       const newUnlocks = Array.from(new Set([...currentUnlocks, generationId]));
 
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from("users")
         .update({
           unlockedGenerations: newUnlocks,
           updatedAt: new Date().toISOString(),
         })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select() // needed for count to be populated
 
       if (error) {
         console.error("Supabase unlock error:", error);
-        return NextResponse.json({ error: "DB update failed" }, { status: 500 });
+        return NextResponse.json({ error: "DB update failed", detail: error.message }, { status: 500 });
+      }
+
+      // count === 0 means the userId row doesn't exist in the users table yet
+      if (count === 0) {
+        console.error(`⚠️ Verify: userId=${userId} not found in users table — user may not be synced`);
+        // Try upserting to create the row with the unlock
+        const { error: upsertError } = await supabase
+          .from("users")
+          .upsert({
+            id: userId,
+            unlockedGenerations: [generationId],
+            updatedAt: new Date().toISOString(),
+          });
+        if (upsertError) {
+          console.error("Supabase upsert error:", upsertError);
+          return NextResponse.json({ error: "DB upsert failed", detail: upsertError.message }, { status: 500 });
+        }
       }
 
       console.log(`🔓 Verified & unlocked generationId=${generationId} for userId=${userId}`);
