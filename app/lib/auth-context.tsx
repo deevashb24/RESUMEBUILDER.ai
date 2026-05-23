@@ -19,6 +19,7 @@ interface AuthContextValue {
   subscription: Subscription | null
   unlockedGenerations: string[]
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -129,6 +130,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut()
   }
 
+  const refreshUser = async () => {
+    if (clerkUser?.id) {
+      const emailStr = clerkUser.primaryEmailAddress?.emailAddress
+      await refreshUserData(clerkUser.id, emailStr)
+    }
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -136,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isPremium,
       subscription,
       unlockedGenerations,
-      logout
+      logout,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

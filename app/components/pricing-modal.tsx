@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { createClient } from "@/utils/supabase/client"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2, CreditCard } from "lucide-react"
@@ -14,7 +15,7 @@ interface PricingModalProps {
 }
 
 export function PricingModal({ open, onClose, generationId }: PricingModalProps) {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('monthly')
 
@@ -83,6 +84,8 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
     if (!user) return
     setLoading('razorpay')
 
+    const supabase = createClient()
+
     try {
       const res = await fetch("/api/razorpay/order", {
         method: "POST",
@@ -90,7 +93,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         body: JSON.stringify({
           userId: user.id,
           planType,
-          // FIX: Explicitly pass generationId for one-time unlock
+          // Explicitly pass generationId for one-time unlock
           generationId: planType === 'one-time' ? generationId : undefined
         }),
       })
@@ -100,44 +103,107 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
         throw new Error(data.error || "Failed to create order. Please check Razorpay keys.")
       }
 
-      const options: any = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        name: "ResumeBuilder.ai",
-        description: data.description || "Pro Subscription",
-        prefill: { email: user.email || undefined },
-        theme: { color: "#000000" },
-        modal: { ondismiss: function () { setLoading(null) } },
-        handler: function (response: any) {
-          alert("Payment successful! Your document is being securely unlocked. The page will refresh in a few seconds.");
-          setLoading(null);
-          onClose();
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
+      // Wrap rzp1.open() in a Promise so we can await the user completing payment
+      await new Promise<void>((resolve, reject) => {
+        const options: any = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+          name: "ResumeBuilder.ai",
+          description: data.description || "Pro Subscription",
+          prefill: { email: user.email || undefined },
+          theme: { color: "#000000" },
+          modal: {
+            ondismiss: function () {
+              setLoading(null)
+              resolve() // user closed the modal — not an error
+            }
+          },
+          handler: async function (response: any) {
+            try {
+              setLoading('verifying')
+
+              // ── Step 1: Verify signature server-side & unlock DB immediately ──
+              const verifyRes = await fetch('/api/razorpay/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  userId: user.id,
+                  planType,
+                  generationId: planType === 'one-time' ? generationId : undefined,
+                }),
+              })
+              const verifyData = await verifyRes.json()
+
+              if (!verifyRes.ok || !verifyData.unlocked) {
+                throw new Error(verifyData.error || 'Payment verification failed')
+              }
+
+              // ── Step 2: Refresh auth context (picks up new DB state) ──────────
+              await refreshUser()
+
+              // ── Step 3: Polling fallback — if realtime didn't fire yet ────────
+              // Poll Supabase directly up to 10 times (30s) to confirm the unlock
+              if (planType === 'one-time' && generationId) {
+                let confirmed = false
+                for (let i = 0; i < 10; i++) {
+                  const { data: userData } = await supabase
+                    .from('users')
+                    .select('unlockedGenerations')
+                    .eq('id', user.id)
+                    .single()
+                  if (userData?.unlockedGenerations?.includes(generationId)) {
+                    confirmed = true
+                    break
+                  }
+                  await new Promise(r => setTimeout(r, 3000))
+                  await refreshUser()
+                }
+                if (!confirmed) {
+                  console.warn('Unlock not reflected in DB after polling — reloading as fallback')
+                }
+              }
+
+              setLoading(null)
+              onClose()
+              // Soft reload to sync any remaining state (layout, etc.)
+              window.location.reload()
+              resolve()
+            } catch (err: any) {
+              setLoading(null)
+              alert(`Payment received but verification failed: ${err.message}. Please refresh the page or contact support.`)
+              reject(err)
+            }
+          }
         }
-      }
 
-      if (data.subscriptionId) {
-        options.subscription_id = data.subscriptionId;
-      } else {
-        options.order_id = data.orderId;
-        options.amount = data.amount;
-        options.currency = "INR";
-      }
+        if (data.subscriptionId) {
+          options.subscription_id = data.subscriptionId
+        } else {
+          options.order_id = data.orderId
+          options.amount = data.amount
+          options.currency = "INR"
+        }
 
-      const rzp1 = new window.Razorpay(options)
-      rzp1.on('payment.failed', function (response: any) {
-        console.error("Razorpay Payment Failed:", response.error);
-        alert(`Payment failed: ${response.error.description || 'Unknown error'}`);
-      });
-      rzp1.open()
+        const rzp1 = new window.Razorpay(options)
+        rzp1.on('payment.failed', function (response: any) {
+          console.error("Razorpay Payment Failed:", response.error)
+          alert(`Payment failed: ${response.error.description || 'Unknown error'}`)
+          setLoading(null)
+          resolve() // resolve so outer try/finally doesn't double-set loading
+        })
+        rzp1.open()
+        // NOTE: do NOT call setLoading(null) here — the modal is still open.
+        // Loading will be cleared inside handler / ondismiss / payment.failed.
+      })
 
     } catch (error: any) {
       console.error("Razorpay Error:", error)
       alert(error.message || "Payment setup failed. Please try again.")
-    } finally {
       setLoading(null)
     }
+    // No finally { setLoading(null) } here — loading is managed inside the Promise above
   }
 
   const PlanSelection = () => (
@@ -209,8 +275,8 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
               </div>
 
               <Button onClick={() => handleRazorpayCheckout(selectedPlan)} disabled={!!loading} variant="outline" className="w-full h-10 text-sm border-[#323536] text-gray-300 bg-transparent hover:bg-[#323536] hover:text-white">
-                {loading === 'razorpay' && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                Pay via Razorpay UPI - {selectedPlan === 'monthly' ? '₹499.99' : '₹999.99'}
+                {(loading === 'razorpay' || loading === 'verifying') && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                {loading === 'verifying' ? 'Verifying payment…' : `Pay via Razorpay UPI - ${selectedPlan === 'monthly' ? '₹499.99' : '₹999.99'}`}
               </Button>
             </div>
 
@@ -232,8 +298,9 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
                   <Button onClick={() => handleCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-black text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/20 shadow-sm">
                     Card ($0.99)
                   </Button>
-                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm">
-                    UPI (₹50.00)
+                  <Button onClick={() => handleRazorpayCheckout('one-time')} disabled={!!loading} className="w-full h-9 text-xs bg-[#ff8a00]/20 text-[#ff8a00] border border-[#ff8a00]/50 hover:bg-[#ff8a00]/30 shadow-sm flex items-center justify-center gap-1.5">
+                    {(loading === 'razorpay' || loading === 'verifying') && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {loading === 'verifying' ? 'Verifying…' : 'UPI (₹50.00)'}
                   </Button>
                 </div>
               </div>
