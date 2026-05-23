@@ -70,7 +70,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
   const [isSaving, setIsSaving] = useState(false)
   const [savedHistoryId, setSavedHistoryId] = useState<string | null>(null)
   // Store the finished generation payload so saveToHistory can use it without re-generating
-  const [pendingHistoryPayload, setPendingHistoryPayload] = useState<{ type: string; layoutId: string; parsedData: any; jobDescription: string; stats: any } | null>(null)
+  const [pendingHistoryPayload, setPendingHistoryPayload] = useState<{ resumeId?: string; type: string; layoutId: string; parsedData: any; jobDescription: string; stats: any } | null>(null)
 
   // --- ACTIONS ---
 
