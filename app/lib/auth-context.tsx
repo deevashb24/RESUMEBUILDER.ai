@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const isActive = isPremiumBool || (subData.status === 'active' && periodEndDates && periodEndDates > now)
-        const unlocked = data.unlockedGenerations || data.unlocked_generations || []
+        const unlocked = data.unlockedGenerations || data.unlocked_generations || data.unlocked_Generations || []
 
         setIsPremium(!!isActive)
         setSubscription(subData)

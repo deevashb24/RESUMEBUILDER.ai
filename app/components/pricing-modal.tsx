@@ -143,6 +143,7 @@ export function PricingModal({ open, onClose, generationId }: PricingModalProps)
               await refreshUser()
 
               setLoading(null)
+              alert('Payment verified successfully! Your document is now unlocked.')
               onClose()
               // Use Next.js soft refresh — re-runs server loaders & re-renders
               // without destroying React state or triggering a full page reload
