@@ -34,9 +34,7 @@ export async function POST(req: NextRequest) {
           id: userId,
           email: email,
           isPremium: false,
-          is_premium: false,
           unlockedGenerations: [],
-          unlocked_generations: [],
           provider: "clerk",
           updatedAt: new Date().toISOString()
         }
