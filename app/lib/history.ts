@@ -22,7 +22,8 @@ export async function saveHistoryEntry(
   type: string,
   jobDescription: string,
   output: string,
-  isUnlocked: boolean = false
+  isUnlocked: boolean = false,
+  id?: string
 ): Promise<string> {
   // Try to extract a meaningful title from the JSON output
   let title = "Generated Document"
@@ -46,6 +47,7 @@ export async function saveHistoryEntry(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        id,
         userId,
         type,
         title,

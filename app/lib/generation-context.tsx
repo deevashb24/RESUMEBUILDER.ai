@@ -188,6 +188,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
 
       // Store pending payload — history save is now explicit (user-initiated)
       setPendingHistoryPayload({
+        resumeId: finalIdForPreview,
         type: selectedOption,
         layoutId: selectedLayout,
         parsedData: generatedData,
@@ -225,7 +226,8 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         pendingHistoryPayload.type,
         pendingHistoryPayload.jobDescription,
         JSON.stringify(finalHistoryContent),
-        isPremium
+        isPremium,
+        pendingHistoryPayload.resumeId
       )
       setSavedHistoryId(historyId)
       setIsSaved(true)

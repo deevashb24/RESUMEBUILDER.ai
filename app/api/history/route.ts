@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
 
     const payload = {
+      ...(body.id ? { id: body.id } : {}),
       userId,
       type: type || "resume",
       title: title || "Generated Document",
