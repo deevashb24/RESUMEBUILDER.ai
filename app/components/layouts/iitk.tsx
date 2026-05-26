@@ -85,12 +85,29 @@ export const IITKLayout = ({ data, onUpdate }: { data: ParsedResumeData, onUpdat
                 {/* HEADER */}
                 <div className="iitk-keep-together mb-[3mm]">
                     <div className="w-full text-left font-bold text-[20.74pt] mb-[-2pt]">
-                        <EditableField
-                            value={doc.header.name}
-                            onUpdate={(v) => onUpdate?.('personal.name', v)}
-                            as="div"
-                            className="iitk-sc inline-block"
-                        />
+                        {doc.header.linkedin?.trim() ? (
+                            <a
+                                href={doc.header.linkedin?.startsWith('http') ? doc.header.linkedin : `https://${doc.header.linkedin}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="iitk-sc inline-block hover:underline"
+                                style={{ color: 'inherit', textDecoration: 'none' }}
+                            >
+                                <EditableField
+                                    value={doc.header.name}
+                                    onUpdate={(v) => onUpdate?.('personal.name', v)}
+                                    as="span"
+                                    className="iitk-sc inline-block"
+                                />
+                            </a>
+                        ) : (
+                            <EditableField
+                                value={doc.header.name}
+                                onUpdate={(v) => onUpdate?.('personal.name', v)}
+                                as="div"
+                                className="iitk-sc inline-block"
+                            />
+                        )}
                     </div>
                     <div className="w-full flex justify-between text-[9pt] leading-tight">
                         <EditableField
