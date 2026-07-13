@@ -3,10 +3,16 @@ import { generateText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { ParsedResumeData } from "@/lib/resume"
 import { auth } from "@clerk/nextjs/server"
+import { z } from "zod"
 
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
   apiKey: process.env.GROQ_API_KEY || "",
+})
+
+const tailorSchema = z.object({
+  jobDescription: z.string().min(1).max(25000),
+  resumeData: z.record(z.any())
 })
 
 export async function POST(request: NextRequest) {
@@ -16,11 +22,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { resumeData, jobDescription } = await request.json()
+    const body = await request.json()
+    const parseResult = tailorSchema.safeParse(body)
 
-    if (!resumeData || !jobDescription) {
-      return NextResponse.json({ error: "Missing data" }, { status: 400 })
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid payload data", details: parseResult.error.errors }, { status: 400 })
     }
+
+    const { resumeData, jobDescription } = parseResult.data as { resumeData: ParsedResumeData, jobDescription: string };
 
     const prompt = `
       You are an elite Resume Strategist and ATS Analyzer.

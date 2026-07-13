@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
+
+const syncSchema = z.object({
+  userId: z.string().min(1).max(255),
+  email: z.string().email().max(255),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, email } = await req.json();
+    const body = await req.json();
+    const parseResult = syncSchema.safeParse(body);
 
-    if (!userId || !email) {
-      return NextResponse.json({ error: "Missing userId or email" }, { status: 400 });
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid payload data", details: parseResult.error.errors }, { status: 400 });
     }
+
+    const { userId, email } = parseResult.data;
 
     // Use Service Role key to bypass RLS, or Anon Key if Service Role isn't available
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
